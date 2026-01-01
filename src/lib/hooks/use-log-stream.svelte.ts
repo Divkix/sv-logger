@@ -249,8 +249,8 @@ export function useLogStream(options: UseLogStreamOptions): UseLogStreamReturn {
     setConnected(false);
   }
 
-  // Auto-connect if enabled on creation
-  if (enabled) {
+  // Auto-connect if enabled on creation (only in browser)
+  if (enabled && typeof window !== 'undefined') {
     // Use queueMicrotask to allow the return value to be captured first
     queueMicrotask(() => {
       connect();

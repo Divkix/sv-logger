@@ -2,6 +2,7 @@
 import ArrowLeftIcon from '@lucide/svelte/icons/arrow-left';
 import { goto } from '$app/navigation';
 import { navigating } from '$app/stores';
+import BottomNav from '$lib/components/bottom-nav.svelte';
 import LevelChart from '$lib/components/level-chart.svelte';
 import StatsSkeleton from '$lib/components/stats-skeleton.svelte';
 import TimeRangePicker, { type TimeRange } from '$lib/components/time-range-picker.svelte';
@@ -44,39 +45,42 @@ const chartData = $derived({
 {#if isNavigating}
   <StatsSkeleton />
 {:else}
-  <div class="space-y-6">
+  <div class="space-y-4 sm:space-y-6">
     <!-- Header -->
-    <div class="flex items-center justify-between">
-      <div class="flex items-center gap-4">
+    <div class="flex items-center justify-between gap-2">
+      <div class="flex items-center gap-2 sm:gap-4 min-w-0">
         <a
           href="/projects/{data.project.id}"
-          class="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
+          class="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors shrink-0"
           aria-label="Back to logs"
         >
           <ArrowLeftIcon class="size-4" />
           <span class="sr-only">Logs</span>
         </a>
-        <h1 class="text-2xl font-bold">{data.project.name}</h1>
+        <h1 class="text-lg sm:text-2xl font-bold truncate">{data.project.name}</h1>
       </div>
     </div>
 
     <!-- Stats Header -->
-    <div class="flex flex-wrap items-center justify-between gap-4">
+    <div class="flex flex-col sm:flex-row sm:flex-wrap items-start sm:items-center justify-between gap-3 sm:gap-4">
       <div>
-        <h2 class="text-lg font-semibold">Log Level Distribution</h2>
-        <p class="text-sm text-muted-foreground">
+        <h2 class="text-base sm:text-lg font-semibold">Log Level Distribution</h2>
+        <p class="text-xs sm:text-sm text-muted-foreground">
           Statistics for the selected time range
         </p>
       </div>
 
-      <TimeRangePicker value={selectedRange} onchange={handleTimeRangeChange} disabled={loading} />
+      <!-- Time range picker with horizontal scroll on mobile -->
+      <div class="w-full sm:w-auto overflow-x-auto">
+        <TimeRangePicker value={selectedRange} onchange={handleTimeRangeChange} disabled={loading} />
+      </div>
     </div>
 
     <!-- Chart Section -->
-    <div class="flex justify-center py-8">
+    <div class="flex justify-center py-4 sm:py-8">
       {#if loading}
         <div class="flex flex-col gap-4">
-          <div class="h-[200px] w-[200px] rounded-full bg-accent animate-pulse"></div>
+          <div class="h-[160px] w-[160px] sm:h-[200px] sm:w-[200px] rounded-full bg-accent animate-pulse"></div>
           <div class="flex flex-col gap-2">
             {#each Array(5) as _}
               <div class="flex items-center gap-2">
@@ -92,7 +96,7 @@ const chartData = $derived({
     </div>
 
     <!-- Summary Stats -->
-    <div class="text-center text-muted-foreground">
+    <div class="text-center text-xs sm:text-sm text-muted-foreground">
       {#if data.stats.totalLogs > 0}
         <p>
           Viewing <span class="font-medium text-foreground">{data.stats.totalLogs.toLocaleString()}</span> logs
@@ -113,3 +117,6 @@ const chartData = $derived({
     </div>
   </div>
 {/if}
+
+<!-- Mobile Bottom Navigation -->
+<BottomNav projectId={data.project.id} />

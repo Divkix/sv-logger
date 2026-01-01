@@ -91,7 +91,7 @@ async function handleCreateProject(name: string) {
       </div>
     {:else}
       <!-- Project Grid -->
-      <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+      <div data-testid="project-grid" class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {#each projects as project (project.id)}
           <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
           <div

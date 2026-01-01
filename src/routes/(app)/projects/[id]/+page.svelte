@@ -4,6 +4,8 @@ import ChartPieIcon from '@lucide/svelte/icons/chart-pie';
 import SettingsIcon from '@lucide/svelte/icons/settings';
 import { goto, invalidateAll } from '$app/navigation';
 import { navigating } from '$app/stores';
+import BottomNav from '$lib/components/bottom-nav.svelte';
+import FilterPanel from '$lib/components/filter-panel.svelte';
 import LevelFilter from '$lib/components/level-filter.svelte';
 import LiveToggle from '$lib/components/live-toggle.svelte';
 import LogDetailModal from '$lib/components/log-detail-modal.svelte';
@@ -61,6 +63,11 @@ let selectedLog = $state<Log | null>(null);
 let showDetailModal = $state(false);
 let showSettingsModal = $state(false);
 let loading = $state(false);
+
+// Count active filters for badge
+const activeFilterCount = $derived(
+  (selectedLevels.length > 0 ? 1 : 0) + (searchValue ? 1 : 0) + (selectedRange !== '1h' ? 1 : 0),
+);
 
 // Live streaming is paused when search is active
 const isLivePaused = $derived(Boolean(data.filters.search));
@@ -189,21 +196,23 @@ async function handleDelete() {
 {#if isNavigating}
   <LogStreamSkeleton />
 {:else}
-  <div class="space-y-6">
+  <div class="space-y-4 sm:space-y-6">
     <!-- Header -->
-    <div class="flex items-center justify-between">
-      <div class="flex items-center gap-4">
+    <div class="flex items-center justify-between gap-2">
+      <div class="flex items-center gap-2 sm:gap-4 min-w-0">
         <a
           href="/"
-          class="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
+          class="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors shrink-0"
           aria-label="Back to dashboard"
         >
           <ArrowLeftIcon class="size-4" />
           <span class="sr-only">Dashboard</span>
         </a>
-        <h1 class="text-2xl font-bold">{data.project.name}</h1>
+        <h1 class="text-lg sm:text-2xl font-bold truncate">{data.project.name}</h1>
       </div>
-      <div class="flex items-center gap-2">
+
+      <!-- Desktop/Tablet header actions -->
+      <div data-testid="project-header-actions" class="hidden sm:flex items-center gap-2">
         <a
           href="/projects/{data.project.id}/stats"
           class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-3"
@@ -220,37 +229,48 @@ async function handleDelete() {
     </div>
 
     <!-- Filters Bar -->
-    <div class="flex flex-wrap items-center gap-4">
+    <div class="flex flex-wrap items-center gap-2 sm:gap-4">
+      <!-- Live Toggle - always visible -->
       <LiveToggle bind:enabled={liveEnabled} disabled={isLivePaused} />
 
       {#if isLivePaused}
         <span
           data-testid="live-paused-notice"
-          class="text-sm text-muted-foreground bg-muted px-2 py-1 rounded"
+          class="text-xs sm:text-sm text-muted-foreground bg-muted px-2 py-1 rounded"
         >
           Live paused during search
         </span>
       {/if}
 
-      <div class="flex-1 max-w-sm">
-        <SearchInput
-          bind:value={searchValue}
-          placeholder="Search logs..."
-          onsearch={handleSearch}
-        />
-      </div>
+      <!-- Filter Panel - collapsible on mobile, inline on desktop -->
+      <FilterPanel {activeFilterCount}>
+        <!-- Search Input -->
+        <div data-testid="search-container" class="w-full sm:w-auto sm:flex-1 sm:max-w-sm">
+          <SearchInput
+            bind:value={searchValue}
+            placeholder="Search logs..."
+            onsearch={handleSearch}
+          />
+        </div>
 
-      <LevelFilter value={selectedLevels} onchange={handleLevelChange} />
+        <!-- Level Filter -->
+        <div class="w-full sm:w-auto overflow-x-auto">
+          <LevelFilter value={selectedLevels} onchange={handleLevelChange} />
+        </div>
 
-      <TimeRangePicker value={selectedRange} onchange={handleTimeRangeChange} />
+        <!-- Time Range Picker -->
+        <div class="w-full sm:w-auto">
+          <TimeRangePicker value={selectedRange} onchange={handleTimeRangeChange} />
+        </div>
+      </FilterPanel>
     </div>
 
-    <!-- Log Table -->
+    <!-- Log Table (responsive: cards on mobile, table on desktop) -->
     <LogTable logs={allLogs} {loading} onLogClick={handleLogClick} />
 
     <!-- Pagination Info -->
     {#if data.pagination.total > 0}
-      <div class="text-sm text-muted-foreground">
+      <div class="text-xs sm:text-sm text-muted-foreground">
         Showing {Math.min(allLogs.length, data.pagination.limit)} of {data.pagination.total} logs
         {#if data.pagination.hasMore}
           <span class="ml-2">(more available)</span>
@@ -273,3 +293,6 @@ async function handleDelete() {
   onRegenerate={handleRegenerate}
   onDelete={handleDelete}
 />
+
+<!-- Mobile Bottom Navigation -->
+<BottomNav projectId={data.project.id} onSettingsClick={openSettings} />

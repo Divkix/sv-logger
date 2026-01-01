@@ -32,16 +32,16 @@ async function handleLogout() {
       </a>
 
       <!-- Right side: User info, Theme toggle, Logout -->
-      <div class="flex items-center gap-4">
-        <!-- User info -->
-        <span class="text-sm text-muted-foreground">
+      <div class="flex items-center gap-2 sm:gap-4">
+        <!-- User info - hidden on mobile -->
+        <span class="hidden sm:inline text-sm text-muted-foreground">
           {data.user.name || data.user.email}
         </span>
 
         <!-- Theme toggle -->
         <ThemeToggle />
 
-        <!-- Logout button -->
+        <!-- Logout button - icon only on mobile, with text on larger screens -->
         <Button
           variant="ghost"
           size="sm"
@@ -49,14 +49,15 @@ async function handleLogout() {
           disabled={isLoggingOut}
           aria-label="Logout"
         >
-          <LogOut class="mr-2 size-4" />
-          Logout
+          <LogOut class="size-4 sm:mr-2" />
+          <span class="hidden sm:inline">Logout</span>
         </Button>
       </div>
     </div>
   </header>
 
-  <main class="container mx-auto flex-1 px-4 py-6">
+  <!-- Main content with bottom padding on mobile for bottom nav -->
+  <main class="container mx-auto flex-1 px-4 py-6 pb-20 sm:pb-6">
     {@render children()}
   </main>
 </div>

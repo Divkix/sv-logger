@@ -12,7 +12,7 @@ interface Props {
 let { enabled = $bindable(true), disabled = false, onchange }: Props = $props();
 </script>
 
-<div class="flex items-center gap-2">
+<div data-testid="live-toggle" class="flex items-center gap-2">
   <span
     data-testid="live-pulse"
     class={cn(
