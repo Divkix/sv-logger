@@ -54,6 +54,7 @@
     "vitest-browser-svelte": "^2.0.1"
   },
   "dependencies": {
+    "better-auth": "^1.4.10",
     "nanoid": "^5.1.6",
     "postgres": "^3.4.7",
     "zod": "^4.3.4"

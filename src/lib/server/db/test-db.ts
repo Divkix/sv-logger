@@ -7,7 +7,7 @@ import * as schema from './schema';
 
 /**
  * Generates CREATE TABLE SQL from Drizzle schema table definition
- * Supports: text, timestamp with timezone, integer, jsonb, enums, unique constraints, default values, foreign keys
+ * Supports: text, timestamp with timezone, integer, jsonb, enums, boolean, unique constraints, default values, foreign keys
  */
 function generateCreateTableSQL(table: PgTable): string {
   const config = getTableConfig(table);
@@ -106,6 +106,17 @@ function generateCreateTableSQL(table: PgTable): string {
         const defaultFn = (column as unknown as { default?: unknown }).default;
         if (defaultFn) {
           parts.push('DEFAULT NOW()');
+        }
+      } else if (column.dataType === 'boolean') {
+        // Handle boolean defaults
+        const defaultValue = (column as unknown as { default?: unknown }).default;
+        if (defaultValue !== undefined) {
+          // Check if it's a simple value or wrapped
+          const value =
+            typeof defaultValue === 'object' && defaultValue !== null && 'value' in defaultValue
+              ? (defaultValue as { value: unknown }).value
+              : defaultValue;
+          parts.push(`DEFAULT ${value}`);
         }
       } else if (column.default !== undefined) {
         const defaultValue = (column.default as unknown as { value?: unknown })?.value;
