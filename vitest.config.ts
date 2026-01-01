@@ -16,6 +16,8 @@ export default defineConfig({
           name: 'unit',
           include: ['src/**/*.unit.test.ts'],
           environment: 'node',
+          globals: true,
+          setupFiles: ['./tests/setup.ts'],
         },
       },
       {
@@ -23,12 +25,15 @@ export default defineConfig({
           name: 'integration',
           include: ['tests/integration/**/*.integration.test.ts'],
           environment: 'node',
+          globals: true,
+          setupFiles: ['./tests/setup.ts'],
         },
       },
       {
         test: {
           name: 'browser',
           include: ['src/**/*.browser.test.ts'],
+          globals: true,
         },
       },
     ],
