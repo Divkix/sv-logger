@@ -23,7 +23,7 @@ export default defineConfig({
       {
         test: {
           name: 'integration',
-          include: ['tests/integration/**/*.integration.test.ts'],
+          include: ['tests/integration/**/*.integration.test.ts', 'scripts/**/*.test.ts'],
           environment: 'node',
           globals: true,
           setupFiles: ['./tests/setup.ts'],
