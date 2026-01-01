@@ -63,7 +63,7 @@ function handleKeyDown(event: KeyboardEvent) {
   <!-- Message -->
   <p
     data-testid="log-message"
-    class="text-sm break-words line-clamp-3"
+    class="text-sm wrap-break-word line-clamp-3"
     title={log.message}
   >
     {log.message}
