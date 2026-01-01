@@ -1,0 +1,196 @@
+<script lang="ts">
+import CopyIcon from '@lucide/svelte/icons/copy';
+import XIcon from '@lucide/svelte/icons/x';
+import type { Log } from '$lib/server/db/schema';
+import { cn } from '$lib/utils';
+import { formatFullDate } from '$lib/utils/format';
+import LevelBadge from './level-badge.svelte';
+
+interface Props {
+  log: Log;
+  open: boolean;
+  onClose?: () => void;
+  class?: string;
+}
+
+const { log, open, onClose, class: className }: Props = $props();
+
+const formattedTimestamp = $derived(log.timestamp ? formatFullDate(log.timestamp) : null);
+
+const formattedMetadata = $derived(log.metadata ? JSON.stringify(log.metadata, null, 2) : null);
+
+const sourceInfo = $derived(
+  log.sourceFile ? (log.lineNumber ? `${log.sourceFile}:${log.lineNumber}` : log.sourceFile) : null,
+);
+
+async function copyToClipboard(text: string) {
+  await navigator.clipboard.writeText(text);
+}
+
+function handleKeyDown(event: KeyboardEvent) {
+  if (event.key === 'Escape') {
+    onClose?.();
+  }
+}
+
+function handleOverlayClick(event: MouseEvent) {
+  if (event.target === event.currentTarget) {
+    onClose?.();
+  }
+}
+</script>
+
+<svelte:document onkeydown={handleKeyDown} />
+
+{#if open}
+  <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
+  <div
+    data-testid="modal-overlay"
+    class="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm animate-in fade-in-0 duration-200"
+    onclick={handleOverlayClick}
+  >
+    <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+    <div
+      role="dialog"
+      aria-labelledby="log-detail-title"
+      aria-modal="true"
+      tabindex="0"
+      data-testid="modal-content"
+      class={cn(
+        'bg-background fixed left-1/2 top-1/2 z-50 w-full max-w-2xl -translate-x-1/2 -translate-y-1/2 rounded-lg border p-6 shadow-lg animate-in fade-in-0 zoom-in-95 duration-200',
+        className,
+      )}
+      onclick={(e) => e.stopPropagation()}
+    >
+      <!-- Header -->
+      <div class="mb-4 flex items-center justify-between">
+        <h2 id="log-detail-title" class="text-lg font-semibold">Log Details</h2>
+        <button
+          type="button"
+          data-testid="close-button"
+          aria-label="Close"
+          class="ring-offset-background focus:ring-ring rounded-sm opacity-70 transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-offset-2"
+          onclick={() => onClose?.()}
+        >
+          <XIcon class="size-4" />
+        </button>
+      </div>
+
+      <!-- Content -->
+      <div class="space-y-4 overflow-y-auto max-h-[60vh]">
+        <!-- ID -->
+        <div class="flex items-center justify-between">
+          <div>
+            <span class="text-muted-foreground text-sm">ID</span>
+            <p class="font-mono text-sm">{log.id}</p>
+          </div>
+          <button
+            type="button"
+            data-testid="copy-id-button"
+            aria-label="Copy ID"
+            class="text-muted-foreground hover:text-foreground p-1"
+            onclick={() => copyToClipboard(log.id)}
+          >
+            <CopyIcon class="size-4" />
+          </button>
+        </div>
+
+        <!-- Level -->
+        <div>
+          <span class="text-muted-foreground text-sm">Level</span>
+          <div class="mt-1">
+            <LevelBadge level={log.level} />
+          </div>
+        </div>
+
+        <!-- Timestamp -->
+        <div>
+          <span class="text-muted-foreground text-sm">Timestamp</span>
+          <p class="font-mono text-sm">
+            {formattedTimestamp ?? 'N/A'}
+          </p>
+        </div>
+
+        <!-- Message -->
+        <div class="flex items-start justify-between gap-2">
+          <div class="flex-1">
+            <span class="text-muted-foreground text-sm">Message</span>
+            <p class="text-sm whitespace-pre-wrap break-words">{log.message}</p>
+          </div>
+          <button
+            type="button"
+            data-testid="copy-message-button"
+            aria-label="Copy message"
+            class="text-muted-foreground hover:text-foreground p-1 flex-shrink-0"
+            onclick={() => copyToClipboard(log.message)}
+          >
+            <CopyIcon class="size-4" />
+          </button>
+        </div>
+
+        <!-- Source -->
+        <div>
+          <span class="text-muted-foreground text-sm">Source</span>
+          <p class="font-mono text-sm">{sourceInfo ?? 'N/A'}</p>
+        </div>
+
+        <!-- Request ID -->
+        <div class="flex items-center justify-between">
+          <div>
+            <span class="text-muted-foreground text-sm">Request ID</span>
+            <p class="font-mono text-sm">{log.requestId ?? 'N/A'}</p>
+          </div>
+          {#if log.requestId}
+            <button
+              type="button"
+              data-testid="copy-request-id-button"
+              aria-label="Copy request ID"
+              class="text-muted-foreground hover:text-foreground p-1"
+              onclick={() => copyToClipboard(log.requestId!)}
+            >
+              <CopyIcon class="size-4" />
+            </button>
+          {/if}
+        </div>
+
+        <!-- User ID -->
+        <div>
+          <span class="text-muted-foreground text-sm">User ID</span>
+          <p class="font-mono text-sm">{log.userId ?? 'N/A'}</p>
+        </div>
+
+        <!-- IP Address -->
+        <div>
+          <span class="text-muted-foreground text-sm">IP Address</span>
+          <p class="font-mono text-sm">{log.ipAddress ?? 'N/A'}</p>
+        </div>
+
+        <!-- Metadata -->
+        <div data-testid="metadata-section">
+          <div class="flex items-center justify-between">
+            <span class="text-muted-foreground text-sm">Metadata</span>
+            {#if log.metadata}
+              <button
+                type="button"
+                data-testid="copy-metadata-button"
+                aria-label="Copy metadata"
+                class="text-muted-foreground hover:text-foreground p-1"
+                onclick={() => copyToClipboard(formattedMetadata!)}
+              >
+                <CopyIcon class="size-4" />
+              </button>
+            {/if}
+          </div>
+          {#if formattedMetadata}
+            <pre
+              data-testid="log-metadata"
+              class="bg-muted mt-1 rounded-md p-3 text-sm font-mono overflow-x-auto"
+            >{formattedMetadata}</pre>
+          {:else}
+            <p class="text-sm">N/A</p>
+          {/if}
+        </div>
+      </div>
+    </div>
+  </div>
+{/if}

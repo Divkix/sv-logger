@@ -103,3 +103,26 @@ export function getTimeRangeStart(range: '15m' | '1h' | '24h' | '7d', referenceT
       return new Date(nowMs - 7 * 24 * 60 * 60 * 1000);
   }
 }
+
+/**
+ * Formats a Date object as a full date-time string in YYYY-MM-DD HH:mm:ss.SSS UTC format.
+ * Uses UTC timezone.
+ *
+ * @param date - The date to format
+ * @returns Formatted full date string (e.g., "2024-01-15 14:30:45.123 UTC")
+ *
+ * @example
+ * formatFullDate(new Date("2024-01-15T14:30:45.123Z"))
+ * // Returns: "2024-01-15 14:30:45.123 UTC"
+ */
+export function formatFullDate(date: Date): string {
+  const year = date.getUTCFullYear();
+  const month = (date.getUTCMonth() + 1).toString().padStart(2, '0');
+  const day = date.getUTCDate().toString().padStart(2, '0');
+  const hours = date.getUTCHours().toString().padStart(2, '0');
+  const minutes = date.getUTCMinutes().toString().padStart(2, '0');
+  const seconds = date.getUTCSeconds().toString().padStart(2, '0');
+  const milliseconds = date.getUTCMilliseconds().toString().padStart(3, '0');
+
+  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds} UTC`;
+}

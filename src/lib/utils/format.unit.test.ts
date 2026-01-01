@@ -1,4 +1,4 @@
-import { formatRelativeTime, formatTimestamp, getTimeRangeStart } from './format';
+import { formatFullDate, formatRelativeTime, formatTimestamp, getTimeRangeStart } from './format';
 
 describe('formatTimestamp', () => {
   it('returns HH:mm:ss.SSS format for afternoon time', () => {
@@ -253,5 +253,55 @@ describe('getTimeRangeStart', () => {
       // If now has milliseconds, the result should maintain them
       expect(result.getMilliseconds()).toBe(now.getMilliseconds());
     });
+  });
+});
+
+describe('formatFullDate', () => {
+  it('returns YYYY-MM-DD HH:mm:ss.SSS UTC format', () => {
+    const date = new Date('2024-01-15T14:30:45.123Z');
+    expect(formatFullDate(date)).toBe('2024-01-15 14:30:45.123 UTC');
+  });
+
+  it('handles morning times correctly', () => {
+    const date = new Date('2024-06-20T08:15:30.456Z');
+    expect(formatFullDate(date)).toBe('2024-06-20 08:15:30.456 UTC');
+  });
+
+  it('handles midnight correctly', () => {
+    const date = new Date('2024-01-01T00:00:00.000Z');
+    expect(formatFullDate(date)).toBe('2024-01-01 00:00:00.000 UTC');
+  });
+
+  it('handles end of year correctly', () => {
+    const date = new Date('2024-12-31T23:59:59.999Z');
+    expect(formatFullDate(date)).toBe('2024-12-31 23:59:59.999 UTC');
+  });
+
+  it('pads single-digit months with leading zero', () => {
+    const date = new Date('2024-01-15T14:30:45.123Z');
+    expect(formatFullDate(date)).toContain('01-15');
+  });
+
+  it('pads single-digit days with leading zero', () => {
+    const date = new Date('2024-01-05T14:30:45.123Z');
+    expect(formatFullDate(date)).toContain('01-05');
+  });
+
+  it('handles epoch start', () => {
+    const date = new Date(0); // 1970-01-01T00:00:00.000Z
+    expect(formatFullDate(date)).toBe('1970-01-01 00:00:00.000 UTC');
+  });
+
+  it('handles double-digit months correctly', () => {
+    const date = new Date('2024-11-20T14:30:45.123Z');
+    expect(formatFullDate(date)).toBe('2024-11-20 14:30:45.123 UTC');
+  });
+
+  it('pads milliseconds to three digits', () => {
+    const date1 = new Date('2024-01-15T14:30:45.001Z');
+    expect(formatFullDate(date1)).toContain('.001 UTC');
+
+    const date2 = new Date('2024-01-15T14:30:45.010Z');
+    expect(formatFullDate(date2)).toContain('.010 UTC');
   });
 });
