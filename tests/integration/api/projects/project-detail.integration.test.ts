@@ -1,0 +1,454 @@
+import type { Redirect } from '@sveltejs/kit';
+import { eq } from 'drizzle-orm';
+import type { PgliteDatabase } from 'drizzle-orm/pglite';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { createAuth } from '$lib/server/auth';
+import type * as schema from '$lib/server/db/schema';
+import { log, project } from '$lib/server/db/schema';
+import { setupTestDatabase } from '$lib/server/db/test-db';
+import { getSession } from '$lib/server/session';
+import { clearApiKeyCache, validateApiKey } from '$lib/server/utils/api-key';
+import { DELETE, GET } from '../../../../src/routes/api/projects/[id]/+server';
+import { POST as POST_REGENERATE } from '../../../../src/routes/api/projects/[id]/regenerate/+server';
+import { seedLogs, seedProject } from '../../../fixtures/db';
+
+/**
+ * Helper to create a mock SvelteKit RequestEvent for [id] routes
+ */
+function createRequestEvent(
+  request: Request,
+  db: PgliteDatabase<typeof schema>,
+  params: { id: string },
+  locals: Partial<App.Locals> = {},
+) {
+  return {
+    request,
+    locals: { db, ...locals },
+    params,
+    url: new URL(request.url),
+    platform: undefined,
+    route: { id: '/api/projects/[id]' },
+    isDataRequest: false,
+    isSubRequest: false,
+    isRemoteRequest: false,
+    tracing: null,
+    cookies: {
+      get: () => undefined,
+      getAll: () => [],
+      set: () => {},
+      delete: () => {},
+      serialize: () => '',
+    },
+    fetch: globalThis.fetch,
+    getClientAddress: () => '127.0.0.1',
+    setHeaders: () => {},
+  } as unknown;
+}
+
+/**
+ * Helper to assert that a promise rejects with a SvelteKit redirect
+ */
+async function expectRedirect(
+  promise: Promise<unknown>,
+  expectedStatus: number,
+  expectedLocation: string,
+): Promise<void> {
+  try {
+    await promise;
+    expect.fail('Expected redirect to be thrown');
+  } catch (error) {
+    const redirect = error as Redirect;
+    expect(redirect.status).toBe(expectedStatus);
+    expect(redirect.location).toBe(expectedLocation);
+  }
+}
+
+describe('GET /api/projects/[id]', () => {
+  let db: PgliteDatabase<typeof schema>;
+  let cleanup: () => Promise<void>;
+  let auth: ReturnType<typeof createAuth>;
+  let authenticatedLocals: Partial<App.Locals>;
+
+  beforeEach(async () => {
+    const setup = await setupTestDatabase();
+    db = setup.db;
+    cleanup = setup.cleanup;
+    auth = createAuth(db);
+    clearApiKeyCache();
+
+    // Create authenticated user
+    const signUpResult = await auth.api.signUpEmail({
+      body: {
+        email: 'test@example.com',
+        password: 'SecureP@ssw0rd123',
+        name: 'Test User',
+      },
+    });
+
+    const mockRequest = new Request('http://localhost:5173', {
+      headers: {
+        cookie: `better-auth.session_token=${signUpResult.token}`,
+      },
+    });
+
+    const sessionData = await getSession(mockRequest.headers, db);
+    if (!sessionData) throw new Error('Session data should not be null');
+
+    authenticatedLocals = {
+      user: sessionData.user,
+      session: sessionData.session,
+    };
+  });
+
+  afterEach(async () => {
+    await cleanup();
+  });
+
+  describe('Authentication', () => {
+    it('throws redirect for unauthenticated request', async () => {
+      const testProject = await seedProject(db);
+      const request = new Request(`http://localhost/api/projects/${testProject.id}`, {
+        method: 'GET',
+      });
+
+      const event = createRequestEvent(request, db, { id: testProject.id });
+      await expectRedirect(GET(event as never), 303, '/login');
+    });
+  });
+
+  describe('Project Detail', () => {
+    it('returns project with stats', async () => {
+      const testProject = await seedProject(db, { name: 'my-test-project' });
+      // Add 10 logs with various levels
+      await seedLogs(db, testProject.id, 3, { level: 'info' });
+      await seedLogs(db, testProject.id, 2, { level: 'error' });
+      await seedLogs(db, testProject.id, 5, { level: 'debug' });
+
+      const request = new Request(`http://localhost/api/projects/${testProject.id}`, {
+        method: 'GET',
+      });
+
+      const event = createRequestEvent(request, db, { id: testProject.id }, authenticatedLocals);
+      const response = await GET(event as never);
+
+      expect(response.status).toBe(200);
+      const body = await response.json();
+
+      // Basic project fields
+      expect(body).toHaveProperty('id', testProject.id);
+      expect(body).toHaveProperty('name', 'my-test-project');
+      expect(body).toHaveProperty('apiKey', testProject.apiKey);
+      expect(body).toHaveProperty('createdAt');
+      expect(body).toHaveProperty('updatedAt');
+
+      // Stats
+      expect(body).toHaveProperty('stats');
+      expect(body.stats).toHaveProperty('totalLogs', 10);
+      expect(body.stats).toHaveProperty('levelCounts');
+      expect(body.stats.levelCounts).toHaveProperty('info', 3);
+      expect(body.stats.levelCounts).toHaveProperty('error', 2);
+      expect(body.stats.levelCounts).toHaveProperty('debug', 5);
+    });
+
+    it('returns 404 for non-existent project', async () => {
+      const request = new Request('http://localhost/api/projects/non-existent-id', {
+        method: 'GET',
+      });
+
+      const event = createRequestEvent(request, db, { id: 'non-existent-id' }, authenticatedLocals);
+      const response = await GET(event as never);
+
+      expect(response.status).toBe(404);
+      const body = await response.json();
+      expect(body).toHaveProperty('error', 'not_found');
+    });
+
+    it('returns empty level counts when project has no logs', async () => {
+      const testProject = await seedProject(db);
+
+      const request = new Request(`http://localhost/api/projects/${testProject.id}`, {
+        method: 'GET',
+      });
+
+      const event = createRequestEvent(request, db, { id: testProject.id }, authenticatedLocals);
+      const response = await GET(event as never);
+
+      expect(response.status).toBe(200);
+      const body = await response.json();
+      expect(body.stats.totalLogs).toBe(0);
+    });
+  });
+});
+
+describe('DELETE /api/projects/[id]', () => {
+  let db: PgliteDatabase<typeof schema>;
+  let cleanup: () => Promise<void>;
+  let auth: ReturnType<typeof createAuth>;
+  let authenticatedLocals: Partial<App.Locals>;
+
+  beforeEach(async () => {
+    const setup = await setupTestDatabase();
+    db = setup.db;
+    cleanup = setup.cleanup;
+    auth = createAuth(db);
+    clearApiKeyCache();
+
+    // Create authenticated user
+    const signUpResult = await auth.api.signUpEmail({
+      body: {
+        email: 'test@example.com',
+        password: 'SecureP@ssw0rd123',
+        name: 'Test User',
+      },
+    });
+
+    const mockRequest = new Request('http://localhost:5173', {
+      headers: {
+        cookie: `better-auth.session_token=${signUpResult.token}`,
+      },
+    });
+
+    const sessionData = await getSession(mockRequest.headers, db);
+    if (!sessionData) throw new Error('Session data should not be null');
+
+    authenticatedLocals = {
+      user: sessionData.user,
+      session: sessionData.session,
+    };
+  });
+
+  afterEach(async () => {
+    await cleanup();
+  });
+
+  describe('Authentication', () => {
+    it('throws redirect for unauthenticated request', async () => {
+      const testProject = await seedProject(db);
+      const request = new Request(`http://localhost/api/projects/${testProject.id}`, {
+        method: 'DELETE',
+      });
+
+      const event = createRequestEvent(request, db, { id: testProject.id });
+      await expectRedirect(DELETE(event as never), 303, '/login');
+    });
+  });
+
+  describe('Project Deletion', () => {
+    it('removes project and logs', async () => {
+      const testProject = await seedProject(db);
+      await seedLogs(db, testProject.id, 5);
+
+      // Verify logs exist before deletion
+      const logsBefore = await db.select().from(log).where(eq(log.projectId, testProject.id));
+      expect(logsBefore).toHaveLength(5);
+
+      const request = new Request(`http://localhost/api/projects/${testProject.id}`, {
+        method: 'DELETE',
+      });
+
+      const event = createRequestEvent(request, db, { id: testProject.id }, authenticatedLocals);
+      const response = await DELETE(event as never);
+
+      expect(response.status).toBe(200);
+      const body = await response.json();
+      expect(body).toHaveProperty('success', true);
+      expect(body).toHaveProperty('id', testProject.id);
+
+      // Verify project was deleted
+      const projectsAfter = await db.select().from(project).where(eq(project.id, testProject.id));
+      expect(projectsAfter).toHaveLength(0);
+
+      // Verify logs were cascade deleted
+      const logsAfter = await db.select().from(log).where(eq(log.projectId, testProject.id));
+      expect(logsAfter).toHaveLength(0);
+    });
+
+    it('returns 404 for non-existent project', async () => {
+      const request = new Request('http://localhost/api/projects/non-existent-id', {
+        method: 'DELETE',
+      });
+
+      const event = createRequestEvent(request, db, { id: 'non-existent-id' }, authenticatedLocals);
+      const response = await DELETE(event as never);
+
+      expect(response.status).toBe(404);
+      const body = await response.json();
+      expect(body).toHaveProperty('error', 'not_found');
+    });
+
+    it('invalidates API key cache on deletion', async () => {
+      const testProject = await seedProject(db);
+
+      // Validate API key to add to cache
+      const apiKeyRequest = new Request('http://localhost', {
+        headers: {
+          Authorization: `Bearer ${testProject.apiKey}`,
+        },
+      });
+      await validateApiKey(apiKeyRequest, db);
+
+      // Delete project
+      const request = new Request(`http://localhost/api/projects/${testProject.id}`, {
+        method: 'DELETE',
+      });
+
+      const event = createRequestEvent(request, db, { id: testProject.id }, authenticatedLocals);
+      await DELETE(event as never);
+
+      // Verify API key is no longer valid (cache should be invalidated)
+      await expect(validateApiKey(apiKeyRequest, db)).rejects.toThrow('Invalid API key');
+    });
+  });
+});
+
+describe('POST /api/projects/[id]/regenerate', () => {
+  let db: PgliteDatabase<typeof schema>;
+  let cleanup: () => Promise<void>;
+  let auth: ReturnType<typeof createAuth>;
+  let authenticatedLocals: Partial<App.Locals>;
+
+  beforeEach(async () => {
+    const setup = await setupTestDatabase();
+    db = setup.db;
+    cleanup = setup.cleanup;
+    auth = createAuth(db);
+    clearApiKeyCache();
+
+    // Create authenticated user
+    const signUpResult = await auth.api.signUpEmail({
+      body: {
+        email: 'test@example.com',
+        password: 'SecureP@ssw0rd123',
+        name: 'Test User',
+      },
+    });
+
+    const mockRequest = new Request('http://localhost:5173', {
+      headers: {
+        cookie: `better-auth.session_token=${signUpResult.token}`,
+      },
+    });
+
+    const sessionData = await getSession(mockRequest.headers, db);
+    if (!sessionData) throw new Error('Session data should not be null');
+
+    authenticatedLocals = {
+      user: sessionData.user,
+      session: sessionData.session,
+    };
+  });
+
+  afterEach(async () => {
+    await cleanup();
+  });
+
+  describe('Authentication', () => {
+    it('throws redirect for unauthenticated request', async () => {
+      const testProject = await seedProject(db);
+      const request = new Request(`http://localhost/api/projects/${testProject.id}/regenerate`, {
+        method: 'POST',
+      });
+
+      const event = createRequestEvent(request, db, { id: testProject.id });
+      await expectRedirect(POST_REGENERATE(event as never), 303, '/login');
+    });
+  });
+
+  describe('API Key Regeneration', () => {
+    it('returns new API key', async () => {
+      const testProject = await seedProject(db);
+      const oldApiKey = testProject.apiKey;
+
+      const request = new Request(`http://localhost/api/projects/${testProject.id}/regenerate`, {
+        method: 'POST',
+      });
+
+      const event = createRequestEvent(request, db, { id: testProject.id }, authenticatedLocals);
+      const response = await POST_REGENERATE(event as never);
+
+      expect(response.status).toBe(200);
+      const body = await response.json();
+
+      expect(body).toHaveProperty('apiKey');
+      expect(body.apiKey).toMatch(/^svl_[A-Za-z0-9_-]{32}$/);
+      expect(body.apiKey).not.toBe(oldApiKey);
+
+      // Verify in database
+      const [updatedProject] = await db
+        .select()
+        .from(project)
+        .where(eq(project.id, testProject.id));
+      expect(updatedProject.apiKey).toBe(body.apiKey);
+    });
+
+    it('invalidates old API key', async () => {
+      const testProject = await seedProject(db);
+      const oldApiKey = testProject.apiKey;
+
+      // Validate old API key to add to cache
+      const oldKeyRequest = new Request('http://localhost', {
+        headers: {
+          Authorization: `Bearer ${oldApiKey}`,
+        },
+      });
+      await validateApiKey(oldKeyRequest, db);
+
+      // Regenerate API key
+      const request = new Request(`http://localhost/api/projects/${testProject.id}/regenerate`, {
+        method: 'POST',
+      });
+
+      const event = createRequestEvent(request, db, { id: testProject.id }, authenticatedLocals);
+      const response = await POST_REGENERATE(event as never);
+      const body = await response.json();
+
+      // Old key should no longer work
+      await expect(validateApiKey(oldKeyRequest, db)).rejects.toThrow('Invalid API key');
+
+      // New key should work
+      const newKeyRequest = new Request('http://localhost', {
+        headers: {
+          Authorization: `Bearer ${body.apiKey}`,
+        },
+      });
+      const projectId = await validateApiKey(newKeyRequest, db);
+      expect(projectId).toBe(testProject.id);
+    });
+
+    it('returns 404 for non-existent project', async () => {
+      const request = new Request('http://localhost/api/projects/non-existent-id/regenerate', {
+        method: 'POST',
+      });
+
+      const event = createRequestEvent(request, db, { id: 'non-existent-id' }, authenticatedLocals);
+      const response = await POST_REGENERATE(event as never);
+
+      expect(response.status).toBe(404);
+      const body = await response.json();
+      expect(body).toHaveProperty('error', 'not_found');
+    });
+
+    it('updates updatedAt timestamp', async () => {
+      const testProject = await seedProject(db);
+      const originalUpdatedAt = testProject.updatedAt;
+
+      // Wait a bit to ensure timestamp difference
+      await new Promise((resolve) => setTimeout(resolve, 10));
+
+      const request = new Request(`http://localhost/api/projects/${testProject.id}/regenerate`, {
+        method: 'POST',
+      });
+
+      const event = createRequestEvent(request, db, { id: testProject.id }, authenticatedLocals);
+      await POST_REGENERATE(event as never);
+
+      const [updatedProject] = await db
+        .select()
+        .from(project)
+        .where(eq(project.id, testProject.id));
+      expect(updatedProject.updatedAt?.getTime()).toBeGreaterThan(
+        originalUpdatedAt?.getTime() ?? 0,
+      );
+    });
+  });
+});
