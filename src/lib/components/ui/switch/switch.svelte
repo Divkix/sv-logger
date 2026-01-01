@@ -1,13 +1,14 @@
 <script lang="ts">
-import type { Switch as SwitchPrimitive } from 'bits-ui';
+import { Switch as SwitchPrimitive, type Switch as SwitchPrimitiveType } from 'bits-ui';
 import { cn, type WithoutChildrenOrChild } from '$lib/utils.js';
 
-const {
+// biome-ignore lint/style/useConst: Svelte 5 requires `let` for bindable props
+let {
   ref = $bindable(null),
   class: className,
   checked = $bindable(false),
   ...restProps
-}: WithoutChildrenOrChild<SwitchPrimitive.RootProps> = $props();
+}: WithoutChildrenOrChild<SwitchPrimitiveType.RootProps> = $props();
 </script>
 
 <SwitchPrimitive.Root
