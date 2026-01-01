@@ -1,5 +1,6 @@
 <script lang="ts">
 import ArrowLeftIcon from '@lucide/svelte/icons/arrow-left';
+import ChartPieIcon from '@lucide/svelte/icons/chart-pie';
 import SettingsIcon from '@lucide/svelte/icons/settings';
 import { goto, invalidateAll } from '$app/navigation';
 import LevelFilter from '$lib/components/level-filter.svelte';
@@ -224,10 +225,20 @@ async function handleDelete() {
       </a>
       <h1 class="text-2xl font-bold">{data.project.name}</h1>
     </div>
-    <Button variant="outline" size="sm" onclick={openSettings} aria-label="Settings">
-      <SettingsIcon class="size-4 mr-2" />
-      Settings
-    </Button>
+    <div class="flex items-center gap-2">
+      <a
+        href="/projects/{data.project.id}/stats"
+        class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-3"
+        aria-label="View statistics"
+      >
+        <ChartPieIcon class="size-4 mr-2" />
+        Stats
+      </a>
+      <Button variant="outline" size="sm" onclick={openSettings} aria-label="Settings">
+        <SettingsIcon class="size-4 mr-2" />
+        Settings
+      </Button>
+    </div>
   </div>
 
   <!-- Filters Bar -->
