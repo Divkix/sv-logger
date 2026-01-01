@@ -58,6 +58,7 @@
     "better-auth": "^1.4.10",
     "nanoid": "^5.1.6",
     "postgres": "^3.4.7",
+    "sveltekit-sse": "^0.14.3",
     "zod": "^4.3.4"
   }
 }
