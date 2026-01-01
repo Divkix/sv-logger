@@ -2,12 +2,19 @@
 import FolderPlusIcon from '@lucide/svelte/icons/folder-plus';
 import PlusIcon from '@lucide/svelte/icons/plus';
 import { goto } from '$app/navigation';
+import { navigating } from '$app/stores';
 import CreateProjectModal from '$lib/components/create-project-modal.svelte';
+import DashboardSkeleton from '$lib/components/dashboard-skeleton.svelte';
 import ProjectCard from '$lib/components/project-card.svelte';
 import { Button } from '$lib/components/ui/button/index.js';
 import type { PageData } from './$types';
 
 const { data }: { data: PageData } = $props();
+
+// Show skeleton when navigating TO this page
+const isLoading = $derived(
+  $navigating?.to?.url.pathname === '/' || $navigating?.to?.url.pathname === '',
+);
 
 // Create a local copy of projects for state management
 // We intentionally capture the initial value since we manage additions locally
@@ -50,54 +57,58 @@ async function handleCreateProject(name: string) {
 }
 </script>
 
-<div class="space-y-6">
-  <!-- Header -->
-  <div class="flex items-center justify-between">
-    <h1 class="text-2xl font-bold">Dashboard</h1>
-    <Button onclick={openCreateModal}>
-      <PlusIcon class="mr-2 size-4" />
-      Create Project
-    </Button>
-  </div>
-
-  <!-- Content -->
-  {#if projects.length === 0}
-    <!-- Empty State -->
-    <div class="flex flex-col items-center justify-center py-12 text-center">
-      <FolderPlusIcon class="size-16 text-muted-foreground/50 mb-4" />
-      <h2 class="text-lg font-semibold mb-2">No projects yet</h2>
-      <p class="text-muted-foreground mb-6 max-w-md">
-        Create your first project to start collecting logs. Each project gets its own API key for
-        log ingestion.
-      </p>
+{#if isLoading}
+  <DashboardSkeleton />
+{:else}
+  <div class="space-y-6">
+    <!-- Header -->
+    <div class="flex items-center justify-between">
+      <h1 class="text-2xl font-bold">Dashboard</h1>
       <Button onclick={openCreateModal}>
         <PlusIcon class="mr-2 size-4" />
         Create Project
       </Button>
     </div>
-  {:else}
-    <!-- Project Grid -->
-    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-      {#each projects as project (project.id)}
-        <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
-        <div
-          data-testid="project-card"
-          class="cursor-pointer transition-transform hover:scale-[1.02] rounded-lg"
-          onclick={() => goto(`/projects/${project.id}`)}
-        >
-          <ProjectCard
-            project={{
-              id: project.id,
-              name: project.name,
-              logCount: project.logCount,
-              lastActivity: project.lastActivity ? new Date(project.lastActivity) : null,
-            }}
-          />
-        </div>
-      {/each}
-    </div>
-  {/if}
-</div>
+
+    <!-- Content -->
+    {#if projects.length === 0}
+      <!-- Empty State -->
+      <div class="flex flex-col items-center justify-center py-12 text-center">
+        <FolderPlusIcon class="size-16 text-muted-foreground/50 mb-4" />
+        <h2 class="text-lg font-semibold mb-2">No projects yet</h2>
+        <p class="text-muted-foreground mb-6 max-w-md">
+          Create your first project to start collecting logs. Each project gets its own API key for
+          log ingestion.
+        </p>
+        <Button onclick={openCreateModal}>
+          <PlusIcon class="mr-2 size-4" />
+          Create Project
+        </Button>
+      </div>
+    {:else}
+      <!-- Project Grid -->
+      <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        {#each projects as project (project.id)}
+          <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
+          <div
+            data-testid="project-card"
+            class="cursor-pointer transition-transform hover:scale-[1.02] rounded-lg"
+            onclick={() => goto(`/projects/${project.id}`)}
+          >
+            <ProjectCard
+              project={{
+                id: project.id,
+                name: project.name,
+                logCount: project.logCount,
+                lastActivity: project.lastActivity ? new Date(project.lastActivity) : null,
+              }}
+            />
+          </div>
+        {/each}
+      </div>
+    {/if}
+  </div>
+{/if}
 
 <!-- Create Project Modal -->
 <CreateProjectModal

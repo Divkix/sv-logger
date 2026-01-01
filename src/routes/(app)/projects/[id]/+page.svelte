@@ -3,9 +3,11 @@ import ArrowLeftIcon from '@lucide/svelte/icons/arrow-left';
 import ChartPieIcon from '@lucide/svelte/icons/chart-pie';
 import SettingsIcon from '@lucide/svelte/icons/settings';
 import { goto, invalidateAll } from '$app/navigation';
+import { navigating } from '$app/stores';
 import LevelFilter from '$lib/components/level-filter.svelte';
 import LiveToggle from '$lib/components/live-toggle.svelte';
 import LogDetailModal from '$lib/components/log-detail-modal.svelte';
+import LogStreamSkeleton from '$lib/components/log-stream-skeleton.svelte';
 import LogTable from '$lib/components/log-table.svelte';
 import ProjectSettings from '$lib/components/project-settings.svelte';
 import SearchInput from '$lib/components/search-input.svelte';
@@ -17,6 +19,12 @@ import type { ClientLog } from '$lib/stores/logs.svelte';
 import type { PageData } from './$types';
 
 const { data }: { data: PageData } = $props();
+
+// Show skeleton when navigating TO this page (project logs page, not stats)
+const isNavigating = $derived(
+  $navigating?.to?.url.pathname.includes('/projects/') &&
+    !$navigating?.to?.url.pathname.endsWith('/stats'),
+);
 
 // Convert server data logs (with string timestamps) to Log type (with Date timestamps)
 function parseLogTimestamp(log: PageData['logs'][number]): Log {
@@ -161,75 +169,79 @@ async function handleDelete() {
 }
 </script>
 
-<div class="space-y-6">
-  <!-- Header -->
-  <div class="flex items-center justify-between">
-    <div class="flex items-center gap-4">
-      <a
-        href="/"
-        class="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
-        aria-label="Back to dashboard"
-      >
-        <ArrowLeftIcon class="size-4" />
-        <span class="sr-only">Dashboard</span>
-      </a>
-      <h1 class="text-2xl font-bold">{data.project.name}</h1>
-    </div>
-    <div class="flex items-center gap-2">
-      <a
-        href="/projects/{data.project.id}/stats"
-        class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-3"
-        aria-label="View statistics"
-      >
-        <ChartPieIcon class="size-4 mr-2" />
-        Stats
-      </a>
-      <Button variant="outline" size="sm" onclick={openSettings} aria-label="Settings">
-        <SettingsIcon class="size-4 mr-2" />
-        Settings
-      </Button>
-    </div>
-  </div>
-
-  <!-- Filters Bar -->
-  <div class="flex flex-wrap items-center gap-4">
-    <LiveToggle bind:enabled={liveEnabled} disabled={isLivePaused} />
-
-    {#if isLivePaused}
-      <span
-        data-testid="live-paused-notice"
-        class="text-sm text-muted-foreground bg-muted px-2 py-1 rounded"
-      >
-        Live paused during search
-      </span>
-    {/if}
-
-    <div class="flex-1 max-w-sm">
-      <SearchInput
-        bind:value={searchValue}
-        placeholder="Search logs..."
-        onsearch={handleSearch}
-      />
+{#if isNavigating}
+  <LogStreamSkeleton />
+{:else}
+  <div class="space-y-6">
+    <!-- Header -->
+    <div class="flex items-center justify-between">
+      <div class="flex items-center gap-4">
+        <a
+          href="/"
+          class="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
+          aria-label="Back to dashboard"
+        >
+          <ArrowLeftIcon class="size-4" />
+          <span class="sr-only">Dashboard</span>
+        </a>
+        <h1 class="text-2xl font-bold">{data.project.name}</h1>
+      </div>
+      <div class="flex items-center gap-2">
+        <a
+          href="/projects/{data.project.id}/stats"
+          class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-3"
+          aria-label="View statistics"
+        >
+          <ChartPieIcon class="size-4 mr-2" />
+          Stats
+        </a>
+        <Button variant="outline" size="sm" onclick={openSettings} aria-label="Settings">
+          <SettingsIcon class="size-4 mr-2" />
+          Settings
+        </Button>
+      </div>
     </div>
 
-    <LevelFilter value={selectedLevels} onchange={handleLevelChange} />
+    <!-- Filters Bar -->
+    <div class="flex flex-wrap items-center gap-4">
+      <LiveToggle bind:enabled={liveEnabled} disabled={isLivePaused} />
 
-    <TimeRangePicker value={selectedRange} onchange={handleTimeRangeChange} />
-  </div>
-
-  <!-- Log Table -->
-  <LogTable logs={allLogs} {loading} onLogClick={handleLogClick} />
-
-  <!-- Pagination Info -->
-  {#if data.pagination.total > 0}
-    <div class="text-sm text-muted-foreground">
-      Showing {Math.min(allLogs.length, data.pagination.limit)} of {data.pagination.total} logs
-      {#if data.pagination.hasMore}
-        <span class="ml-2">(more available)</span>
+      {#if isLivePaused}
+        <span
+          data-testid="live-paused-notice"
+          class="text-sm text-muted-foreground bg-muted px-2 py-1 rounded"
+        >
+          Live paused during search
+        </span>
       {/if}
+
+      <div class="flex-1 max-w-sm">
+        <SearchInput
+          bind:value={searchValue}
+          placeholder="Search logs..."
+          onsearch={handleSearch}
+        />
+      </div>
+
+      <LevelFilter value={selectedLevels} onchange={handleLevelChange} />
+
+      <TimeRangePicker value={selectedRange} onchange={handleTimeRangeChange} />
     </div>
-  {/if}
-</div>
+
+    <!-- Log Table -->
+    <LogTable logs={allLogs} {loading} onLogClick={handleLogClick} />
+
+    <!-- Pagination Info -->
+    {#if data.pagination.total > 0}
+      <div class="text-sm text-muted-foreground">
+        Showing {Math.min(allLogs.length, data.pagination.limit)} of {data.pagination.total} logs
+        {#if data.pagination.hasMore}
+          <span class="ml-2">(more available)</span>
+        {/if}
+      </div>
+    {/if}
+  </div>
+{/if}
 
 <!-- Log Detail Modal -->
 {#if selectedLog}
