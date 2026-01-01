@@ -289,18 +289,35 @@ export async function createTestDatabase(): Promise<PgliteDatabase<typeof schema
   // Create enum types first
   await createEnumTypes(db);
 
-  // Dynamically create all tables from schema
+  // Create tables in dependency order to handle foreign keys
+  // Order: user -> project/session/account/verification -> log
+  const tableOrder = [
+    'user', // No dependencies
+    'project', // No dependencies
+    'session', // Depends on user
+    'account', // Depends on user
+    'verification', // No dependencies
+    'log', // Depends on project
+  ];
+
   const tables = Object.values(schema).filter((item) => is(item, PgTable));
 
-  for (const table of tables) {
-    // Create table
-    const createSQL = generateCreateTableSQL(table as PgTable);
-    await db.execute(sql.raw(createSQL));
+  for (const tableName of tableOrder) {
+    const table = tables.find((t) => {
+      const config = getTableConfig(t as PgTable);
+      return config.name === tableName;
+    });
 
-    // Create indexes
-    const indexSQLs = generateIndexSQL(table as PgTable);
-    for (const indexSQL of indexSQLs) {
-      await db.execute(sql.raw(indexSQL));
+    if (table) {
+      // Create table
+      const createSQL = generateCreateTableSQL(table as PgTable);
+      await db.execute(sql.raw(createSQL));
+
+      // Create indexes
+      const indexSQLs = generateIndexSQL(table as PgTable);
+      for (const indexSQL of indexSQLs) {
+        await db.execute(sql.raw(indexSQL));
+      }
     }
   }
 
