@@ -115,13 +115,13 @@ function handleOverlayClick(event: MouseEvent) {
         <div class="flex items-start justify-between gap-2">
           <div class="flex-1">
             <span class="text-muted-foreground text-sm">Message</span>
-            <p class="text-sm whitespace-pre-wrap break-words">{log.message}</p>
+            <p class="text-sm whitespace-pre-wrap wrap-break-word">{log.message}</p>
           </div>
           <button
             type="button"
             data-testid="copy-message-button"
             aria-label="Copy message"
-            class="text-muted-foreground hover:text-foreground p-1 flex-shrink-0"
+            class="text-muted-foreground hover:text-foreground p-1 shrink-0"
             onclick={() => copyToClipboard(log.message)}
           >
             <CopyIcon class="size-4" />

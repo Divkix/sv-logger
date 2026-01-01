@@ -199,7 +199,7 @@ function handleDeleteCancel() {
         <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
         <div
           data-testid="regenerate-confirm-dialog"
-          class="fixed inset-0 z-[60] flex items-center justify-center bg-black/50"
+          class="fixed inset-0 z-60 flex items-center justify-center bg-black/50"
           onclick={(e) => e.stopPropagation()}
         >
           <div class="bg-background w-full max-w-md rounded-lg border p-6 shadow-lg">
@@ -235,7 +235,7 @@ function handleDeleteCancel() {
         <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
         <div
           data-testid="delete-confirm-dialog"
-          class="fixed inset-0 z-[60] flex items-center justify-center bg-black/50"
+          class="fixed inset-0 z-60 flex items-center justify-center bg-black/50"
           onclick={(e) => e.stopPropagation()}
         >
           <div class="bg-background w-full max-w-md rounded-lg border p-6 shadow-lg">
