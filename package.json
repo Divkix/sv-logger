@@ -17,10 +17,19 @@
     "db:push": "drizzle-kit push",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
-    "db:studio": "drizzle-kit studio"
+    "db:studio": "drizzle-kit studio",
+    "test": "vitest",
+    "test:unit": "vitest run src/**/*.unit.test.ts",
+    "test:integration": "vitest run tests/integration",
+    "test:browser": "vitest run src/**/*.browser.test.ts",
+    "test:e2e": "playwright test",
+    "test:coverage": "vitest run --coverage",
+    "test:ui": "vitest --ui"
   },
   "devDependencies": {
     "@biomejs/biome": "2.3.10",
+    "@electric-sql/pglite": "^0.3.14",
+    "@playwright/test": "^1.57.0",
     "@sveltejs/adapter-auto": "^7.0.0",
     "@sveltejs/adapter-node": "^5.4.0",
     "@sveltejs/kit": "^2.49.1",
@@ -28,7 +37,11 @@
     "@tailwindcss/forms": "^0.5.10",
     "@tailwindcss/typography": "^0.5.19",
     "@tailwindcss/vite": "^4.1.17",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/svelte": "^5.3.1",
     "@types/node": "^24",
+    "@vitest/browser": "^4.0.16",
+    "@vitest/coverage-v8": "^4.0.16",
     "drizzle-kit": "^0.31.8",
     "drizzle-orm": "^0.45.0",
     "knip": "^5.78.0",
@@ -36,7 +49,9 @@
     "svelte-check": "^4.3.4",
     "tailwindcss": "^4.1.17",
     "typescript": "^5.9.3",
-    "vite": "^7.2.6"
+    "vite": "^7.2.6",
+    "vitest": "^4.0.16",
+    "vitest-browser-svelte": "^2.0.1"
   },
   "dependencies": {
     "postgres": "^3.4.7"
