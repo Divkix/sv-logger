@@ -7,6 +7,7 @@
       "dependencies": {
         "nanoid": "^5.1.6",
         "postgres": "^3.4.7",
+        "zod": "^4.3.4",
       },
       "devDependencies": {
         "@biomejs/biome": "2.3.10",
