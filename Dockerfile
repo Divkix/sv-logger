@@ -33,8 +33,11 @@ RUN bun install --frozen-lockfile --production
 FROM base AS deps-dev
 WORKDIR /app
 COPY package.json bun.lock ./
+# Skip all browser binary downloads (Playwright, Puppeteer, etc.)
 ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
-RUN bun install --frozen-lockfile
+ENV PUPPETEER_SKIP_DOWNLOAD=1
+ENV PLAYWRIGHT_BROWSERS_PATH=/dev/null
+RUN bun install --frozen-lockfile --ignore-scripts && bun run prepare
 
 # -----------------------------------------------------------------------------
 # Stage 3: Build the SvelteKit application
@@ -49,7 +52,10 @@ COPY . .
 ENV NODE_ENV=production
 
 # Build the SvelteKit app (creates /app/build directory)
-RUN bun --bun run build
+# Dummy env vars satisfy build-time validation; real values provided at runtime
+RUN DATABASE_URL=postgresql://build:build@localhost/build \
+    BETTER_AUTH_SECRET=build-time-placeholder-secret-32chars \
+    bun --bun run build
 
 # -----------------------------------------------------------------------------
 # Stage 4: Production runtime
