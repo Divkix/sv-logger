@@ -166,7 +166,28 @@ curl -X POST http://localhost:5173/api/v1/logs/batch \
 
 ## Production Deployment
 
-### Docker
+### Docker Compose (Recommended)
+
+The easiest way to deploy sv-logger with PostgreSQL:
+
+```bash
+# Set required environment variables
+export BETTER_AUTH_SECRET=$(openssl rand -base64 32)
+export DB_PASSWORD="your-secure-db-password"
+
+# Start the full stack
+docker compose -f compose.prod.yaml up -d
+
+# View logs
+docker compose -f compose.prod.yaml logs -f app
+
+# Stop the stack
+docker compose -f compose.prod.yaml down
+```
+
+### Docker (App Only)
+
+If you have an external PostgreSQL database:
 
 ```bash
 # Build the image
@@ -174,10 +195,33 @@ docker build -t sv-logger .
 
 # Run the container
 docker run -p 3000:3000 \
-  -e DATABASE_URL="postgres://..." \
-  -e BETTER_AUTH_SECRET="..." \
+  -e DATABASE_URL="postgresql://user:pass@host:5432/db" \
+  -e BETTER_AUTH_SECRET="your-32-char-secret" \
+  -e NODE_ENV=production \
   sv-logger
 ```
+
+### Health Check
+
+The app exposes a health check endpoint for monitoring:
+
+```bash
+curl http://localhost:3000/api/health
+```
+
+Response:
+```json
+{
+  "status": "healthy",
+  "database": "connected",
+  "timestamp": "2025-01-02T12:00:00.000Z",
+  "uptime": 3600,
+  "version": "0.0.1"
+}
+```
+
+- Returns `200 OK` when healthy
+- Returns `503 Service Unavailable` when database is down
 
 ### Manual
 
@@ -189,6 +233,12 @@ bun ./build/index.js
 The app runs on port 3000 by default.
 
 ## API Reference
+
+### Health (Public)
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/health` | GET | Health check with database status |
 
 ### Log Ingestion (API Key Auth)
 

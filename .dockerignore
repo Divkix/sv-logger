@@ -1,0 +1,61 @@
+# =============================================================================
+# Docker Ignore File
+# =============================================================================
+# Files and directories excluded from Docker build context
+# to speed up builds and reduce image size
+# =============================================================================
+
+# Dependencies (will be installed fresh in container)
+node_modules
+
+# Build outputs (will be built fresh in container)
+build
+.svelte-kit
+
+# Development files
+*.md
+!README.md
+dev-docs/
+
+# Git
+.git
+.gitignore
+
+# IDE and editor files
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# Test files
+tests/
+**/*.test.ts
+**/*.spec.ts
+coverage/
+playwright-report/
+test-results/
+
+# Environment files (secrets should be passed via env vars)
+.env
+.env.*
+!.env.example
+
+# Docker files (avoid recursive context)
+Dockerfile*
+compose*.yaml
+compose*.yml
+.dockerignore
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# Misc
+.turbo
+.vercel
+.netlify
