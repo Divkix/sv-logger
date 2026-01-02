@@ -74,9 +74,7 @@ test.describe('Theme Toggle', () => {
     await expect(html).toHaveClass(/dark/);
 
     // Verify localStorage
-    const storedMode = await page.evaluate(() =>
-      localStorage.getItem('mode-watcher-mode')
-    );
+    const storedMode = await page.evaluate(() => localStorage.getItem('mode-watcher-mode'));
     expect(storedMode).toBe('dark');
 
     // Reload page

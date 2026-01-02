@@ -33,7 +33,9 @@ async function getDbClient(locals: App.Locals): Promise<DatabaseClient | null> {
 /**
  * Check database connectivity by executing a simple query
  */
-async function checkDatabase(db: DatabaseClient | null): Promise<{ connected: boolean; error?: string }> {
+async function checkDatabase(
+  db: DatabaseClient | null,
+): Promise<{ connected: boolean; error?: string }> {
   if (!db) {
     return { connected: false, error: 'Database client not available' };
   }

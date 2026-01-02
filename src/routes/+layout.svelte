@@ -1,8 +1,8 @@
 <script lang="ts">
 import './layout.css';
+import { ModeWatcher } from 'mode-watcher';
 import favicon from '$lib/assets/favicon.svg';
 import { Toaster } from '$lib/components/ui/sonner';
-import { ModeWatcher } from 'mode-watcher';
 
 const { children } = $props();
 </script>

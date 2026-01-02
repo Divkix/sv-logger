@@ -161,7 +161,7 @@ export function focusTrap(node: HTMLElement, options: FocusTrapOptions = {}) {
  */
 export function announceToScreenReader(
   message: string,
-  priority: 'polite' | 'assertive' = 'polite'
+  priority: 'polite' | 'assertive' = 'polite',
 ) {
   // Look for existing live region or create one
   let liveRegion = document.getElementById('sr-announcer');

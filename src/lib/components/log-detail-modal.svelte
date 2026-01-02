@@ -3,8 +3,8 @@ import CopyIcon from '@lucide/svelte/icons/copy';
 import XIcon from '@lucide/svelte/icons/x';
 import type { Log } from '$lib/server/db/schema';
 import { cn } from '$lib/utils';
+import { announceToScreenReader, focusTrap } from '$lib/utils/focus-trap';
 import { formatFullDate } from '$lib/utils/format';
-import { focusTrap, announceToScreenReader } from '$lib/utils/focus-trap';
 import LevelBadge from './level-badge.svelte';
 
 interface Props {

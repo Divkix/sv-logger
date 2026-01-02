@@ -55,17 +55,25 @@ const isProd = nodeEnv === 'production';
 const validationErrors: Array<{ variable: string; message: string }> = [];
 
 // Validate DATABASE_URL
-const databaseUrl = process.env.DATABASE_URL;
-if (!databaseUrl) {
+const rawDatabaseUrl = process.env.DATABASE_URL;
+if (!rawDatabaseUrl) {
   validationErrors.push({
     variable: 'DATABASE_URL',
     message: 'DATABASE_URL environment variable is required',
   });
-} else if (!databaseUrl.startsWith('postgres')) {
+} else if (!rawDatabaseUrl.startsWith('postgres')) {
   validationErrors.push({
     variable: 'DATABASE_URL',
-    message: 'DATABASE_URL must be a PostgreSQL connection string (starts with postgres:// or postgresql://)',
+    message:
+      'DATABASE_URL must be a PostgreSQL connection string (starts with postgres:// or postgresql://)',
   });
+}
+
+// Re-read after validation to get narrowed type (validation throws if missing)
+function getDatabaseUrl(): string {
+  const url = process.env.DATABASE_URL;
+  if (!url) throw new Error('DATABASE_URL missing after validation');
+  return url;
 }
 
 // Validate BETTER_AUTH_SECRET
@@ -98,7 +106,7 @@ if (validationErrors.length > 0) {
  */
 export const env = {
   /** PostgreSQL connection string */
-  DATABASE_URL: databaseUrl!,
+  DATABASE_URL: getDatabaseUrl(),
 
   /** Secret key for better-auth sessions (defaults to dev secret in development) */
   BETTER_AUTH_SECRET: authSecret || 'default-secret-for-development-only',

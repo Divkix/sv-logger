@@ -2,8 +2,8 @@ import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/sv
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Log, Project } from '$lib/server/db/schema';
-import LogDetailModal from '../log-detail-modal.svelte';
 import CreateProjectModal from '../create-project-modal.svelte';
+import LogDetailModal from '../log-detail-modal.svelte';
 import ProjectSettings from '../project-settings.svelte';
 
 // Mock clipboard API
@@ -64,7 +64,7 @@ describe('Accessibility: Modal Focus Management', () => {
 
       const modal = screen.getByRole('dialog');
       const focusableElements = modal.querySelectorAll(
-        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
       );
 
       expect(focusableElements.length).toBeGreaterThan(0);
@@ -87,7 +87,7 @@ describe('Accessibility: Modal Focus Management', () => {
 
       const modal = screen.getByRole('dialog');
       const focusableElements = modal.querySelectorAll(
-        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
       );
 
       const lastFocusable = focusableElements[focusableElements.length - 1] as HTMLElement;
@@ -137,7 +137,7 @@ describe('Accessibility: Modal Focus Management', () => {
         () => {
           expect(document.activeElement).toBe(triggerButton);
         },
-        { timeout: 500 }
+        { timeout: 500 },
       );
 
       document.body.removeChild(triggerButton);
@@ -150,7 +150,7 @@ describe('Accessibility: Modal Focus Management', () => {
 
       const modal = screen.getByRole('dialog');
       const focusableElements = modal.querySelectorAll(
-        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
       );
 
       expect(focusableElements.length).toBeGreaterThan(0);
@@ -197,7 +197,7 @@ describe('Accessibility: Modal Focus Management', () => {
         () => {
           expect(document.activeElement).toBe(triggerButton);
         },
-        { timeout: 500 }
+        { timeout: 500 },
       );
 
       document.body.removeChild(triggerButton);
@@ -210,7 +210,7 @@ describe('Accessibility: Modal Focus Management', () => {
 
       const modal = screen.getByRole('dialog');
       const focusableElements = modal.querySelectorAll(
-        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
       );
 
       expect(focusableElements.length).toBeGreaterThan(0);
@@ -257,7 +257,7 @@ describe('Accessibility: Modal Focus Management', () => {
         () => {
           expect(document.activeElement).toBe(triggerButton);
         },
-        { timeout: 500 }
+        { timeout: 500 },
       );
 
       document.body.removeChild(triggerButton);
@@ -515,7 +515,7 @@ describe('Accessibility: Live Regions', () => {
         expect(liveRegion).toHaveAttribute('aria-atomic', 'true');
         expect(liveRegion).toHaveClass('sr-only');
       },
-      { timeout: 100 }
+      { timeout: 100 },
     );
   });
 });

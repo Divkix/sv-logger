@@ -5,7 +5,7 @@ import Trash2Icon from '@lucide/svelte/icons/trash-2';
 import XIcon from '@lucide/svelte/icons/x';
 import type { Project } from '$lib/server/db/schema';
 import { cn } from '$lib/utils';
-import { focusTrap, announceToScreenReader } from '$lib/utils/focus-trap';
+import { announceToScreenReader, focusTrap } from '$lib/utils/focus-trap';
 import { toastError, toastSuccess } from '$lib/utils/toast';
 import Button from './ui/button/button.svelte';
 import Separator from './ui/separator/separator.svelte';
@@ -20,7 +20,15 @@ interface Props {
   class?: string;
 }
 
-const { project, open, onClose, onRegenerate, onDelete, triggerElement = null, class: className }: Props = $props();
+const {
+  project,
+  open,
+  onClose,
+  onRegenerate,
+  onDelete,
+  triggerElement = null,
+  class: className,
+}: Props = $props();
 
 let showRegenerateConfirm = $state(false);
 let showDeleteConfirm = $state(false);
