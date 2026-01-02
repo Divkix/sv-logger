@@ -102,7 +102,7 @@ describe('getTimeRangeStart', () => {
     ['24h', 24 * 60 * 60 * 1000, '24 hours'],
     ['7d', 7 * 24 * 60 * 60 * 1000, '7 days'],
   ])('getTimeRangeStart(%s) returns Date %i ms before reference time (%s)', (range, offset) => {
-    const result = getTimeRangeStart(range, now);
+    const result = getTimeRangeStart(range as '15m' | '1h' | '24h' | '7d', now);
     const expected = new Date(now.getTime() - offset);
     expect(result).toEqual(expected);
     expect(result.getTime()).toBe(now.getTime() - offset);
