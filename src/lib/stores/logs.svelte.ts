@@ -81,13 +81,34 @@ export function createLogStreamStore(options: LogStreamStoreOptions = {}) {
      * Adds new logs to the store (prepends to maintain newest-first order)
      * Trims oldest logs if exceeding maxLogs limit
      *
+     * Optimized to avoid creating intermediate arrays larger than maxLogs.
+     *
      * @param newLogs - Array of logs to add
      */
     addLogs(newLogs: ClientLog[]): void {
       if (newLogs.length === 0) return;
 
-      // Prepend new logs and trim to maxLogs
-      _logs = [...newLogs, ..._logs].slice(0, maxLogs);
+      const newCount = newLogs.length;
+
+      // If new logs alone fill or exceed maxLogs, just use them (trimmed)
+      if (newCount >= maxLogs) {
+        _logs = newLogs.slice(0, maxLogs);
+        return;
+      }
+
+      // Calculate how many existing logs we can keep
+      const keepFromExisting = Math.min(_logs.length, maxLogs - newCount);
+
+      if (keepFromExisting === 0) {
+        // No existing logs or none to keep
+        _logs = newLogs;
+      } else if (keepFromExisting === _logs.length) {
+        // Can keep all existing logs - just prepend
+        _logs = [...newLogs, ..._logs];
+      } else {
+        // Need to trim existing logs - slice before spreading to avoid large intermediate array
+        _logs = [...newLogs, ..._logs.slice(0, keepFromExisting)];
+      }
     },
 
     /**

@@ -2,6 +2,7 @@ import { json } from '@sveltejs/kit';
 import { eq } from 'drizzle-orm';
 import type { PgliteDatabase } from 'drizzle-orm/pglite';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
+import { SSE_CONFIG } from '$lib/server/config/performance';
 import type * as schema from '$lib/server/db/schema';
 import { type Log, project } from '$lib/server/db/schema';
 import { logEventBus } from '$lib/server/events';
@@ -10,10 +11,8 @@ import type { RequestEvent } from './$types';
 
 type DatabaseClient = PostgresJsDatabase<typeof schema> | PgliteDatabase<typeof schema>;
 
-// Configuration
-const BATCH_WINDOW_MS = 1500; // 1.5 second batch window
-const MAX_BATCH_SIZE = 50; // Flush immediately at this size
-const HEARTBEAT_INTERVAL_MS = 30000; // 30 seconds
+// Destructure SSE configuration for cleaner access
+const { BATCH_WINDOW_MS, MAX_BATCH_SIZE, HEARTBEAT_INTERVAL_MS } = SSE_CONFIG;
 
 /**
  * Helper to get database client from locals or production db

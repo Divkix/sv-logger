@@ -205,4 +205,70 @@ describe('Log Stream Store', () => {
       expect(store.logCount).toBe(0);
     });
   });
+
+  describe('performance optimizations', () => {
+    it('handles rapid successive addLogs calls efficiently', () => {
+      const store = createLogStreamStore({ maxLogs: 100 });
+      const startTime = performance.now();
+
+      // Simulate rapid SSE updates (50 batches of 5 logs each)
+      for (let batch = 0; batch < 50; batch++) {
+        store.addLogs(createSampleLogs(5, { message: `Batch ${batch}` }));
+      }
+
+      const elapsed = performance.now() - startTime;
+
+      // Should complete in under 100ms (very generous for 250 log operations)
+      expect(elapsed).toBeLessThan(100);
+      expect(store.logs).toHaveLength(100);
+      // Newest logs should be at the beginning
+      expect(store.logs[0].message).toContain('Batch 49');
+    });
+
+    it('does not leak memory when repeatedly hitting maxLogs limit', () => {
+      const store = createLogStreamStore({ maxLogs: 10 });
+
+      // Add 100 batches of 5 logs each
+      for (let i = 0; i < 100; i++) {
+        store.addLogs(createSampleLogs(5));
+      }
+
+      // Should never exceed maxLogs
+      expect(store.logs).toHaveLength(10);
+    });
+
+    it('efficiently handles single log additions', () => {
+      const store = createLogStreamStore({ maxLogs: 1000 });
+      const startTime = performance.now();
+
+      // Simulate real-time single log arrivals (common SSE pattern)
+      for (let i = 0; i < 200; i++) {
+        store.addLogs([createSampleLog({ id: `single-${i}` })]);
+      }
+
+      const elapsed = performance.now() - startTime;
+
+      // Should complete in under 50ms
+      expect(elapsed).toBeLessThan(50);
+      expect(store.logs).toHaveLength(200);
+    });
+
+    it('handles large batch additions without creating excessive intermediate arrays', () => {
+      const store = createLogStreamStore({ maxLogs: 500 });
+
+      // Add a large batch
+      const largeBatch = createSampleLogs(300);
+      store.addLogs(largeBatch);
+
+      expect(store.logs).toHaveLength(300);
+
+      // Add another batch that will cause trimming
+      const anotherBatch = createSampleLogs(300, { message: 'second batch' });
+      store.addLogs(anotherBatch);
+
+      expect(store.logs).toHaveLength(500);
+      // First 300 should be from second batch
+      expect(store.logs[0].message).toBe('second batch');
+    });
+  });
 });
