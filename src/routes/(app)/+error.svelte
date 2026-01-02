@@ -2,12 +2,12 @@
 import AlertTriangleIcon from '@lucide/svelte/icons/alert-triangle';
 import ArrowLeftIcon from '@lucide/svelte/icons/arrow-left';
 import RefreshCwIcon from '@lucide/svelte/icons/refresh-cw';
-import { page } from '$app/stores';
+import { page } from '$app/state';
 import { Button } from '$lib/components/ui/button/index.js';
 
-const errorCode = $derived($page.status);
-const errorMessage = $derived($page.error?.message || 'An unexpected error occurred');
-const errorId = $derived(($page.error as { id?: string })?.id);
+const errorCode = $derived(page.status);
+const errorMessage = $derived(page.error?.message || 'An unexpected error occurred');
+const errorId = $derived((page.error as { id?: string })?.id);
 
 function reload() {
   window.location.reload();
