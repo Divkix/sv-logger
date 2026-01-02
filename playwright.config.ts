@@ -1,15 +1,19 @@
 import type { PlaywrightTestConfig } from '@playwright/test';
 
+// Use preview mode in CI for stability (avoids Vite dev server HMR issues)
+const isCI = !!process.env.CI;
+const port = isCI ? 4173 : 5173;
+
 const config: PlaywrightTestConfig = {
   testDir: './tests/e2e',
   testMatch: /(.+\.)?(test|spec)\.[jt]s/,
   fullyParallel: true,
-  forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 2 : 0,
-  workers: process.env.CI ? 1 : undefined,
-  reporter: process.env.CI ? 'github' : 'list',
+  forbidOnly: isCI,
+  retries: isCI ? 2 : 0,
+  workers: isCI ? 1 : undefined,
+  reporter: isCI ? 'github' : 'list',
   use: {
-    baseURL: 'http://localhost:5173',
+    baseURL: `http://localhost:${port}`,
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
   },
@@ -28,10 +32,11 @@ const config: PlaywrightTestConfig = {
     },
   ],
   webServer: {
-    command: 'bun run dev',
-    port: 5173,
-    reuseExistingServer: !process.env.CI,
+    command: isCI ? 'bun run build && bun run preview' : 'bun run dev',
+    port,
+    reuseExistingServer: !isCI,
     timeout: 120000,
+    stdout: 'pipe',
   },
 };
 
