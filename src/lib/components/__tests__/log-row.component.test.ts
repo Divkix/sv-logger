@@ -61,7 +61,7 @@ describe('LogRow', () => {
       render(LogRow, { props: { log } });
 
       // Should show a placeholder or handle gracefully
-      expect(screen.getByTestId('log-timestamp')).toBeInTheDocument();
+      expect(screen.getByTestId('log-timestamp-desktop')).toBeInTheDocument();
     });
   });
 
@@ -114,7 +114,7 @@ describe('LogRow', () => {
       const log = { ...baseLog, message: longMessage };
       render(LogRow, { props: { log } });
 
-      const messageElement = screen.getByTestId('log-message');
+      const messageElement = screen.getByTestId('log-message-desktop');
       expect(messageElement).toBeInTheDocument();
       // Should have CSS truncation class
       expect(messageElement).toHaveClass('truncate');
@@ -124,7 +124,7 @@ describe('LogRow', () => {
       const log = { ...baseLog, message: 'Some message' };
       render(LogRow, { props: { log } });
 
-      const messageElement = screen.getByTestId('log-message');
+      const messageElement = screen.getByTestId('log-message-desktop');
       expect(messageElement).toHaveClass('max-w-md');
     });
   });
