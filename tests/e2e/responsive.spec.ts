@@ -152,14 +152,16 @@ test.describe('Responsive Design - Mobile Viewport', () => {
 
     // Bottom nav should contain key navigation items
     await expect(bottomNav.getByRole('link', { name: /home|dashboard/i })).toBeVisible();
-    await expect(bottomNav.getByRole('link', { name: /stats/i })).toBeVisible();
+    // Use testid for stats link for reliability
+    await expect(bottomNav.locator('[data-testid="nav-stats"]')).toBeVisible();
   });
 
   test('should hide desktop header navigation on mobile', async ({ page }) => {
     await page.goto(`/projects/${testProject.id}`);
 
-    // User name text should be hidden on mobile (only show in bottom nav or menu)
-    const userText = page.locator('header').getByText(TEST_USER.email);
+    // User name/email text should be hidden on mobile (only show in bottom nav or menu)
+    // Admin user has name: 'Admin' which takes precedence over email
+    const userText = page.locator('header').getByText(/admin/i);
     await expect(userText).not.toBeVisible();
 
     // Logout text should be hidden (icon only or in menu)
@@ -257,7 +259,8 @@ test.describe('Responsive Design - Tablet Viewport', () => {
     await page.goto(`/projects/${testProject.id}`);
 
     // Header nav items should be visible
-    await expect(page.locator('header').getByText(TEST_USER.email)).toBeVisible();
+    // User display shows name if available, otherwise email (admin user has name: 'Admin')
+    await expect(page.locator('header').getByText(/admin/i)).toBeVisible();
     await expect(page.getByRole('button', { name: /logout/i })).toBeVisible();
   });
 });
@@ -303,7 +306,7 @@ test.describe('Responsive Design - Desktop Viewport', () => {
     // All filter components should be visible
     await expect(page.locator('[data-testid="level-filter"]')).toBeVisible();
     await expect(page.getByPlaceholder(/search/i)).toBeVisible();
-    await expect(page.getByRole('button', { name: '15m' })).toBeVisible();
+    await expect(page.getByRole('button', { name: /last 15 minutes/i })).toBeVisible();
     await expect(page.locator('[data-testid="live-toggle"]')).toBeVisible();
   });
 
@@ -311,7 +314,8 @@ test.describe('Responsive Design - Desktop Viewport', () => {
     await page.goto(`/projects/${testProject.id}`);
 
     // Project action buttons in header should be visible
-    await expect(page.getByRole('link', { name: /stats/i })).toBeVisible();
+    // Stats link has aria-label="View statistics" which overrides visible text
+    await expect(page.getByRole('link', { name: /view statistics/i })).toBeVisible();
     await expect(page.getByRole('button', { name: /settings/i })).toBeVisible();
   });
 });
@@ -344,23 +348,37 @@ test.describe('Responsive Design - Dashboard Page', () => {
     await page.setViewportSize(VIEWPORTS.tablet);
     await page.goto('/');
 
+    // Create a project to see the grid
+    const project = await createProject(page, `grid-test-tablet-${Date.now()}`);
+    await page.reload();
+
     const projectGrid = page.locator('[data-testid="project-grid"]');
     await expect(projectGrid).toBeVisible();
 
     // Grid should have 2 columns at tablet breakpoint
     // We'll verify by checking the grid-cols class
     await expect(projectGrid).toHaveClass(/sm:grid-cols-2/);
+
+    // Clean up
+    await deleteProject(page, project.id);
   });
 
   test('should show multi-column grid on desktop', async ({ page }) => {
     await page.setViewportSize(VIEWPORTS.desktop);
     await page.goto('/');
 
+    // Create a project to see the grid
+    const project = await createProject(page, `grid-test-desktop-${Date.now()}`);
+    await page.reload();
+
     const projectGrid = page.locator('[data-testid="project-grid"]');
     await expect(projectGrid).toBeVisible();
 
     // Grid should have 3-4 columns at desktop breakpoint
     await expect(projectGrid).toHaveClass(/lg:grid-cols-3/);
+
+    // Clean up
+    await deleteProject(page, project.id);
   });
 });
 
@@ -400,7 +418,7 @@ test.describe('Responsive Design - Filter Collapsing Interaction', () => {
     await expect(filterPanel).toBeVisible();
 
     // Close filters by clicking backdrop
-    await page.locator('.fixed.bg-black\\/50').click({ position: { x: 10, y: 10 } });
+    await page.getByRole('button', { name: /close filter panel/i }).click();
     await expect(filterPanel).not.toBeVisible();
   });
 
@@ -440,7 +458,7 @@ test.describe('Responsive Design - Filter Collapsing Interaction', () => {
       .click();
 
     // Close filter panel by clicking close button
-    await filterPanel.getByRole('button', { name: /close/i }).click();
+    await filterPanel.getByRole('button', { name: /close filters/i }).click();
 
     // Badge should show active filter count
     const filterBadge = page.locator(
@@ -529,7 +547,8 @@ test.describe('Responsive Design - Bottom Navigation', () => {
     await page.goto(`/projects/${testProject.id}`);
 
     const bottomNav = page.locator('[data-testid="bottom-nav"]');
-    await bottomNav.getByRole('link', { name: /stats/i }).click();
+    // Use testid for stats link for reliability
+    await bottomNav.locator('[data-testid="nav-stats"]').click();
 
     await expect(page).toHaveURL(`/projects/${testProject.id}/stats`);
   });
@@ -554,8 +573,8 @@ test.describe('Responsive Design - Bottom Navigation', () => {
     const logsNavItem = bottomNav.locator('[data-testid="nav-logs"]');
     await expect(logsNavItem).toHaveAttribute('data-active', 'true');
 
-    // Navigate to stats
-    await bottomNav.getByRole('link', { name: /stats/i }).click();
+    // Navigate to stats using testid for reliability
+    await bottomNav.locator('[data-testid="nav-stats"]').click();
 
     // "Stats" should now be active
     const statsNavItem = bottomNav.locator('[data-testid="nav-stats"]');
@@ -601,7 +620,8 @@ test.describe('Responsive Design - Accessibility', () => {
     await page.goto(`/projects/${testProject.id}`);
 
     const bottomNav = page.locator('[data-testid="bottom-nav"]');
-    await expect(bottomNav).toHaveAttribute('role', 'navigation');
+    // <nav> element has implicit navigation role - use toHaveRole() instead of toHaveAttribute()
+    await expect(bottomNav).toHaveRole('navigation');
     await expect(bottomNav).toHaveAttribute('aria-label', /main|navigation/i);
   });
 
@@ -619,5 +639,6 @@ test.describe('Responsive Design - Accessibility', () => {
 
     // Should be able to close with Escape (focus is trapped in panel)
     await page.keyboard.press('Escape');
+    await expect(filterPanel).not.toBeVisible();
   });
 });

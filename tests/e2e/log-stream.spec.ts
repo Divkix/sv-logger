@@ -387,24 +387,24 @@ test.describe('Log Stream Page - Time Range Filter', () => {
     await page.goto(`/projects/${testProject.id}`);
 
     // Time range picker should be visible with all options
-    await expect(page.getByRole('button', { name: '15m' })).toBeVisible();
-    await expect(page.getByRole('button', { name: '1h' })).toBeVisible();
-    await expect(page.getByRole('button', { name: '24h' })).toBeVisible();
-    await expect(page.getByRole('button', { name: '7d' })).toBeVisible();
+    await expect(page.getByRole('button', { name: /last 15 minutes/i })).toBeVisible();
+    await expect(page.getByRole('button', { name: /last hour/i })).toBeVisible();
+    await expect(page.getByRole('button', { name: /last 24 hours/i })).toBeVisible();
+    await expect(page.getByRole('button', { name: /last 7 days/i })).toBeVisible();
   });
 
   test('should highlight selected time range', async ({ page }) => {
     await page.goto(`/projects/${testProject.id}`);
 
     // Default should be 1h
-    const hourButton = page.getByRole('button', { name: '1h' });
+    const hourButton = page.getByRole('button', { name: /last hour/i });
     await expect(hourButton).toHaveAttribute('data-selected', 'true');
 
     // Click 24h
-    await page.getByRole('button', { name: '24h' }).click();
+    await page.getByRole('button', { name: /last 24 hours/i }).click();
 
     // 24h should now be selected
-    await expect(page.getByRole('button', { name: '24h' })).toHaveAttribute(
+    await expect(page.getByRole('button', { name: /last 24 hours/i })).toHaveAttribute(
       'data-selected',
       'true',
     );
@@ -421,7 +421,7 @@ test.describe('Log Stream Page - Time Range Filter', () => {
     await page.goto(`/projects/${testProject.id}`);
 
     // Should show recent log with 15m filter
-    await page.getByRole('button', { name: '15m' }).click();
+    await page.getByRole('button', { name: /last 15 minutes/i }).click();
     await expect(page.getByText('Recent log message')).toBeVisible();
   });
 });
