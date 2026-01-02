@@ -30,7 +30,7 @@ bun run db:studio        # Open Drizzle Studio
 
 ## Tech Stack
 
-- **Framework:** SvelteKit with adapter-node
+- **Framework:** SvelteKit with svelte-adapter-bun
 - **Database:** PostgreSQL with Drizzle ORM
 - **Auth:** better-auth (planned)
 - **UI:** shadcn-svelte + Tailwind CSS v4

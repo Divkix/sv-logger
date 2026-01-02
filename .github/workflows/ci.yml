@@ -257,7 +257,7 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: Build application
-        run: bun run build
+        run: bun --bun run build
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4

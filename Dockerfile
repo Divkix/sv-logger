@@ -48,7 +48,7 @@ COPY . .
 ENV NODE_ENV=production
 
 # Build the SvelteKit app (creates /app/build directory)
-RUN bun run build
+RUN bun --bun run build
 
 # -----------------------------------------------------------------------------
 # Stage 4: Production runtime
