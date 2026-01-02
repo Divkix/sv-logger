@@ -1,6 +1,7 @@
 <script lang="ts">
 import XIcon from '@lucide/svelte/icons/x';
 import { cn } from '$lib/utils';
+import { focusTrap } from '$lib/utils/focus-trap';
 import Button from './ui/button/button.svelte';
 import Input from './ui/input/input.svelte';
 
@@ -8,14 +9,31 @@ interface Props {
   open: boolean;
   onClose?: () => void;
   onCreate?: (name: string) => Promise<void>;
+  triggerElement?: HTMLElement | null;
   class?: string;
 }
 
-const { open, onClose, onCreate, class: className }: Props = $props();
+const { open, onClose, onCreate, triggerElement = null, class: className }: Props = $props();
 
 let name = $state('');
 let error = $state('');
 let isSubmitting = $state(false);
+let previouslyFocusedElement: HTMLElement | null = $state(null);
+
+// Store the previously focused element when modal opens
+$effect(() => {
+  if (open && !previouslyFocusedElement) {
+    previouslyFocusedElement = (triggerElement || document.activeElement) as HTMLElement;
+  }
+});
+
+// Restore focus when modal closes
+$effect(() => {
+  if (!open && previouslyFocusedElement) {
+    previouslyFocusedElement.focus();
+    previouslyFocusedElement = null;
+  }
+});
 
 function reset() {
   name = '';
@@ -83,14 +101,15 @@ async function handleSubmit(event: Event) {
     data-testid="modal-overlay"
     class="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm animate-in fade-in-0 duration-200"
     onclick={handleOverlayClick}
+    role="presentation"
   >
-    <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
     <div
       role="dialog"
       aria-labelledby="create-project-title"
       aria-modal="true"
-      tabindex="0"
+      tabindex="-1"
       data-testid="modal-content"
+      use:focusTrap={{ initialFocus: '#project-name' }}
       class={cn(
         'bg-background fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-lg border p-6 shadow-lg animate-in fade-in-0 zoom-in-95 duration-200',
         className,
@@ -103,11 +122,11 @@ async function handleSubmit(event: Event) {
         <button
           type="button"
           data-testid="close-button"
-          aria-label="Close"
+          aria-label="Close create project dialog"
           class="ring-offset-background focus:ring-ring rounded-sm opacity-70 transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-offset-2"
           onclick={handleClose}
         >
-          <XIcon class="size-4" />
+          <XIcon class="size-4" aria-hidden="true" />
         </button>
       </div>
 

@@ -4,16 +4,18 @@ import XIcon from '@lucide/svelte/icons/x';
 import type { Log } from '$lib/server/db/schema';
 import { cn } from '$lib/utils';
 import { formatFullDate } from '$lib/utils/format';
+import { focusTrap, announceToScreenReader } from '$lib/utils/focus-trap';
 import LevelBadge from './level-badge.svelte';
 
 interface Props {
   log: Log;
   open: boolean;
   onClose?: () => void;
+  triggerElement?: HTMLElement | null;
   class?: string;
 }
 
-const { log, open, onClose, class: className }: Props = $props();
+const { log, open, onClose, triggerElement = null, class: className }: Props = $props();
 
 const formattedTimestamp = $derived(log.timestamp ? formatFullDate(log.timestamp) : null);
 
@@ -23,8 +25,26 @@ const sourceInfo = $derived(
   log.sourceFile ? (log.lineNumber ? `${log.sourceFile}:${log.lineNumber}` : log.sourceFile) : null,
 );
 
-async function copyToClipboard(text: string) {
+let previouslyFocusedElement: HTMLElement | null = $state(null);
+
+// Store the previously focused element when modal opens
+$effect(() => {
+  if (open && !previouslyFocusedElement) {
+    previouslyFocusedElement = (triggerElement || document.activeElement) as HTMLElement;
+  }
+});
+
+// Restore focus when modal closes
+$effect(() => {
+  if (!open && previouslyFocusedElement) {
+    previouslyFocusedElement.focus();
+    previouslyFocusedElement = null;
+  }
+});
+
+async function copyToClipboard(text: string, description: string) {
   await navigator.clipboard.writeText(text);
+  announceToScreenReader(`${description} copied to clipboard`);
 }
 
 function handleKeyDown(event: KeyboardEvent) {
@@ -48,14 +68,15 @@ function handleOverlayClick(event: MouseEvent) {
     data-testid="modal-overlay"
     class="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm animate-in fade-in-0 duration-200"
     onclick={handleOverlayClick}
+    role="presentation"
   >
-    <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
     <div
       role="dialog"
       aria-labelledby="log-detail-title"
       aria-modal="true"
-      tabindex="0"
+      tabindex="-1"
       data-testid="modal-content"
+      use:focusTrap={{ initialFocus: '[data-testid="close-button"]' }}
       class={cn(
         'bg-background fixed left-1/2 top-1/2 z-50 w-full max-w-2xl -translate-x-1/2 -translate-y-1/2 rounded-lg border p-6 shadow-lg animate-in fade-in-0 zoom-in-95 duration-200',
         className,
@@ -68,11 +89,11 @@ function handleOverlayClick(event: MouseEvent) {
         <button
           type="button"
           data-testid="close-button"
-          aria-label="Close"
+          aria-label="Close log details"
           class="ring-offset-background focus:ring-ring rounded-sm opacity-70 transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-offset-2"
           onclick={() => onClose?.()}
         >
-          <XIcon class="size-4" />
+          <XIcon class="size-4" aria-hidden="true" />
         </button>
       </div>
 
@@ -87,11 +108,11 @@ function handleOverlayClick(event: MouseEvent) {
           <button
             type="button"
             data-testid="copy-id-button"
-            aria-label="Copy ID"
-            class="text-muted-foreground hover:text-foreground p-1"
-            onclick={() => copyToClipboard(log.id)}
+            aria-label="Copy log ID to clipboard"
+            class="text-muted-foreground hover:text-foreground p-1 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 rounded"
+            onclick={() => copyToClipboard(log.id, 'Log ID')}
           >
-            <CopyIcon class="size-4" />
+            <CopyIcon class="size-4" aria-hidden="true" />
           </button>
         </div>
 
@@ -120,11 +141,11 @@ function handleOverlayClick(event: MouseEvent) {
           <button
             type="button"
             data-testid="copy-message-button"
-            aria-label="Copy message"
-            class="text-muted-foreground hover:text-foreground p-1 shrink-0"
-            onclick={() => copyToClipboard(log.message)}
+            aria-label="Copy message to clipboard"
+            class="text-muted-foreground hover:text-foreground p-1 shrink-0 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 rounded"
+            onclick={() => copyToClipboard(log.message, 'Message')}
           >
-            <CopyIcon class="size-4" />
+            <CopyIcon class="size-4" aria-hidden="true" />
           </button>
         </div>
 
@@ -144,11 +165,11 @@ function handleOverlayClick(event: MouseEvent) {
             <button
               type="button"
               data-testid="copy-request-id-button"
-              aria-label="Copy request ID"
-              class="text-muted-foreground hover:text-foreground p-1"
-              onclick={() => copyToClipboard(log.requestId!)}
+              aria-label="Copy request ID to clipboard"
+              class="text-muted-foreground hover:text-foreground p-1 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 rounded"
+              onclick={() => copyToClipboard(log.requestId!, 'Request ID')}
             >
-              <CopyIcon class="size-4" />
+              <CopyIcon class="size-4" aria-hidden="true" />
             </button>
           {/if}
         </div>
@@ -166,18 +187,18 @@ function handleOverlayClick(event: MouseEvent) {
         </div>
 
         <!-- Metadata -->
-        <div data-testid="metadata-section">
+        <div data-testid="metadata-section" aria-label="Log metadata">
           <div class="flex items-center justify-between">
             <span class="text-muted-foreground text-sm">Metadata</span>
             {#if log.metadata}
               <button
                 type="button"
                 data-testid="copy-metadata-button"
-                aria-label="Copy metadata"
-                class="text-muted-foreground hover:text-foreground p-1"
-                onclick={() => copyToClipboard(formattedMetadata!)}
+                aria-label="Copy metadata to clipboard"
+                class="text-muted-foreground hover:text-foreground p-1 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 rounded"
+                onclick={() => copyToClipboard(formattedMetadata!, 'Metadata')}
               >
-                <CopyIcon class="size-4" />
+                <CopyIcon class="size-4" aria-hidden="true" />
               </button>
             {/if}
           </div>
@@ -185,6 +206,7 @@ function handleOverlayClick(event: MouseEvent) {
             <pre
               data-testid="log-metadata"
               class="bg-muted mt-1 rounded-md p-3 text-sm font-mono overflow-x-auto"
+              aria-label="Log metadata JSON"
             >{formattedMetadata}</pre>
           {:else}
             <p class="text-sm">N/A</p>
