@@ -52,37 +52,34 @@ function handleKeyDown(event: KeyboardEvent) {
     onClose?.();
   }
 }
-
-function handleOverlayClick(event: MouseEvent) {
-  if (event.target === event.currentTarget) {
-    onClose?.();
-  }
-}
 </script>
 
 <svelte:document onkeydown={handleKeyDown} />
 
 {#if open}
-  <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
-  <div
+  <!-- Backdrop -->
+  <button
+    type="button"
     data-testid="modal-overlay"
-    class="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm animate-in fade-in-0 duration-200"
-    onclick={handleOverlayClick}
-    role="presentation"
+    class="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm animate-in fade-in-0 duration-200 cursor-default"
+    onclick={() => onClose?.()}
+    aria-label="Close dialog"
+    tabindex="-1"
+  ></button>
+
+  <!-- Dialog -->
+  <div
+    role="dialog"
+    aria-labelledby="log-detail-title"
+    aria-modal="true"
+    tabindex="-1"
+    data-testid="modal-content"
+    use:focusTrap={{ initialFocus: '[data-testid="close-button"]' }}
+    class={cn(
+      'bg-background fixed left-1/2 top-1/2 z-50 w-full max-w-2xl -translate-x-1/2 -translate-y-1/2 rounded-lg border p-6 shadow-lg animate-in fade-in-0 zoom-in-95 duration-200',
+      className,
+    )}
   >
-    <div
-      role="dialog"
-      aria-labelledby="log-detail-title"
-      aria-modal="true"
-      tabindex="-1"
-      data-testid="modal-content"
-      use:focusTrap={{ initialFocus: '[data-testid="close-button"]' }}
-      class={cn(
-        'bg-background fixed left-1/2 top-1/2 z-50 w-full max-w-2xl -translate-x-1/2 -translate-y-1/2 rounded-lg border p-6 shadow-lg animate-in fade-in-0 zoom-in-95 duration-200',
-        className,
-      )}
-      onclick={(e) => e.stopPropagation()}
-    >
       <!-- Header -->
       <div class="mb-4 flex items-center justify-between">
         <h2 id="log-detail-title" class="text-lg font-semibold">Log Details</h2>
@@ -213,6 +210,5 @@ function handleOverlayClick(event: MouseEvent) {
           {/if}
         </div>
       </div>
-    </div>
   </div>
 {/if}

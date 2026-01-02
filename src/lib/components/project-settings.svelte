@@ -73,12 +73,6 @@ function handleKeyDown(event: KeyboardEvent) {
   }
 }
 
-function handleOverlayClick(event: MouseEvent) {
-  if (event.target === event.currentTarget) {
-    onClose?.();
-  }
-}
-
 function handleRegenerateClick() {
   showRegenerateConfirm = true;
 }
@@ -113,26 +107,29 @@ function handleDeleteCancel() {
 <svelte:document onkeydown={handleKeyDown} />
 
 {#if open}
-  <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
-  <div
+  <!-- Backdrop -->
+  <button
+    type="button"
     data-testid="modal-overlay"
-    class="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm animate-in fade-in-0 duration-200"
-    onclick={handleOverlayClick}
-    role="presentation"
+    class="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm animate-in fade-in-0 duration-200 cursor-default"
+    onclick={() => onClose?.()}
+    aria-label="Close dialog"
+    tabindex="-1"
+  ></button>
+
+  <!-- Dialog -->
+  <div
+    role="dialog"
+    aria-labelledby="project-settings-title"
+    aria-modal="true"
+    tabindex="-1"
+    data-testid="modal-content"
+    use:focusTrap={{ initialFocus: '[data-testid="close-button"]' }}
+    class={cn(
+      'bg-background fixed left-1/2 top-1/2 z-50 w-full max-w-2xl -translate-x-1/2 -translate-y-1/2 rounded-lg border p-6 shadow-lg animate-in fade-in-0 zoom-in-95 duration-200',
+      className,
+    )}
   >
-    <div
-      role="dialog"
-      aria-labelledby="project-settings-title"
-      aria-modal="true"
-      tabindex="-1"
-      data-testid="modal-content"
-      use:focusTrap={{ initialFocus: '[data-testid="close-button"]' }}
-      class={cn(
-        'bg-background fixed left-1/2 top-1/2 z-50 w-full max-w-2xl -translate-x-1/2 -translate-y-1/2 rounded-lg border p-6 shadow-lg animate-in fade-in-0 zoom-in-95 duration-200',
-        className,
-      )}
-      onclick={(e) => e.stopPropagation()}
-    >
       <!-- Header -->
       <div class="mb-4 flex items-center justify-between">
         <h2 id="project-settings-title" class="text-lg font-semibold">Project Settings</h2>
@@ -219,19 +216,22 @@ function handleDeleteCancel() {
 
       <!-- Regenerate Confirmation Dialog -->
       {#if showRegenerateConfirm}
-        <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
         <div
-          data-testid="regenerate-confirm-dialog"
-          role="alertdialog"
-          aria-modal="true"
-          aria-labelledby="regenerate-dialog-title"
-          aria-describedby="regenerate-dialog-description"
-          tabindex="-1"
           class="fixed inset-0 z-60 flex items-center justify-center bg-black/50"
           onclick={(e) => e.stopPropagation()}
-          use:focusTrap={{ initialFocus: '[data-testid="cancel-regenerate-button"]' }}
+          onkeydown={(e) => e.stopPropagation()}
+          role="presentation"
         >
-          <div class="bg-background w-full max-w-md rounded-lg border p-6 shadow-lg">
+          <div
+            data-testid="regenerate-confirm-dialog"
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="regenerate-dialog-title"
+            aria-describedby="regenerate-dialog-description"
+            tabindex="-1"
+            class="bg-background w-full max-w-md rounded-lg border p-6 shadow-lg"
+            use:focusTrap={{ initialFocus: '[data-testid="cancel-regenerate-button"]' }}
+          >
             <h3 id="regenerate-dialog-title" class="text-lg font-semibold">Regenerate API Key?</h3>
             <p id="regenerate-dialog-description" class="text-muted-foreground mt-2 text-sm">
               This will invalidate the current API key immediately. Any applications using the old
@@ -261,19 +261,22 @@ function handleDeleteCancel() {
 
       <!-- Delete Confirmation Dialog -->
       {#if showDeleteConfirm}
-        <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
         <div
-          data-testid="delete-confirm-dialog"
-          role="alertdialog"
-          aria-modal="true"
-          aria-labelledby="delete-dialog-title"
-          aria-describedby="delete-dialog-description"
-          tabindex="-1"
           class="fixed inset-0 z-60 flex items-center justify-center bg-black/50"
           onclick={(e) => e.stopPropagation()}
-          use:focusTrap={{ initialFocus: '[data-testid="delete-confirm-input"]' }}
+          onkeydown={(e) => e.stopPropagation()}
+          role="presentation"
         >
-          <div class="bg-background w-full max-w-md rounded-lg border p-6 shadow-lg">
+          <div
+            data-testid="delete-confirm-dialog"
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="delete-dialog-title"
+            aria-describedby="delete-dialog-description"
+            tabindex="-1"
+            class="bg-background w-full max-w-md rounded-lg border p-6 shadow-lg"
+            use:focusTrap={{ initialFocus: '[data-testid="delete-confirm-input"]' }}
+          >
             <h3 id="delete-dialog-title" class="text-lg font-semibold text-destructive">Delete Project?</h3>
             <p id="delete-dialog-description" class="text-muted-foreground mt-2 text-sm" data-testid="delete-instruction">
               This action cannot be undone. Type <code class="bg-muted rounded px-1 font-mono"
@@ -312,6 +315,5 @@ function handleDeleteCancel() {
           </div>
         </div>
       {/if}
-    </div>
   </div>
 {/if}

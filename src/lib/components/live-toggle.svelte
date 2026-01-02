@@ -8,7 +8,6 @@ interface Props {
   onchange?: (enabled: boolean) => void;
 }
 
-// biome-ignore lint/style/useConst: Svelte 5 requires `let` for bindable props
 let { enabled = $bindable(true), disabled = false, onchange }: Props = $props();
 </script>
 

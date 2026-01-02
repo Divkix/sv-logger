@@ -2,7 +2,6 @@
 import { Switch as SwitchPrimitive, type Switch as SwitchPrimitiveType } from 'bits-ui';
 import { cn, type WithoutChildrenOrChild } from '$lib/utils.js';
 
-// biome-ignore lint/style/useConst: Svelte 5 requires `let` for bindable props
 let {
   ref = $bindable(null),
   class: className,
