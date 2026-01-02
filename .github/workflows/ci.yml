@@ -30,7 +30,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
@@ -42,7 +42,7 @@ jobs:
         run: echo "dir=$(bun pm cache)" >> $GITHUB_OUTPUT
 
       - name: Cache bun dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ${{ steps.bun-cache-dir.outputs.dir }}
           key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lockb') }}
@@ -68,7 +68,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
@@ -80,7 +80,7 @@ jobs:
         run: echo "dir=$(bun pm cache)" >> $GITHUB_OUTPUT
 
       - name: Cache bun dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ${{ steps.bun-cache-dir.outputs.dir }}
           key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lockb') }}
@@ -103,7 +103,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
@@ -115,7 +115,7 @@ jobs:
         run: echo "dir=$(bun pm cache)" >> $GITHUB_OUTPUT
 
       - name: Cache bun dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ${{ steps.bun-cache-dir.outputs.dir }}
           key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lockb') }}
@@ -158,7 +158,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
@@ -170,7 +170,7 @@ jobs:
         run: echo "dir=$(bun pm cache)" >> $GITHUB_OUTPUT
 
       - name: Cache bun dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ${{ steps.bun-cache-dir.outputs.dir }}
           key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lockb') }}
@@ -185,7 +185,7 @@ jobs:
         run: echo "version=$(bunx playwright --version | cut -d' ' -f2)" >> $GITHUB_OUTPUT
 
       - name: Cache Playwright browsers
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         id: playwright-cache
         with:
           path: ~/.cache/ms-playwright
@@ -216,7 +216,7 @@ jobs:
 
       - name: Upload Playwright artifacts
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: playwright-report-${{ matrix.browser }}-${{ github.run_id }}
           path: |
@@ -234,7 +234,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
@@ -246,7 +246,7 @@ jobs:
         run: echo "dir=$(bun pm cache)" >> $GITHUB_OUTPUT
 
       - name: Cache bun dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ${{ steps.bun-cache-dir.outputs.dir }}
           key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lockb') }}
@@ -260,7 +260,7 @@ jobs:
         run: bun --bun run build
 
       - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: build-${{ github.run_id }}
           path: build/
