@@ -96,25 +96,28 @@ describe('LogTable', () => {
     it('renders LogRow component for each log', () => {
       render(LogTable, { props: { logs: sampleLogs, loading: false } });
 
-      expect(screen.getByText('First log message')).toBeInTheDocument();
-      expect(screen.getByText('Second log message')).toBeInTheDocument();
-      expect(screen.getByText('Third log message')).toBeInTheDocument();
+      const table = screen.getByRole('table');
+      expect(within(table).getByText('First log message')).toBeInTheDocument();
+      expect(within(table).getByText('Second log message')).toBeInTheDocument();
+      expect(within(table).getByText('Third log message')).toBeInTheDocument();
     });
 
     it('renders log levels correctly', () => {
       render(LogTable, { props: { logs: sampleLogs, loading: false } });
 
-      expect(screen.getByText('INFO')).toBeInTheDocument();
-      expect(screen.getByText('ERROR')).toBeInTheDocument();
-      expect(screen.getByText('DEBUG')).toBeInTheDocument();
+      const table = screen.getByRole('table');
+      expect(within(table).getByText('INFO')).toBeInTheDocument();
+      expect(within(table).getByText('ERROR')).toBeInTheDocument();
+      expect(within(table).getByText('DEBUG')).toBeInTheDocument();
     });
 
     it('renders timestamps correctly', () => {
       render(LogTable, { props: { logs: sampleLogs, loading: false } });
 
-      expect(screen.getByText('14:30:45.123')).toBeInTheDocument();
-      expect(screen.getByText('14:31:00.000')).toBeInTheDocument();
-      expect(screen.getByText('14:32:00.000')).toBeInTheDocument();
+      const table = screen.getByRole('table');
+      expect(within(table).getByText('14:30:45.123')).toBeInTheDocument();
+      expect(within(table).getByText('14:31:00.000')).toBeInTheDocument();
+      expect(within(table).getByText('14:32:00.000')).toBeInTheDocument();
     });
 
     it('propagates onLogClick callback to log rows', async () => {
@@ -132,9 +135,10 @@ describe('LogTable', () => {
       const singleLog = [createLog({ id: 'single_log', message: 'Only one log' })];
       render(LogTable, { props: { logs: singleLog, loading: false } });
 
+      const table = screen.getByRole('table');
       const rows = screen.getAllByTestId('log-row');
       expect(rows).toHaveLength(1);
-      expect(screen.getByText('Only one log')).toBeInTheDocument();
+      expect(within(table).getByText('Only one log')).toBeInTheDocument();
     });
   });
 
@@ -185,7 +189,8 @@ describe('LogTable', () => {
     it('shows "No logs" text in empty state', () => {
       render(LogTable, { props: { logs: [], loading: false } });
 
-      expect(screen.getByText(/no logs/i)).toBeInTheDocument();
+      const table = screen.getByRole('table');
+      expect(within(table).getByText(/no logs/i)).toBeInTheDocument();
     });
 
     it('hides empty state when logs are present', () => {
