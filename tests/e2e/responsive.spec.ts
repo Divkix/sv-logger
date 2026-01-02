@@ -230,9 +230,10 @@ test.describe('Responsive Design - Tablet Viewport', () => {
     const logTable = page.locator('[data-testid="log-table"] table');
     await expect(logTable).toBeVisible();
 
-    // Cards should be hidden on tablet
-    const logCards = page.locator('[data-testid="log-card"]');
-    await expect(logCards).toHaveCount(0);
+    // Cards container should be hidden on tablet (via sm:hidden CSS class)
+    // Cards exist in DOM but are not visible at tablet+ viewports
+    const logCard = page.locator('[data-testid="log-card"]').first();
+    await expect(logCard).not.toBeVisible();
   });
 
   test('should show inline filters on tablet', async ({ page }) => {
@@ -440,8 +441,9 @@ test.describe('Responsive Design - Filter Collapsing Interaction', () => {
     const errorCard = page.locator('[data-testid="log-card"]').filter({ hasText: 'Error message' });
     await expect(errorCard).toBeVisible();
 
-    // Info message should be hidden (use .first() for dual layout)
-    await expect(page.getByText('Info message').first()).not.toBeVisible();
+    // Info message should be hidden (check within visible mobile cards container)
+    const infoCard = page.locator('[data-testid="log-card"]').filter({ hasText: 'Info message' });
+    await expect(infoCard).not.toBeVisible();
   });
 
   test('should show active filter count badge on toggle button', async ({ page }) => {
