@@ -26,8 +26,13 @@ WORKDIR /app
 # Copy package files for dependency installation
 COPY package.json bun.lock ./
 
+# Skip all browser binary downloads (Playwright, Puppeteer, etc.)
+ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
+ENV PUPPETEER_SKIP_DOWNLOAD=1
+ENV PLAYWRIGHT_BROWSERS_PATH=/dev/null
+
 # Install production dependencies only
-RUN bun install --frozen-lockfile --production
+RUN bun install --frozen-lockfile --production --ignore-scripts
 
 # Install all dependencies for build stage
 FROM base AS deps-dev
