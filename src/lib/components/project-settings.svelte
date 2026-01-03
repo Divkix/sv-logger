@@ -41,7 +41,7 @@ let previouslyFocusedElement: HTMLElement | null = $state(null);
 
 // Project name editing state
 let isEditingName = $state(false);
-let editedName = $state(project.name);
+let editedName = $state('');
 let nameError = $state('');
 let isSaving = $state(false);
 
