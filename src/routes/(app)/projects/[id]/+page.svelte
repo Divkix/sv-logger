@@ -1,10 +1,14 @@
 <script lang="ts">
 import ArrowLeftIcon from '@lucide/svelte/icons/arrow-left';
 import ChartPieIcon from '@lucide/svelte/icons/chart-pie';
+import LoaderIcon from '@lucide/svelte/icons/loader';
 import SettingsIcon from '@lucide/svelte/icons/settings';
 import { goto, invalidateAll } from '$app/navigation';
 import { navigating } from '$app/stores';
+import ActiveFilterChips from '$lib/components/active-filter-chips.svelte';
 import BottomNav from '$lib/components/bottom-nav.svelte';
+import ClearFiltersButton from '$lib/components/clear-filters-button.svelte';
+import ConnectionStatus from '$lib/components/connection-status.svelte';
 import ExportButton from '$lib/components/export-button.svelte';
 import FilterPanel from '$lib/components/filter-panel.svelte';
 import LevelFilter from '$lib/components/level-filter.svelte';
@@ -68,9 +72,23 @@ let showDetailModal = $state(false);
 let showSettingsModal = $state(false);
 let loading = $state(false);
 
+// Track new log IDs for highlighting
+let newLogIds = $state<Set<string>>(new Set());
+
+// Pagination state for Load More
+let loadedMoreLogs = $state<Log[]>([]);
+// svelte-ignore state_referenced_locally
+let nextCursor = $state<string | null>(data.pagination.nextCursor ?? null);
+let isLoadingMore = $state(false);
+
 // Count active filters for badge
 const activeFilterCount = $derived(
   (selectedLevels.length > 0 ? 1 : 0) + (searchValue ? 1 : 0) + (selectedRange !== '1h' ? 1 : 0),
+);
+
+// Derive hasFilters for empty state distinction
+const hasFilters = $derived(
+  Boolean(searchValue) || selectedLevels.length > 0 || selectedRange !== '1h',
 );
 
 // Live streaming is paused when search is active
@@ -82,6 +100,14 @@ let streamedLogs = $state<Log[]>([]);
 // Handle incoming logs from SSE stream
 function handleIncomingLogs(logs: ClientLog[]) {
   const parsedLogs = logs.map(parseClientLog);
+  const ids = parsedLogs.map((l) => l.id);
+  newLogIds = new Set([...ids, ...newLogIds]);
+
+  // Remove highlight after 3s
+  setTimeout(() => {
+    newLogIds = new Set([...newLogIds].filter((id) => !ids.includes(id)));
+  }, 3000);
+
   streamedLogs = [...parsedLogs, ...streamedLogs];
 }
 
@@ -106,8 +132,15 @@ $effect(() => {
   };
 });
 
-// Combined logs: server-loaded + streamed (with proper Date conversion)
-const allLogs = $derived([...streamedLogs, ...data.logs.map(parseLogTimestamp)]);
+// Reset pagination state when data changes (filters applied)
+$effect(() => {
+  // This runs when data.logs changes (after navigation with new filters)
+  loadedMoreLogs = [];
+  nextCursor = data.pagination.nextCursor ?? null;
+});
+
+// Combined logs: streamed + server-loaded + loaded more (with proper Date conversion)
+const allLogs = $derived([...streamedLogs, ...data.logs.map(parseLogTimestamp), ...loadedMoreLogs]);
 
 function handleSearch(value: string) {
   searchValue = value;
@@ -196,6 +229,68 @@ async function handleDelete() {
     toastError(error);
   }
 }
+
+async function handleRename(name: string) {
+  const response = await fetch(`/api/projects/${data.project.id}`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ name }),
+  });
+
+  if (!response.ok) {
+    const result = await response.json();
+    throw new Error(result.message || 'Failed to update project name');
+  }
+
+  await invalidateAll();
+}
+
+async function loadMore() {
+  if (!nextCursor || isLoadingMore) return;
+  isLoadingMore = true;
+
+  try {
+    const params = new URLSearchParams();
+    params.set('cursor', nextCursor);
+    if (searchValue) params.set('search', searchValue);
+    if (selectedLevels.length > 0) params.set('level', selectedLevels.join(','));
+    params.set('range', selectedRange);
+
+    const response = await fetch(`/api/projects/${data.project.id}/logs?${params}`);
+    const result = await response.json();
+
+    loadedMoreLogs = [...loadedMoreLogs, ...result.logs.map(parseLogTimestamp)];
+    nextCursor = result.nextCursor;
+  } catch (error) {
+    toastError('Failed to load more logs');
+  } finally {
+    isLoadingMore = false;
+  }
+}
+
+function clearFilters() {
+  searchValue = '';
+  selectedLevels = [];
+  selectedRange = '1h';
+  updateFilters();
+}
+
+function handleRemoveLevel(level: LogLevel) {
+  selectedLevels = selectedLevels.filter((l) => l !== level);
+  updateFilters();
+}
+
+function handleRemoveSearch() {
+  searchValue = '';
+  updateFilters();
+}
+
+function handleRemoveRange() {
+  selectedRange = '1h';
+  updateFilters();
+}
 </script>
 
 {#if isNavigating}
@@ -238,6 +333,9 @@ async function handleDelete() {
       <!-- Live Toggle - always visible -->
       <LiveToggle bind:enabled={liveEnabled} disabled={isLivePaused} />
 
+      <!-- Connection Status -->
+      <ConnectionStatus isConnecting={logStream.isConnecting} error={logStream.error} />
+
       {#if isLivePaused}
         <span
           data-testid="live-paused-notice"
@@ -279,11 +377,43 @@ async function handleDelete() {
             />
           </div>
         {/if}
+
+        <!-- Clear Filters Button -->
+        <ClearFiltersButton visible={activeFilterCount > 0} onclick={clearFilters} />
       </FilterPanel>
+
+      <!-- Active Filter Chips (Desktop) -->
+      <ActiveFilterChips
+        levels={selectedLevels}
+        search={searchValue}
+        range={selectedRange}
+        onRemoveLevel={handleRemoveLevel}
+        onRemoveSearch={handleRemoveSearch}
+        onRemoveRange={handleRemoveRange}
+      />
     </div>
 
     <!-- Log Table (responsive: cards on mobile, table on desktop) -->
-    <LogTable logs={allLogs} {loading} onLogClick={handleLogClick} />
+    <LogTable logs={allLogs} {loading} {hasFilters} onLogClick={handleLogClick} {newLogIds} />
+
+    <!-- Load More Button -->
+    {#if nextCursor}
+      <div class="flex justify-center py-4">
+        <Button
+          data-testid="load-more-button"
+          variant="outline"
+          onclick={loadMore}
+          disabled={isLoadingMore}
+        >
+          {#if isLoadingMore}
+            <LoaderIcon class="size-4 mr-2 animate-spin" />
+            Loading...
+          {:else}
+            Load More
+          {/if}
+        </Button>
+      </div>
+    {/if}
 
     <!-- Pagination Info -->
     {#if data.pagination.total > 0}
@@ -308,6 +438,7 @@ async function handleDelete() {
   appUrl={data.appUrl}
   open={showSettingsModal}
   onClose={closeSettings}
+  onRename={handleRename}
   onRegenerate={handleRegenerate}
   onDelete={handleDelete}
 />

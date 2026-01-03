@@ -1,10 +1,11 @@
 import { json } from '@sveltejs/kit';
-import { and, count, desc, eq, gte, inArray, lte, type SQL, sql } from 'drizzle-orm';
+import { and, count, desc, eq, gte, inArray, lt, lte, or, type SQL, sql } from 'drizzle-orm';
 import type { PgliteDatabase } from 'drizzle-orm/pglite';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import type * as schema from '$lib/server/db/schema';
 import { log, project } from '$lib/server/db/schema';
 import { requireAuth } from '$lib/server/utils/auth-guard';
+import { decodeCursor, encodeCursor } from '$lib/server/utils/cursor';
 import { LOG_LEVELS, type LogLevel } from '$lib/shared/types';
 import type { RequestEvent } from './$types';
 
@@ -70,7 +71,8 @@ function buildSearchQuery(searchTerm: string): string {
  *
  * Query Parameters:
  * - limit: number (100-500, default 100) - Logs per page
- * - offset: number (default 0) - Pagination offset
+ * - offset: number (default 0) - Pagination offset (deprecated, use cursor)
+ * - cursor: string - Cursor for pagination (preferred over offset)
  * - level: string - Filter by level (comma-separated, e.g., "error,fatal")
  * - search: string - Full-text search query
  * - from: string (ISO 8601) - Start timestamp filter
@@ -80,11 +82,13 @@ function buildSearchQuery(searchTerm: string): string {
  * {
  *   logs: Array<Log>,
  *   total: number,
- *   has_more: boolean
+ *   has_more: boolean,
+ *   nextCursor?: string
  * }
  *
  * Error responses:
  * - 303 redirect to /login: Not authenticated
+ * - 400 invalid_cursor: Cursor is malformed
  * - 404 not_found: Project does not exist
  */
 export async function GET(event: RequestEvent): Promise<Response> {
@@ -108,6 +112,7 @@ export async function GET(event: RequestEvent): Promise<Response> {
   const url = event.url;
   const limitParam = url.searchParams.get('limit');
   const offsetParam = url.searchParams.get('offset');
+  const cursorParam = url.searchParams.get('cursor');
   const levelParam = url.searchParams.get('level');
   const searchParam = url.searchParams.get('search');
   const fromParam = url.searchParams.get('from');
@@ -120,7 +125,7 @@ export async function GET(event: RequestEvent): Promise<Response> {
     MAX_LIMIT,
   );
 
-  // Parse offset
+  // Parse offset (fallback for backward compatibility)
   const offset = offsetParam ? Math.max(0, Number.parseInt(offsetParam, 10) || 0) : 0;
 
   // Parse level filter
@@ -132,6 +137,30 @@ export async function GET(event: RequestEvent): Promise<Response> {
 
   // Build WHERE conditions
   const conditions: SQL[] = [eq(log.projectId, projectId)];
+
+  // Cursor-based pagination condition
+  if (cursorParam) {
+    try {
+      const { timestamp: cursorTimestamp, id: cursorId } = decodeCursor(cursorParam);
+
+      // Query: WHERE (timestamp < cursor_timestamp OR (timestamp = cursor_timestamp AND id < cursor_id))
+      // This ensures we get logs older than the cursor position
+      conditions.push(
+        or(
+          lt(log.timestamp, cursorTimestamp),
+          and(eq(log.timestamp, cursorTimestamp), lt(log.id, cursorId)),
+        ) as SQL,
+      );
+    } catch (error) {
+      return json(
+        {
+          code: 'invalid_cursor',
+          message: error instanceof Error ? error.message : 'Invalid cursor',
+        },
+        { status: 400 },
+      );
+    }
+  }
 
   // Level filter
   if (levels && levels.length > 0) {
@@ -178,12 +207,18 @@ export async function GET(event: RequestEvent): Promise<Response> {
     })
     .from(log)
     .where(whereClause)
-    .orderBy(desc(log.timestamp))
+    .orderBy(desc(log.timestamp), desc(log.id))
     .limit(limit)
-    .offset(offset);
+    .offset(cursorParam ? 0 : offset); // Only use offset if cursor is not provided
 
   // Determine if there are more logs
-  const hasMore = offset + logs.length < total;
+  const hasMore = cursorParam ? logs.length === limit : offset + logs.length < total;
+
+  // Compute next cursor if there are more logs
+  const nextCursor =
+    hasMore && logs.length > 0
+      ? encodeCursor(logs[logs.length - 1].timestamp as Date, logs[logs.length - 1].id)
+      : null;
 
   return json({
     logs: logs.map((l) => ({
@@ -192,5 +227,6 @@ export async function GET(event: RequestEvent): Promise<Response> {
     })),
     total,
     has_more: hasMore,
+    nextCursor,
   });
 }

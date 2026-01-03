@@ -1,11 +1,12 @@
 import { json } from '@sveltejs/kit';
-import { count, eq } from 'drizzle-orm';
+import { and, count, eq, ne } from 'drizzle-orm';
 import type { PgliteDatabase } from 'drizzle-orm/pglite';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import type * as schema from '$lib/server/db/schema';
 import { log, project } from '$lib/server/db/schema';
 import { invalidateApiKeyCache } from '$lib/server/utils/api-key';
 import { requireAuth } from '$lib/server/utils/auth-guard';
+import { projectUpdatePayloadSchema } from '$lib/shared/schemas/project';
 import type { RequestEvent } from './$types';
 
 type DatabaseClient = PostgresJsDatabase<typeof schema> | PgliteDatabase<typeof schema>;
@@ -98,6 +99,81 @@ export async function GET(event: RequestEvent): Promise<Response> {
       totalLogs: logCountResult?.count ?? 0,
       levelCounts: levelCountsObj,
     },
+  });
+}
+
+/**
+ * PATCH /api/projects/[id]
+ *
+ * Updates a project's editable fields (currently: name).
+ * Requires session authentication.
+ *
+ * Request body:
+ * {
+ *   name?: string  // Optional. Must be unique, 1-50 chars, alphanumeric with hyphens/underscores
+ * }
+ *
+ * Response:
+ * {
+ *   id: string,
+ *   name: string,
+ *   apiKey: string,
+ *   createdAt: string,
+ *   updatedAt: string
+ * }
+ *
+ * Error responses:
+ * - 400 validation_error: Invalid name format
+ * - 400 duplicate_name: Name already in use by another project
+ * - 404 not_found: Project does not exist
+ */
+export async function PATCH(event: RequestEvent): Promise<Response> {
+  // Require session authentication
+  await requireAuth(event);
+
+  const db = await getDbClient(event.locals);
+  const projectId = event.params.id;
+
+  // Validate request body
+  const body = await event.request.json();
+  const result = projectUpdatePayloadSchema.safeParse(body);
+  if (!result.success) {
+    const errorMessage = result.error.issues?.[0]?.message || 'Validation failed';
+    return json({ code: 'validation_error', message: errorMessage }, { status: 400 });
+  }
+
+  const { name } = result.data;
+
+  // Check for duplicate name (if name is being updated)
+  if (name) {
+    const existing = await db.query.project.findFirst({
+      where: and(eq(project.name, name), ne(project.id, projectId)),
+    });
+    if (existing) {
+      return json(
+        { code: 'duplicate_name', message: 'A project with this name already exists' },
+        { status: 400 },
+      );
+    }
+  }
+
+  // Update project
+  const [updated] = await db
+    .update(project)
+    .set({ name, updatedAt: new Date() })
+    .where(eq(project.id, projectId))
+    .returning();
+
+  if (!updated) {
+    return json({ code: 'not_found', message: 'Project not found' }, { status: 404 });
+  }
+
+  return json({
+    id: updated.id,
+    name: updated.name,
+    apiKey: updated.apiKey,
+    createdAt: updated.createdAt?.toISOString(),
+    updatedAt: updated.updatedAt?.toISOString(),
   });
 }
 

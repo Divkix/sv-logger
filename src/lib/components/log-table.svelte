@@ -7,13 +7,26 @@ import LogRow from './log-row.svelte';
 interface Props {
   logs: Log[];
   loading?: boolean;
+  hasFilters?: boolean;
   onLogClick?: (log: Log) => void;
   class?: string;
+  newLogIds?: Set<string>;
 }
 
-const { logs, loading = false, onLogClick, class: className }: Props = $props();
+const {
+  logs,
+  loading = false,
+  hasFilters,
+  onLogClick,
+  class: className,
+  newLogIds,
+}: Props = $props();
 
 const SKELETON_ROW_COUNT = 8;
+
+// Determine empty state message and test id based on hasFilters
+const emptyStateMessage = $derived(hasFilters ? 'No logs match your filters' : 'No logs yet');
+const emptyStateTestId = $derived(hasFilters ? 'log-table-no-results' : 'log-table-empty');
 </script>
 
 <div data-testid="log-table" class={cn('w-full', className)}>
@@ -31,12 +44,12 @@ const SKELETON_ROW_COUNT = 8;
         </div>
       {/each}
     {:else if logs.length === 0}
-      <div data-testid="log-table-empty" class="text-center py-8 text-muted-foreground">
-        No logs yet
+      <div data-testid={emptyStateTestId} class="text-center py-8 text-muted-foreground">
+        {emptyStateMessage}
       </div>
     {:else}
       {#each logs as log (log.id)}
-        <LogCard {log} onclick={onLogClick} />
+        <LogCard {log} onclick={onLogClick} isNew={newLogIds?.has(log.id)} />
       {/each}
     {/if}
   </div>
@@ -72,14 +85,14 @@ const SKELETON_ROW_COUNT = 8;
           </tr>
         {/each}
       {:else if logs.length === 0}
-        <tr data-testid="log-table-empty-desktop" class="text-muted-foreground">
+        <tr data-testid={emptyStateTestId} class="text-muted-foreground">
           <td colspan="3" class="h-32 text-center">
-            No logs yet
+            {emptyStateMessage}
           </td>
         </tr>
       {:else}
         {#each logs as log (log.id)}
-          <LogRow {log} onclick={onLogClick} />
+          <LogRow {log} onclick={onLogClick} isNew={newLogIds?.has(log.id)} />
         {/each}
       {/if}
     </tbody>

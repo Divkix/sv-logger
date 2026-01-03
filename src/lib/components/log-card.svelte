@@ -8,9 +8,10 @@ interface Props {
   log: Log;
   onclick?: (log: Log) => void;
   class?: string;
+  isNew?: boolean;
 }
 
-const { log, onclick, class: className }: Props = $props();
+const { log, onclick, class: className, isNew }: Props = $props();
 
 const formattedTimestamp = $derived(
   log.timestamp ? formatTimestamp(log.timestamp) : '--:--:--.---',
@@ -42,6 +43,7 @@ function handleKeyDown(event: KeyboardEvent) {
     'p-3 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors',
     className,
   )}
+  class:log-new={isNew}
   role="button"
   tabindex="0"
   onclick={handleClick}

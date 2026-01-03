@@ -244,4 +244,27 @@ describe('LogRow', () => {
       expect(screen.queryByText('auth.ts:42')).not.toBeInTheDocument();
     });
   });
+
+  describe('highlight new logs', () => {
+    it('applies log-new class when isNew is true', () => {
+      render(LogRow, { props: { log: baseLog, isNew: true } });
+
+      const row = screen.getByTestId('log-row');
+      expect(row).toHaveClass('log-new');
+    });
+
+    it('does not apply log-new class when isNew is false', () => {
+      render(LogRow, { props: { log: baseLog, isNew: false } });
+
+      const row = screen.getByTestId('log-row');
+      expect(row).not.toHaveClass('log-new');
+    });
+
+    it('does not apply log-new class when isNew is undefined', () => {
+      render(LogRow, { props: { log: baseLog } });
+
+      const row = screen.getByTestId('log-row');
+      expect(row).not.toHaveClass('log-new');
+    });
+  });
 });

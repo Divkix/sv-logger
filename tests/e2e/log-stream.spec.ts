@@ -589,8 +589,9 @@ test.describe('Log Stream Page - Empty State', () => {
   test('should show empty state when no logs exist', async ({ page }) => {
     await page.goto(`/projects/${testProject.id}`);
 
-    // Should show empty message (desktop table has data-testid="log-table-empty-desktop")
-    await expect(page.locator('[data-testid="log-table-empty-desktop"]')).toBeVisible();
+    // Should show empty message - wait for log table to load, then check desktop table empty state
+    await expect(page.locator('[data-testid="log-table"]')).toBeVisible();
+    await expect(page.getByRole('cell', { name: 'No logs yet' })).toBeVisible();
   });
 });
 

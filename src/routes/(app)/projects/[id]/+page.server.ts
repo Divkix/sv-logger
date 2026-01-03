@@ -1,8 +1,9 @@
 import { error } from '@sveltejs/kit';
-import { and, count, desc, eq, gte, inArray, type SQL, sql } from 'drizzle-orm';
+import { and, count, desc, eq, gte, inArray, lt, or, type SQL, sql } from 'drizzle-orm';
 import { env } from '$lib/server/config';
 import { log, project } from '$lib/server/db/schema';
 import { requireAuth } from '$lib/server/utils/auth-guard';
+import { decodeCursor, encodeCursor } from '$lib/server/utils/cursor';
 import { LOG_LEVELS, type LogLevel } from '$lib/shared/types';
 import type { PageServerLoad } from './$types';
 
@@ -84,6 +85,7 @@ export const load: PageServerLoad = async (event) => {
   const url = event.url;
   const limitParam = url.searchParams.get('limit');
   const offsetParam = url.searchParams.get('offset');
+  const cursorParam = url.searchParams.get('cursor');
   const levelParam = url.searchParams.get('level');
   const searchParam = url.searchParams.get('search');
   const rangeParam = url.searchParams.get('range') || '1h';
@@ -102,6 +104,24 @@ export const load: PageServerLoad = async (event) => {
 
   // Build WHERE conditions
   const conditions: SQL[] = [eq(log.projectId, projectId)];
+
+  // Cursor-based pagination condition
+  if (cursorParam) {
+    try {
+      const { timestamp: cursorTimestamp, id: cursorId } = decodeCursor(cursorParam);
+
+      // Query: WHERE (timestamp < cursor_timestamp OR (timestamp = cursor_timestamp AND id < cursor_id))
+      conditions.push(
+        or(
+          lt(log.timestamp, cursorTimestamp),
+          and(eq(log.timestamp, cursorTimestamp), lt(log.id, cursorId)),
+        ) as SQL,
+      );
+    } catch {
+      // Invalid cursor - ignore it and continue without cursor pagination
+      // This provides better UX than throwing an error
+    }
+  }
 
   // Level filter
   if (levels && levels.length > 0) {
@@ -144,11 +164,18 @@ export const load: PageServerLoad = async (event) => {
     })
     .from(log)
     .where(whereClause)
-    .orderBy(desc(log.timestamp))
+    .orderBy(desc(log.timestamp), desc(log.id))
     .limit(limit)
-    .offset(offset);
+    .offset(cursorParam ? 0 : offset); // Only use offset if cursor is not provided
 
-  const hasMore = offset + logs.length < total;
+  // Determine if there are more logs
+  const hasMore = cursorParam ? logs.length === limit : offset + logs.length < total;
+
+  // Compute next cursor if there are more logs
+  const nextCursor =
+    hasMore && logs.length > 0
+      ? encodeCursor(logs[logs.length - 1].timestamp as Date, logs[logs.length - 1].id)
+      : null;
 
   return {
     project: {
@@ -167,6 +194,7 @@ export const load: PageServerLoad = async (event) => {
       hasMore,
       limit,
       offset,
+      nextCursor,
     },
     filters: {
       levels: levels ?? [],

@@ -15,6 +15,7 @@ interface Props {
   appUrl?: string | null;
   open: boolean;
   onClose?: () => void;
+  onRename?: (name: string) => Promise<void>;
   onRegenerate?: () => void;
   onDelete?: () => void;
   triggerElement?: HTMLElement | null;
@@ -26,6 +27,7 @@ const {
   appUrl = null,
   open,
   onClose,
+  onRename,
   onRegenerate,
   onDelete,
   triggerElement = null,
@@ -36,6 +38,12 @@ let showRegenerateConfirm = $state(false);
 let showDeleteConfirm = $state(false);
 let deleteConfirmInput = $state('');
 let previouslyFocusedElement: HTMLElement | null = $state(null);
+
+// Project name editing state
+let isEditingName = $state(false);
+let editedName = $state(project.name);
+let nameError = $state('');
+let isSaving = $state(false);
 
 // Store the previously focused element when modal opens
 $effect(() => {
@@ -50,6 +58,11 @@ $effect(() => {
     previouslyFocusedElement.focus();
     previouslyFocusedElement = null;
   }
+});
+
+// Reset edited name when project changes
+$effect(() => {
+  editedName = project.name;
 });
 
 const isDeleteConfirmValid = $derived(deleteConfirmInput === project.name);
@@ -116,6 +129,8 @@ function handleKeyDown(event: KeyboardEvent) {
     } else if (showDeleteConfirm) {
       showDeleteConfirm = false;
       deleteConfirmInput = '';
+    } else if (isEditingName) {
+      handleCancelEdit();
     } else {
       onClose?.();
     }
@@ -150,6 +165,52 @@ function handleDeleteConfirm() {
 function handleDeleteCancel() {
   showDeleteConfirm = false;
   deleteConfirmInput = '';
+}
+
+function handleCancelEdit() {
+  isEditingName = false;
+  editedName = project.name;
+  nameError = '';
+}
+
+async function handleSaveName() {
+  if (!onRename) return;
+
+  nameError = '';
+  const trimmedName = editedName.trim();
+
+  // Client-side validation
+  if (!trimmedName) {
+    nameError = 'Project name cannot be empty';
+    return;
+  }
+
+  if (trimmedName.length > 50) {
+    nameError = 'Project name cannot exceed 50 characters';
+    return;
+  }
+
+  if (!/^[a-zA-Z0-9_-]+$/.test(trimmedName)) {
+    nameError = 'Project name must contain only alphanumeric characters, hyphens, and underscores';
+    return;
+  }
+
+  isSaving = true;
+  try {
+    await onRename(trimmedName);
+    isEditingName = false;
+    nameError = '';
+    toastSuccess('Project name updated successfully');
+    announceToScreenReader('Project name updated successfully');
+  } catch (error) {
+    if (error instanceof Error) {
+      nameError = error.message;
+    } else {
+      nameError = 'Failed to update project name';
+    }
+  } finally {
+    isSaving = false;
+  }
 }
 </script>
 
@@ -195,6 +256,40 @@ function handleDeleteCancel() {
 
       <!-- Content -->
       <div class="space-y-6 overflow-y-auto max-h-[70vh]">
+        <!-- Project Name Section -->
+        <div>
+          <span class="text-muted-foreground text-sm font-medium">Project Name</span>
+          {#if isEditingName}
+            <div class="mt-2 space-y-2">
+              <input
+                type="text"
+                data-testid="project-name-input"
+                class="bg-background border-input w-full rounded-md border px-3 py-2 text-sm"
+                bind:value={editedName}
+                aria-invalid={!!nameError}
+              />
+              {#if nameError}
+                <p class="text-destructive text-sm" data-testid="name-error">{nameError}</p>
+              {/if}
+              <div class="flex gap-2">
+                <Button size="sm" onclick={handleSaveName} disabled={isSaving} data-testid="save-name-button">
+                  {isSaving ? 'Saving...' : 'Save'}
+                </Button>
+                <Button variant="outline" size="sm" onclick={handleCancelEdit} data-testid="cancel-edit-button">Cancel</Button>
+              </div>
+            </div>
+          {:else}
+            <div class="mt-2 flex items-center gap-2">
+              <span class="font-medium" data-testid="project-name-display">{project.name}</span>
+              <Button variant="ghost" size="sm" onclick={() => { isEditingName = true; editedName = project.name; }} data-testid="edit-name-button">
+                Edit
+              </Button>
+            </div>
+          {/if}
+        </div>
+
+        <Separator />
+
         <!-- API Key Section -->
         <div>
           <span class="text-muted-foreground text-sm font-medium">API Key</span>

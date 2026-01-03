@@ -150,8 +150,9 @@ test.describe('Log Export - Visibility', () => {
     // Navigate to project with no logs
     await page.goto(`/projects/${testProject.id}`);
 
-    // Wait for page to load and verify empty state
-    await expect(page.locator('[data-testid="log-table-empty-desktop"]')).toBeVisible();
+    // Wait for page to load and verify empty state (desktop table cell)
+    await expect(page.locator('[data-testid="log-table"]')).toBeVisible();
+    await expect(page.getByRole('cell', { name: 'No logs yet' })).toBeVisible();
 
     // Export button should not be visible
     const exportButton = page.locator('[data-testid="export-button"]');

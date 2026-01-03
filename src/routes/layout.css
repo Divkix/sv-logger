@@ -119,3 +119,16 @@
     @apply bg-background text-foreground;
   }
 }
+
+@keyframes log-highlight-fade {
+  0% {
+    background-color: oklch(0.85 0.12 145);
+  }
+  100% {
+    background-color: transparent;
+  }
+}
+
+.log-new {
+  animation: log-highlight-fade 3s ease-out forwards;
+}

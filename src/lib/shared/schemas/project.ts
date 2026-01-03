@@ -24,3 +24,22 @@ export const projectCreatePayloadSchema = z.object({
       'Project name must contain only alphanumeric characters, hyphens, and underscores',
     ),
 });
+
+/**
+ * Project update payload schema for PATCH /api/projects/[id]
+ *
+ * Name field is optional but must follow same rules as create when provided
+ */
+export const projectUpdatePayloadSchema = z.object({
+  name: z
+    .string()
+    .min(1, 'Project name cannot be empty')
+    .max(50, 'Project name cannot exceed 50 characters')
+    .regex(
+      PROJECT_NAME_PATTERN,
+      'Project name must contain only alphanumeric characters, hyphens, and underscores',
+    )
+    .optional(),
+});
+
+export type ProjectUpdatePayload = z.infer<typeof projectUpdatePayloadSchema>;
