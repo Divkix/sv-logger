@@ -122,6 +122,16 @@ async function copyCurlCommand() {
   }
 }
 
+async function copyProjectName() {
+  try {
+    await navigator.clipboard.writeText(project.name);
+    toastSuccess('Project name copied to clipboard');
+    announceToScreenReader('Project name copied to clipboard');
+  } catch {
+    toastError('Failed to copy to clipboard');
+  }
+}
+
 function handleKeyDown(event: KeyboardEvent) {
   if (event.key === 'Escape') {
     if (showRegenerateConfirm) {
@@ -432,9 +442,20 @@ async function handleSaveName() {
           >
             <h3 id="delete-dialog-title" class="text-lg font-semibold text-destructive">Delete Project?</h3>
             <p id="delete-dialog-description" class="text-muted-foreground mt-2 text-sm" data-testid="delete-instruction">
-              This action cannot be undone. Type <code class="bg-muted rounded px-1 font-mono"
-                >{project.name}</code
-              > to confirm.
+              This action cannot be undone. Type
+              <span class="inline-flex items-center gap-1">
+                <code class="bg-muted rounded px-1 font-mono">{project.name}</code>
+                <button
+                  type="button"
+                  data-testid="copy-project-name-button"
+                  aria-label="Copy project name to clipboard"
+                  class="text-muted-foreground hover:text-foreground p-0.5 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1 rounded"
+                  onclick={copyProjectName}
+                >
+                  <CopyIcon class="size-3" aria-hidden="true" />
+                </button>
+              </span>
+              to confirm.
             </p>
             <label for="delete-confirm-input" class="sr-only">Type project name to confirm deletion</label>
             <input

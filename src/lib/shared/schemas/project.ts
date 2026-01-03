@@ -41,5 +41,3 @@ export const projectUpdatePayloadSchema = z.object({
     )
     .optional(),
 });
-
-export type ProjectUpdatePayload = z.infer<typeof projectUpdatePayloadSchema>;

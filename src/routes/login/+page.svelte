@@ -1,4 +1,5 @@
 <script lang="ts">
+import { goto, invalidateAll } from '$app/navigation';
 import { authClient } from '$lib/auth-client';
 import { Button } from '$lib/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader } from '$lib/components/ui/card';
@@ -82,10 +83,10 @@ async function handleSubmit(event: Event) {
         password,
       },
       {
-        onSuccess: () => {
-          // Use hard redirect to ensure server sees the session cookie
-          // Client-side navigation (goto) doesn't reliably send cookies on first request
-          window.location.href = '/';
+        onSuccess: async () => {
+          // Invalidate all load functions to refresh session data, then navigate
+          await invalidateAll();
+          await goto('/');
         },
         onError: (ctx) => {
           // Handle error from better-auth
@@ -104,7 +105,8 @@ async function handleSubmit(event: Event) {
 
     // If we have data but onSuccess didn't fire, redirect manually
     if (data?.user) {
-      window.location.href = '/';
+      await invalidateAll();
+      await goto('/');
     }
   } catch (err) {
     // Handle unexpected errors

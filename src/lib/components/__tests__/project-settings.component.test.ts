@@ -239,6 +239,37 @@ describe('ProjectSettings', () => {
 
       expect(onDelete).not.toHaveBeenCalled();
     });
+
+    it('renders copy project name button in delete confirmation', async () => {
+      render(ProjectSettings, { props: { project: baseProject, open: true } });
+
+      const deleteButton = screen.getByTestId('delete-project-button');
+      await fireEvent.click(deleteButton);
+
+      expect(screen.getByTestId('copy-project-name-button')).toBeInTheDocument();
+    });
+
+    it('copy button has accessible label', async () => {
+      render(ProjectSettings, { props: { project: baseProject, open: true } });
+
+      const deleteButton = screen.getByTestId('delete-project-button');
+      await fireEvent.click(deleteButton);
+
+      const copyButton = screen.getByTestId('copy-project-name-button');
+      expect(copyButton).toHaveAccessibleName(/copy project name/i);
+    });
+
+    it('copies project name when copy button is clicked', async () => {
+      render(ProjectSettings, { props: { project: baseProject, open: true } });
+
+      const deleteButton = screen.getByTestId('delete-project-button');
+      await fireEvent.click(deleteButton);
+
+      const copyButton = screen.getByTestId('copy-project-name-button');
+      await fireEvent.click(copyButton);
+
+      expect(mockClipboard.writeText).toHaveBeenCalledWith(baseProject.name);
+    });
   });
 
   describe('shows usage example with curl', () => {

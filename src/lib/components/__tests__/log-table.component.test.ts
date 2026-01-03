@@ -1,4 +1,4 @@
-import { cleanup, render, screen, within } from '@testing-library/svelte';
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/svelte';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { Log } from '$lib/server/db/schema';
 import LogTable from '../log-table.svelte';
@@ -297,6 +297,187 @@ describe('LogTable', () => {
 
       const tableContainer = screen.getByTestId('log-table');
       expect(tableContainer).toHaveClass('custom-class');
+    });
+  });
+
+  describe('column sorting', () => {
+    // Logs with distinct timestamps and levels for predictable sorting tests
+    const sortableLogs: Log[] = [
+      createLog({
+        id: 'log_a',
+        message: 'Alpha message',
+        level: 'error',
+        timestamp: new Date('2024-01-15T14:30:00.000Z'),
+      }),
+      createLog({
+        id: 'log_b',
+        message: 'Beta message',
+        level: 'debug',
+        timestamp: new Date('2024-01-15T14:32:00.000Z'),
+      }),
+      createLog({
+        id: 'log_c',
+        message: 'Charlie message',
+        level: 'warn',
+        timestamp: new Date('2024-01-15T14:31:00.000Z'),
+      }),
+    ];
+
+    it('renders sortable column headers as buttons', () => {
+      render(LogTable, { props: { logs: sortableLogs, loading: false } });
+
+      const header = screen.getByTestId('log-table-header');
+      expect(within(header).getByRole('button', { name: /sort by time/i })).toBeInTheDocument();
+      expect(within(header).getByRole('button', { name: /sort by level/i })).toBeInTheDocument();
+      expect(within(header).getByRole('button', { name: /sort by message/i })).toBeInTheDocument();
+    });
+
+    it('sorts logs by timestamp ascending when Time header clicked', async () => {
+      render(LogTable, { props: { logs: sortableLogs, loading: false } });
+
+      const timeButton = screen.getByRole('button', { name: /sort by time/i });
+      await fireEvent.click(timeButton);
+
+      // After ascending sort by time: Alpha (14:30) -> Charlie (14:31) -> Beta (14:32)
+      const rows = screen.getAllByTestId('log-row');
+      expect(within(rows[0]).getByText('Alpha message')).toBeInTheDocument();
+      expect(within(rows[1]).getByText('Charlie message')).toBeInTheDocument();
+      expect(within(rows[2]).getByText('Beta message')).toBeInTheDocument();
+    });
+
+    it('sorts logs by timestamp descending on second click', async () => {
+      render(LogTable, { props: { logs: sortableLogs, loading: false } });
+
+      const timeButton = screen.getByRole('button', { name: /sort by time/i });
+      await fireEvent.click(timeButton); // asc
+      await fireEvent.click(timeButton); // desc
+
+      // After descending sort by time: Beta (14:32) -> Charlie (14:31) -> Alpha (14:30)
+      const rows = screen.getAllByTestId('log-row');
+      expect(within(rows[0]).getByText('Beta message')).toBeInTheDocument();
+      expect(within(rows[1]).getByText('Charlie message')).toBeInTheDocument();
+      expect(within(rows[2]).getByText('Alpha message')).toBeInTheDocument();
+    });
+
+    it('resets sort on third click', async () => {
+      render(LogTable, { props: { logs: sortableLogs, loading: false } });
+
+      const timeButton = screen.getByRole('button', { name: /sort by time/i });
+      await fireEvent.click(timeButton); // asc
+      await fireEvent.click(timeButton); // desc
+      await fireEvent.click(timeButton); // reset
+
+      // Original order restored: Alpha -> Beta -> Charlie
+      const rows = screen.getAllByTestId('log-row');
+      expect(within(rows[0]).getByText('Alpha message')).toBeInTheDocument();
+      expect(within(rows[1]).getByText('Beta message')).toBeInTheDocument();
+      expect(within(rows[2]).getByText('Charlie message')).toBeInTheDocument();
+    });
+
+    it('sorts logs by level severity ascending', async () => {
+      render(LogTable, { props: { logs: sortableLogs, loading: false } });
+
+      const levelButton = screen.getByRole('button', { name: /sort by level/i });
+      await fireEvent.click(levelButton);
+
+      // Level priority: debug (1) < warn (3) < error (4)
+      // Ascending: debug -> warn -> error
+      const rows = screen.getAllByTestId('log-row');
+      expect(within(rows[0]).getByText('DEBUG')).toBeInTheDocument();
+      expect(within(rows[1]).getByText('WARN')).toBeInTheDocument();
+      expect(within(rows[2]).getByText('ERROR')).toBeInTheDocument();
+    });
+
+    it('sorts logs by level severity descending on second click', async () => {
+      render(LogTable, { props: { logs: sortableLogs, loading: false } });
+
+      const levelButton = screen.getByRole('button', { name: /sort by level/i });
+      await fireEvent.click(levelButton); // asc
+      await fireEvent.click(levelButton); // desc
+
+      // Descending: error -> warn -> debug
+      const rows = screen.getAllByTestId('log-row');
+      expect(within(rows[0]).getByText('ERROR')).toBeInTheDocument();
+      expect(within(rows[1]).getByText('WARN')).toBeInTheDocument();
+      expect(within(rows[2]).getByText('DEBUG')).toBeInTheDocument();
+    });
+
+    it('sorts logs by message alphabetically ascending', async () => {
+      render(LogTable, { props: { logs: sortableLogs, loading: false } });
+
+      const messageButton = screen.getByRole('button', { name: /sort by message/i });
+      await fireEvent.click(messageButton);
+
+      // Alphabetically: Alpha -> Beta -> Charlie
+      const rows = screen.getAllByTestId('log-row');
+      expect(within(rows[0]).getByText('Alpha message')).toBeInTheDocument();
+      expect(within(rows[1]).getByText('Beta message')).toBeInTheDocument();
+      expect(within(rows[2]).getByText('Charlie message')).toBeInTheDocument();
+    });
+
+    it('sorts logs by message alphabetically descending on second click', async () => {
+      render(LogTable, { props: { logs: sortableLogs, loading: false } });
+
+      const messageButton = screen.getByRole('button', { name: /sort by message/i });
+      await fireEvent.click(messageButton); // asc
+      await fireEvent.click(messageButton); // desc
+
+      // Descending: Charlie -> Beta -> Alpha
+      const rows = screen.getAllByTestId('log-row');
+      expect(within(rows[0]).getByText('Charlie message')).toBeInTheDocument();
+      expect(within(rows[1]).getByText('Beta message')).toBeInTheDocument();
+      expect(within(rows[2]).getByText('Alpha message')).toBeInTheDocument();
+    });
+
+    it('switching sort columns resets to ascending', async () => {
+      render(LogTable, { props: { logs: sortableLogs, loading: false } });
+
+      const timeButton = screen.getByRole('button', { name: /sort by time/i });
+      const levelButton = screen.getByRole('button', { name: /sort by level/i });
+
+      await fireEvent.click(timeButton); // time asc
+      await fireEvent.click(timeButton); // time desc
+      await fireEvent.click(levelButton); // level asc (new column)
+
+      // After switching to level, should be ascending: debug -> warn -> error
+      const rows = screen.getAllByTestId('log-row');
+      expect(within(rows[0]).getByText('DEBUG')).toBeInTheDocument();
+      expect(within(rows[1]).getByText('WARN')).toBeInTheDocument();
+      expect(within(rows[2]).getByText('ERROR')).toBeInTheDocument();
+    });
+
+    it('displays sort direction indicator on active column', async () => {
+      render(LogTable, { props: { logs: sortableLogs, loading: false } });
+
+      const timeButton = screen.getByRole('button', { name: /sort by time/i });
+      await fireEvent.click(timeButton);
+
+      // aria-sort should be on the <th> parent element
+      const timeHeader = timeButton.closest('th');
+      expect(timeHeader).toHaveAttribute('aria-sort', 'ascending');
+    });
+
+    it('displays descending indicator on second click', async () => {
+      render(LogTable, { props: { logs: sortableLogs, loading: false } });
+
+      const timeButton = screen.getByRole('button', { name: /sort by time/i });
+      await fireEvent.click(timeButton); // asc
+      await fireEvent.click(timeButton); // desc
+
+      const timeHeader = timeButton.closest('th');
+      expect(timeHeader).toHaveAttribute('aria-sort', 'descending');
+    });
+
+    it('removes sort indicator after third click', async () => {
+      render(LogTable, { props: { logs: sortableLogs, loading: false } });
+
+      const timeButton = screen.getByRole('button', { name: /sort by time/i });
+      await fireEvent.click(timeButton); // asc
+      await fireEvent.click(timeButton); // desc
+      await fireEvent.click(timeButton); // reset
+
+      const timeHeader = timeButton.closest('th');
+      expect(timeHeader).toHaveAttribute('aria-sort', 'none');
     });
   });
 });
