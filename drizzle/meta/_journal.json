@@ -8,6 +8,13 @@
       "when": 1767270351378,
       "tag": "0000_deep_frightful_four",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1767473903168,
+      "tag": "0001_jazzy_the_anarchist",
+      "breakpoints": true
     }
   ]
 }
