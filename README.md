@@ -280,6 +280,16 @@ The app runs on port 3000 by default.
 | Auth errors | Verify `BETTER_AUTH_SECRET` is at least 32 characters |
 | Port 5432 in use | Stop other PostgreSQL instances or change port in `compose.yaml` |
 
+## Badge
+
+Using Logwell? Add the badge to your project:
+
+```markdown
+[![Powered by Logwell](https://img.shields.io/badge/Powered%20by-Logwell-111111?style=flat&logo=data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgdmlld0JveD0iMCAwIDUxMiA1MTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjUxMiIgaGVpZ2h0PSI1MTIiIHJ4PSIxMTUiIGZpbGw9IndoaXRlIi8+PHJlY3QgeD0iMTI4IiB5PSIxNDgiIHdpZHRoPSIyNTYiIGhlaWdodD0iNDgiIHJ4PSIyNCIgZmlsbD0iIzExMTExMSIvPjxyZWN0IHg9IjEyOCIgeT0iMjI4IiB3aWR0aD0iMjU2IiBoZWlnaHQ9IjQ4IiByeD0iMjQiIGZpbGw9IiMxMTExMTEiIGZpbGwtb3BhY2l0eT0iMC42Ii8+PHJlY3QgeD0iMTI4IiB5PSIzMDgiIHdpZHRoPSIxNjAiIGhlaWdodD0iNDgiIHJ4PSIyNCIgZmlsbD0iIzExMTExMSIgZmlsbC1vcGFjaXR5PSIwLjI1Ii8+PC9zdmc+)](https://github.com/divkix/logwell)
+```
+
+[![Powered by Logwell](https://img.shields.io/badge/Powered%20by-Logwell-111111?style=flat&logo=data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgdmlld0JveD0iMCAwIDUxMiA1MTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjUxMiIgaGVpZ2h0PSI1MTIiIHJ4PSIxMTUiIGZpbGw9IndoaXRlIi8+PHJlY3QgeD0iMTI4IiB5PSIxNDgiIHdpZHRoPSIyNTYiIGhlaWdodD0iNDgiIHJ4PSIyNCIgZmlsbD0iIzExMTExMSIvPjxyZWN0IHg9IjEyOCIgeT0iMjI4IiB3aWR0aD0iMjU2IiBoZWlnaHQ9IjQ4IiByeD0iMjQiIGZpbGw9IiMxMTExMTEiIGZpbGwtb3BhY2l0eT0iMC42Ii8+PHJlY3QgeD0iMTI4IiB5PSIzMDgiIHdpZHRoPSIxNjAiIGhlaWdodD0iNDgiIHJ4PSIyNCIgZmlsbD0iIzExMTExMSIgZmlsbC1vcGFjaXR5PSIwLjI1Ii8+PC9zdmc+)](https://github.com/divkix/logwell)
+
 ## License
 
 [MIT](LICENSE)
