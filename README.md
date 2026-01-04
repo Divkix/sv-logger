@@ -345,6 +345,22 @@ docker compose -f compose.prod.yaml down
 
 If you have an external PostgreSQL database:
 
+#### Using Pre-built Image
+
+```bash
+# Pull from GitHub Container Registry
+docker pull ghcr.io/divkix/logwell:latest
+
+# Run the container
+docker run -p 3000:3000 \
+  -e DATABASE_URL="postgresql://user:pass@host:5432/db" \
+  -e BETTER_AUTH_SECRET="your-32-char-secret" \
+  -e NODE_ENV=production \
+  ghcr.io/divkix/logwell:latest
+```
+
+#### Building Locally
+
 ```bash
 # Build the image
 docker build -t logwell .
