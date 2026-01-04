@@ -15,10 +15,10 @@ export type LogInsert = typeof schema.log.$inferInsert;
 export type LogSelect = typeof schema.log.$inferSelect;
 
 /**
- * Generates a unique API key in the format: svl_<32-random-chars>
+ * Generates a unique API key in the format: lw_<32-random-chars>
  */
 export function generateApiKey(): string {
-  return `svl_${nanoid(32)}`;
+  return `lw_${nanoid(32)}`;
 }
 
 /**

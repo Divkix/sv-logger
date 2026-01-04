@@ -541,7 +541,7 @@ test.describe('Log Stream Page - Project Settings Modal', () => {
     await page.getByRole('button', { name: /settings/i }).click();
 
     // API key should be displayed
-    await expect(page.locator('[data-testid="api-key-display"]')).toContainText('svl_');
+    await expect(page.locator('[data-testid="api-key-display"]')).toContainText('lw_');
   });
 
   test('should show curl example in settings modal', async ({ page }) => {

@@ -42,18 +42,18 @@ const CACHE_TTL_MS = 5 * 60 * 1000;
 
 /**
  * Regex pattern for API key validation
- * Format: svl_[32 alphanumeric characters including - and _]
+ * Format: lw_[32 alphanumeric characters including - and _]
  */
-const API_KEY_REGEX = /^svl_[A-Za-z0-9_-]{32}$/;
+const API_KEY_REGEX = /^lw_[A-Za-z0-9_-]{32}$/;
 
 /**
- * Generates a new API key with format: svl_[32 random alphanumeric characters]
+ * Generates a new API key with format: lw_[32 random alphanumeric characters]
  * Uses nanoid for cryptographically secure random generation
  *
- * @returns API key string in format svl_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+ * @returns API key string in format lw_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
  */
 export function generateApiKey(): string {
-  return `svl_${nanoid(32)}`;
+  return `lw_${nanoid(32)}`;
 }
 
 /**

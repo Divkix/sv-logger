@@ -80,7 +80,7 @@ const otlpSamplePayload = {
       },
       scopeLogs: [
         {
-          scope: { name: 'sv-logger' },
+          scope: { name: 'logwell' },
           logRecords: [
             {
               severityNumber: 9,

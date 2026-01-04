@@ -1,4 +1,4 @@
-# sv-logger Implementation Plan
+# Logwell Implementation Plan
 
 > TDD + Testing Trophy Methodology | SvelteKit + Drizzle + better-auth
 
@@ -174,7 +174,7 @@ export const project = pgTable('project', {
 **Install:** `bun add nanoid`
 
 **TDD Flow:**
-1. Write unit test: "generateApiKey returns svl_ prefixed 32-char string"
+1. Write unit test: "generateApiKey returns lw_ prefixed 32-char string"
 2. Write unit test: "validateApiKeyFormat rejects malformed keys"
 3. Write integration test: "validateApiKey returns projectId for valid key"
 4. Write integration test: "validateApiKey caches validated keys"

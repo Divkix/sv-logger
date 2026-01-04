@@ -28,7 +28,7 @@ async function handleLogout() {
     <div class="container mx-auto flex h-14 items-center justify-between px-4">
       <!-- Logo/Title -->
       <a href="/" class="flex items-center gap-2 font-semibold text-lg">
-        <span class="text-primary">sv-logger</span>
+        <span class="text-primary">Logwell</span>
       </a>
 
       <!-- Right side: User info, Theme toggle, Logout -->

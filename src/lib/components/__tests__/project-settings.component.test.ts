@@ -13,7 +13,7 @@ describe('ProjectSettings', () => {
   const baseProject: Project = {
     id: 'proj_123',
     name: 'my-backend',
-    apiKey: 'svl_aBcDeFgHiJkLmNoPqRsTuVwXyZ123456',
+    apiKey: 'lw_aBcDeFgHiJkLmNoPqRsTuVwXyZ123456',
     createdAt: new Date('2024-01-10T10:00:00Z'),
     updatedAt: new Date('2024-01-15T14:00:00Z'),
   };
@@ -32,7 +32,7 @@ describe('ProjectSettings', () => {
       render(ProjectSettings, { props: { project: baseProject, open: true } });
 
       expect(screen.getByTestId('api-key-display')).toHaveTextContent(
-        'svl_aBcDeFgHiJkLmNoPqRsTuVwXyZ123456',
+        'lw_aBcDeFgHiJkLmNoPqRsTuVwXyZ123456',
       );
     });
 
@@ -62,7 +62,7 @@ describe('ProjectSettings', () => {
       const copyButton = screen.getByTestId('copy-api-key-button');
       await fireEvent.click(copyButton);
 
-      expect(mockClipboard.writeText).toHaveBeenCalledWith('svl_aBcDeFgHiJkLmNoPqRsTuVwXyZ123456');
+      expect(mockClipboard.writeText).toHaveBeenCalledWith('lw_aBcDeFgHiJkLmNoPqRsTuVwXyZ123456');
     });
 
     it('copy button has accessible label', () => {
@@ -291,7 +291,7 @@ describe('ProjectSettings', () => {
       render(ProjectSettings, { props: { project: baseProject, open: true } });
 
       const curlExample = screen.getByTestId('curl-example');
-      expect(curlExample).toHaveTextContent(/svl_aBcD/);
+      expect(curlExample).toHaveTextContent(/lw_aBcD/);
     });
 
     it('curl example includes Authorization header', () => {

@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-sv-logger is a self-hosted logging platform with real-time log streaming, full-text search, and per-project API key authentication. See `dev-docs/PRD.md` for complete specifications.
+Logwell is a self-hosted logging platform with real-time log streaming, full-text search, and per-project API key authentication. See `dev-docs/PRD.md` for complete specifications.
 
 ## Commands
 

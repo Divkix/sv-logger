@@ -61,7 +61,7 @@ describe('Accessibility: Modal Focus Management', () => {
   const baseProject: Project = {
     id: 'proj_123',
     name: 'test-project',
-    apiKey: 'svl_test1234567890abcdefghijklmnop',
+    apiKey: 'lw_test1234567890abcdefghijklmnop',
     createdAt: new Date('2024-01-01'),
     updatedAt: new Date('2024-01-01'),
   };
@@ -376,7 +376,7 @@ describe('Accessibility: ARIA Labels', () => {
   const baseProject: Project = {
     id: 'proj_123',
     name: 'test-project',
-    apiKey: 'svl_test1234567890abcdefghijklmnop',
+    apiKey: 'lw_test1234567890abcdefghijklmnop',
     createdAt: new Date('2024-01-01'),
     updatedAt: new Date('2024-01-01'),
   };

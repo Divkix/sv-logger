@@ -6,7 +6,7 @@ describe('Example Unit Test', () => {
   });
 
   it('should handle strings', () => {
-    const greeting = 'Hello, sv-logger!';
-    expect(greeting).toContain('sv-logger');
+    const greeting = 'Hello, Logwell!';
+    expect(greeting).toContain('Logwell');
   });
 });

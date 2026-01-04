@@ -68,7 +68,7 @@ test.describe('App Layout - Header', () => {
     // Header should have the app title/logo
     const header = page.locator('header');
     await expect(header).toBeVisible();
-    await expect(header.getByText(/sv-logger/i)).toBeVisible();
+    await expect(header.getByText(/logwell/i)).toBeVisible();
   });
 
   test('should render header with logout button', async ({ page }) => {
@@ -144,7 +144,7 @@ test.describe('App Layout - Navigation', () => {
     const header = page.locator('header');
 
     // Either the logo/title is clickable or there's a home link
-    const homeLink = header.getByRole('link', { name: /home|dashboard|sv-logger/i });
+    const homeLink = header.getByRole('link', { name: /home|dashboard|logwell/i });
     await expect(homeLink).toBeVisible();
   });
 });

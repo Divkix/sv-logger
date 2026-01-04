@@ -2,12 +2,12 @@ import { describe, expect, it } from 'vitest';
 import { generateApiKey, validateApiKeyFormat } from './api-key';
 
 describe('API Key Generation', () => {
-  it('generateApiKey returns svl_ prefixed 32-char string', () => {
+  it('generateApiKey returns lw_ prefixed 32-char string', () => {
     const apiKey = generateApiKey();
 
     expect(apiKey).toBeDefined();
-    expect(apiKey).toMatch(/^svl_[A-Za-z0-9_-]{32}$/);
-    expect(apiKey.length).toBe(36); // 'svl_' (4 chars) + 32 chars
+    expect(apiKey).toMatch(/^lw_[A-Za-z0-9_-]{32}$/);
+    expect(apiKey.length).toBe(35); // 'lw_' (3 chars) + 32 chars
   });
 
   it('generateApiKey returns unique keys on multiple calls', () => {
@@ -24,11 +24,11 @@ describe('API Key Generation', () => {
 describe('API Key Format Validation', () => {
   it('validateApiKeyFormat accepts valid API key format', () => {
     const validKeys = [
-      'svl_aBcDeFgHiJkLmNoPqRsTuVwXyZ123456',
-      'svl_12345678901234567890123456789012',
-      'svl_abcdefghijklmnopqrstuvwxyz123456',
-      'svl_ABCDEFGHIJKLMNOPQRSTUVWXYZ123456',
-      'svl_aB1-_cD2eF3gH4iJ5kL6mN7oP8qR9sT0',
+      'lw_aBcDeFgHiJkLmNoPqRsTuVwXyZ123456',
+      'lw_12345678901234567890123456789012',
+      'lw_abcdefghijklmnopqrstuvwxyz123456',
+      'lw_ABCDEFGHIJKLMNOPQRSTUVWXYZ123456',
+      'lw_aB1-_cD2eF3gH4iJ5kL6mN7oP8qR9sT0',
     ];
 
     for (const key of validKeys) {
@@ -36,12 +36,12 @@ describe('API Key Format Validation', () => {
     }
   });
 
-  it('validateApiKeyFormat rejects key without svl_ prefix', () => {
+  it('validateApiKeyFormat rejects key without lw_ prefix', () => {
     const invalidKeys = [
       'aBcDeFgHiJkLmNoPqRsTuVwXyZ123456789',
       'api_aBcDeFgHiJkLmNoPqRsTuVwXyZ123456',
-      'sl_aBcDeFgHiJkLmNoPqRsTuVwXyZ1234567',
-      'svlaBcDeFgHiJkLmNoPqRsTuVwXyZ1234567',
+      'l_aBcDeFgHiJkLmNoPqRsTuVwXyZ12345678',
+      'lwaBcDeFgHiJkLmNoPqRsTuVwXyZ12345678',
     ];
 
     for (const key of invalidKeys) {
@@ -51,12 +51,12 @@ describe('API Key Format Validation', () => {
 
   it('validateApiKeyFormat rejects key with wrong length', () => {
     const invalidKeys = [
-      'svl_short',
-      'svl_123',
-      'svl_aBcDeFgHiJkLmNoPqRsTuVwXyZ12345', // 31 chars
-      'svl_aBcDeFgHiJkLmNoPqRsTuVwXyZ1234567', // 33 chars
-      'svl_',
-      'svl_a',
+      'lw_short',
+      'lw_123',
+      'lw_aBcDeFgHiJkLmNoPqRsTuVwXyZ12345', // 31 chars
+      'lw_aBcDeFgHiJkLmNoPqRsTuVwXyZ1234567', // 33 chars
+      'lw_',
+      'lw_a',
     ];
 
     for (const key of invalidKeys) {
@@ -66,11 +66,11 @@ describe('API Key Format Validation', () => {
 
   it('validateApiKeyFormat rejects key with invalid characters', () => {
     const invalidKeys = [
-      'svl_aBcDeFgHiJkLmNoPqRsTuVwXyZ1234$6', // $ not allowed
-      'svl_aBcDeFgHiJkLmNoPqRsTuVwXyZ1234@6', // @ not allowed
-      'svl_aBcDeFgHiJkLmNoPqRsTuVwXyZ1234!6', // ! not allowed
-      'svl_aBcDeFgHiJkLmNoPqRsTuVwXyZ1234 6', // space not allowed
-      'svl_aBcDeFgHiJkLmNoPqRsTuVwXyZ1234.6', // . not allowed
+      'lw_aBcDeFgHiJkLmNoPqRsTuVwXyZ1234$6', // $ not allowed
+      'lw_aBcDeFgHiJkLmNoPqRsTuVwXyZ1234@6', // @ not allowed
+      'lw_aBcDeFgHiJkLmNoPqRsTuVwXyZ1234!6', // ! not allowed
+      'lw_aBcDeFgHiJkLmNoPqRsTuVwXyZ1234 6', // space not allowed
+      'lw_aBcDeFgHiJkLmNoPqRsTuVwXyZ1234.6', // . not allowed
     ];
 
     for (const key of invalidKeys) {

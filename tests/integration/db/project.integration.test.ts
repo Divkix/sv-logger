@@ -7,10 +7,10 @@ import { project } from '../../../src/lib/server/db/schema';
 import { setupTestDatabase } from '../../../src/lib/server/db/test-db';
 
 /**
- * Generates a unique API key in the format: svl_<32-random-chars>
+ * Generates a unique API key in the format: lw_<32-random-chars>
  */
 function generateApiKey(): string {
-  return `svl_${nanoid(32)}`;
+  return `lw_${nanoid(32)}`;
 }
 
 describe('Project Table Schema', () => {

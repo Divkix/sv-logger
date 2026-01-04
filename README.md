@@ -1,4 +1,4 @@
-# sv-logger
+# Logwell
 
 A self-hosted logging platform with real-time log streaming, full-text search, and per-project API key authentication.
 
@@ -32,8 +32,8 @@ A self-hosted logging platform with real-time log streaming, full-text search, a
 
 ```bash
 # Clone the repository
-git clone https://github.com/divkix/sv-logger.git
-cd sv-logger
+git clone https://github.com/divkix/logwell.git
+cd logwell
 
 # Install dependencies
 bun install
@@ -87,15 +87,15 @@ openssl rand -base64 32
 1. Sign in to the dashboard
 2. Click **New Project**
 3. Enter a project name
-4. Copy the generated API key (`svl_...`)
+4. Copy the generated API key (`lw_...`)
 
 ### Send Logs
 
-sv-logger accepts logs via **OTLP/HTTP JSON** at `POST /v1/logs`.
+Logwell accepts logs via **OTLP/HTTP JSON** at `POST /v1/logs`.
 
 ```bash
 curl -X POST http://localhost:5173/v1/logs \
-  -H "Authorization: Bearer svl_YOUR_API_KEY" \
+  -H "Authorization: Bearer lw_YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "resourceLogs": [
@@ -107,7 +107,7 @@ curl -X POST http://localhost:5173/v1/logs \
         },
         "scopeLogs": [
           {
-            "scope": { "name": "sv-logger" },
+            "scope": { "name": "logwell" },
             "logRecords": [
               {
                 "severityNumber": 9,
@@ -124,7 +124,7 @@ curl -X POST http://localhost:5173/v1/logs \
 
 ### OTLP Attribute Mapping
 
-sv-logger derives some UI fields from common OTLP log attributes (if present):
+Logwell derives some UI fields from common OTLP log attributes (if present):
 
 | UI field | Preferred OTLP attribute keys |
 |----------|-------------------------------|
@@ -170,7 +170,7 @@ sv-logger derives some UI fields from common OTLP log attributes (if present):
 
 ### Docker Compose (Recommended)
 
-The easiest way to deploy sv-logger with PostgreSQL:
+The easiest way to deploy Logwell with PostgreSQL:
 
 ```bash
 # Set required environment variables
@@ -193,14 +193,14 @@ If you have an external PostgreSQL database:
 
 ```bash
 # Build the image
-docker build -t sv-logger .
+docker build -t logwell .
 
 # Run the container
 docker run -p 3000:3000 \
   -e DATABASE_URL="postgresql://user:pass@host:5432/db" \
   -e BETTER_AUTH_SECRET="your-32-char-secret" \
   -e NODE_ENV=production \
-  sv-logger
+  logwell
 ```
 
 ### Health Check

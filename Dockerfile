@@ -1,11 +1,11 @@
 # =============================================================================
-# sv-logger Production Dockerfile
+# Logwell Production Dockerfile
 # =============================================================================
 # Multi-stage build optimized for production deployment
 # Uses Bun runtime for fast performance
 #
-# Build: docker build -t sv-logger .
-# Run:   docker run -p 3000:3000 --env-file .env sv-logger
+# Build: docker build -t logwell .
+# Run:   docker run -p 3000:3000 --env-file .env logwell
 # =============================================================================
 
 # -----------------------------------------------------------------------------
@@ -71,33 +71,33 @@ FROM base AS release
 WORKDIR /app
 
 # Create non-root user for security
-RUN addgroup --system --gid 1001 svlogger && \
-    adduser --system --uid 1001 svlogger
+RUN addgroup --system --gid 1001 logwell && \
+    adduser --system --uid 1001 logwell
 
 # Copy production dependencies
-COPY --from=deps --chown=svlogger:svlogger /app/node_modules ./node_modules
+COPY --from=deps --chown=logwell:logwell /app/node_modules ./node_modules
 
 # Copy drizzle-kit and its dependencies for migrations
 # drizzle-kit is a devDependency, so we copy it from deps-dev
-COPY --from=deps-dev --chown=svlogger:svlogger /app/node_modules/drizzle-kit ./node_modules/drizzle-kit
-COPY --from=deps-dev --chown=svlogger:svlogger /app/node_modules/.bin/drizzle-kit ./node_modules/.bin/drizzle-kit
+COPY --from=deps-dev --chown=logwell:logwell /app/node_modules/drizzle-kit ./node_modules/drizzle-kit
+COPY --from=deps-dev --chown=logwell:logwell /app/node_modules/.bin/drizzle-kit ./node_modules/.bin/drizzle-kit
 
 # Copy built application
-COPY --from=build --chown=svlogger:svlogger /app/build ./build
-COPY --from=build --chown=svlogger:svlogger /app/package.json ./
+COPY --from=build --chown=logwell:logwell /app/build ./build
+COPY --from=build --chown=logwell:logwell /app/package.json ./
 
 # Copy files needed for migrations and seeding
-COPY --from=build --chown=svlogger:svlogger /app/drizzle ./drizzle
-COPY --from=build --chown=svlogger:svlogger /app/drizzle.config.ts ./
-COPY --from=build --chown=svlogger:svlogger /app/scripts ./scripts
-COPY --from=build --chown=svlogger:svlogger /app/src/lib/server ./src/lib/server
+COPY --from=build --chown=logwell:logwell /app/drizzle ./drizzle
+COPY --from=build --chown=logwell:logwell /app/drizzle.config.ts ./
+COPY --from=build --chown=logwell:logwell /app/scripts ./scripts
+COPY --from=build --chown=logwell:logwell /app/src/lib/server ./src/lib/server
 
 # Copy entrypoint script
-COPY --chown=svlogger:svlogger entrypoint.sh ./
+COPY --chown=logwell:logwell entrypoint.sh ./
 RUN chmod +x entrypoint.sh
 
 # Switch to non-root user
-USER svlogger
+USER logwell
 
 # Expose the application port
 EXPOSE 3000

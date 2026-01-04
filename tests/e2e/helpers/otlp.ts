@@ -61,7 +61,7 @@ export async function ingestOtlpLogs(
       {
         scopeLogs: [
           {
-            scope: { name: 'sv-logger-e2e' },
+            scope: { name: 'logwell-e2e' },
             logRecords,
           },
         ],

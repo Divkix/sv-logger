@@ -126,14 +126,14 @@ function handleKeyDown(event: KeyboardEvent) {
 </script>
 
 <svelte:head>
-  <title>Sign In - sv-logger</title>
+  <title>Sign In - Logwell</title>
 </svelte:head>
 
 <div class="flex min-h-screen items-center justify-center px-4">
   <Card class="w-full max-w-sm">
     <CardHeader class="text-center">
       <h1 class="text-2xl font-semibold leading-none">Sign In</h1>
-      <CardDescription>Enter your credentials to access sv-logger</CardDescription>
+      <CardDescription>Enter your credentials to access Logwell</CardDescription>
     </CardHeader>
     <CardContent>
       <form onsubmit={(e) => { e.preventDefault(); handleSubmit(e); }} novalidate class="flex flex-col gap-4">

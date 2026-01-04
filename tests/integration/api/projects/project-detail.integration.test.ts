@@ -370,7 +370,7 @@ describe('POST /api/projects/[id]/regenerate', () => {
       const body = await response.json();
 
       expect(body).toHaveProperty('apiKey');
-      expect(body.apiKey).toMatch(/^svl_[A-Za-z0-9_-]{32}$/);
+      expect(body.apiKey).toMatch(/^lw_[A-Za-z0-9_-]{32}$/);
       expect(body.apiKey).not.toBe(oldApiKey);
 
       // Verify in database

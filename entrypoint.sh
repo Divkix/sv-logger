@@ -1,7 +1,7 @@
 #!/bin/sh
 set -e
 
-echo "=== sv-logger startup ==="
+echo "=== Logwell startup ==="
 
 # Run database migrations
 echo "Running database migrations..."

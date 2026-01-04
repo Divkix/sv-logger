@@ -1,5 +1,5 @@
 # =============================================================================
-# sv-logger Production Docker Compose
+# Logwell Production Docker Compose
 # =============================================================================
 # Full production stack with app, database, and optional reverse proxy
 #
@@ -32,7 +32,7 @@ services:
       - NODE_ENV=production
       - HOST=0.0.0.0
       - PORT=3000
-      - DATABASE_URL=postgresql://svlogger:${DB_PASSWORD:-changeme}@db:5432/svlogger
+      - DATABASE_URL=postgresql://logwell:${DB_PASSWORD:-changeme}@db:5432/logwell
       - BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET:?BETTER_AUTH_SECRET is required}
       - ADMIN_PASSWORD=${ADMIN_PASSWORD:-}
       - ORIGIN=${ORIGIN:-http://localhost:3000}
@@ -46,7 +46,7 @@ services:
       start_period: 30s
       retries: 3
     networks:
-      - svlogger-network
+      - logwell-network
 
   # ---------------------------------------------------------------------------
   # PostgreSQL Database
@@ -55,18 +55,18 @@ services:
     image: postgres:18-alpine
     restart: unless-stopped
     environment:
-      POSTGRES_USER: svlogger
+      POSTGRES_USER: logwell
       POSTGRES_PASSWORD: ${DB_PASSWORD:-changeme}
-      POSTGRES_DB: svlogger
+      POSTGRES_DB: logwell
     volumes:
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U svlogger -d svlogger"]
+      test: ["CMD-SHELL", "pg_isready -U logwell -d logwell"]
       interval: 5s
       timeout: 5s
       retries: 5
     networks:
-      - svlogger-network
+      - logwell-network
     # Uncomment to expose database port externally (not recommended for production)
     # ports:
     #   - "5432:5432"
@@ -82,5 +82,5 @@ volumes:
 # Networks
 # -----------------------------------------------------------------------------
 networks:
-  svlogger-network:
+  logwell-network:
     driver: bridge

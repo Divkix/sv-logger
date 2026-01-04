@@ -40,7 +40,7 @@ function buildPartialSuccess(rejected: number) {
  * POST /v1/logs (OTLP/HTTP JSON)
  *
  * Accepts OTLP log exports via JSON Protobuf mapping.
- * Uses project API key authentication (Authorization: Bearer svl_xxx).
+ * Uses project API key authentication (Authorization: Bearer lw_xxx).
  */
 export const POST: RequestHandler = async ({ request, locals }) => {
   const db = await getDbClient(locals);

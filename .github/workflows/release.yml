@@ -316,7 +316,7 @@ jobs:
             type=raw,value=${{ steps.version.outputs.tag }}
             type=raw,value=latest
           labels: |
-            org.opencontainers.image.title=sv-logger
+            org.opencontainers.image.title=Logwell
             org.opencontainers.image.description=Self-hosted logging platform with real-time streaming
             org.opencontainers.image.source=${{ github.event.repository.html_url }}
             org.opencontainers.image.revision=${{ github.sha }}

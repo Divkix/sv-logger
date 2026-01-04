@@ -1,5 +1,5 @@
 /**
- * Performance configuration module for sv-logger.
+ * Performance configuration module for Logwell.
  *
  * This module centralizes all performance-related configuration parameters,
  * making them configurable via environment variables while providing

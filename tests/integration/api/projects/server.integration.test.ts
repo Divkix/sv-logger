@@ -272,7 +272,7 @@ describe('POST /api/projects', () => {
       expect(body).toHaveProperty('id');
       expect(body).toHaveProperty('name', 'my-new-project');
       expect(body).toHaveProperty('apiKey');
-      expect(body.apiKey).toMatch(/^svl_[A-Za-z0-9_-]{32}$/);
+      expect(body.apiKey).toMatch(/^lw_[A-Za-z0-9_-]{32}$/);
       expect(body).toHaveProperty('createdAt');
       expect(body).toHaveProperty('updatedAt');
 

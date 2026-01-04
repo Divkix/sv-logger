@@ -1,4 +1,4 @@
-# sv-logger: Product Requirements Document
+# Logwell: Product Requirements Document
 
 > A personal, high-performance logging platform with a clean, minimal interface.
 
@@ -24,7 +24,7 @@
 
 ## Overview
 
-**sv-logger** is a self-hosted logging platform designed for personal use across multiple projects. It provides:
+**Logwell** is a self-hosted logging platform designed for personal use across multiple projects. It provides:
 
 - A simple HTTP API for log ingestion (single and batch)
 - A real-time dashboard to monitor logs as they arrive
@@ -236,7 +236,7 @@ Stores project metadata and API credentials.
 CREATE TABLE project (
   id          TEXT PRIMARY KEY,              -- nanoid, e.g., "proj_V1StGXR8_Z5j"
   name        TEXT NOT NULL UNIQUE,          -- user-chosen, e.g., "my-backend"
-  api_key     TEXT NOT NULL UNIQUE,          -- "svl_" + nanoid(32)
+  api_key     TEXT NOT NULL UNIQUE,          -- "lw_" + nanoid(32)
   created_at  TIMESTAMPTZ DEFAULT NOW(),
   updated_at  TIMESTAMPTZ DEFAULT NOW()
 );
@@ -377,7 +377,7 @@ export type LogLevel = 'debug' | 'info' | 'warn' | 'error' | 'fatal';
 **Log ingestion routes**: Bearer token in Authorization header
 
 ```
-Authorization: Bearer svl_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+Authorization: Bearer lw_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 ```
 
 ### Endpoints
@@ -390,7 +390,7 @@ Ingest logs via OTLP/HTTP JSON (OpenTelemetry Protocol).
 
 **Headers:**
 ```
-Authorization: Bearer svl_xxxxx
+Authorization: Bearer lw_xxxxx
 Content-Type: application/json
 ```
 
@@ -406,7 +406,7 @@ Content-Type: application/json
       },
       "scopeLogs": [
         {
-          "scope": { "name": "sv-logger" },
+          "scope": { "name": "logwell" },
           "logRecords": [
             {
               "severityNumber": 17,
@@ -468,7 +468,7 @@ List all projects.
     {
       "id": "proj_abc",
       "name": "my-backend",
-      "api_key": "svl_xxxx...xxxx",
+      "api_key": "lw_xxxx...xxxx",
       "created_at": "2024-01-10T10:00:00Z",
       "updated_at": "2024-01-15T14:00:00Z",
       "log_count": 15420
@@ -493,7 +493,7 @@ Create a new project.
 {
   "id": "proj_xyz",
   "name": "my-new-project",
-  "api_key": "svl_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+  "api_key": "lw_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
   "created_at": "2024-01-15T14:35:00Z"
 }
 ```
@@ -507,7 +507,7 @@ Get project details.
 {
   "id": "proj_abc",
   "name": "my-backend",
-  "api_key": "svl_xxxx...xxxx",
+  "api_key": "lw_xxxx...xxxx",
   "created_at": "2024-01-10T10:00:00Z",
   "log_count": 15420,
   "level_counts": {
@@ -533,7 +533,7 @@ Regenerate the API key for a project.
 **Response (200 OK):**
 ```json
 {
-  "api_key": "svl_new_key_xxxxxxxxxxxxxxxxxxxxxxxx"
+  "api_key": "lw_new_key_xxxxxxxxxxxxxxxxxxxxxxxx"
 }
 ```
 
@@ -667,7 +667,7 @@ Get log level distribution for charts.
 **Layout:**
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│  [Logo] sv-logger                              [Theme] [Logout] │
+│  [Logo] Logwell                                [Theme] [Logout] │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                 │
 │  Projects                                      [+ New Project]  │
@@ -851,14 +851,14 @@ Get log level distribution for charts.
 │                                                                 │
 │  API Key                                                        │
 │  ┌─────────────────────────────────────────────────────────┐    │
-│  │ svl_aBcDeFgHiJkLmNoPqRsTuVwXyZ123456                    │    │
+│  │ lw_aBcDeFgHiJkLmNoPqRsTuVwXyZ123456                     │    │
 │  └─────────────────────────────────────────────────────────┘    │
 │  [📋 Copy]  [↻ Regenerate]                                      │
 │                                                                 │
 │  OTLP/HTTP Example                                              │
 │  ┌─────────────────────────────────────────────────────────┐    │
 │  │ curl -X POST https://your-domain.com/v1/logs \          │    │
-│  │   -H "Authorization: Bearer svl_aBcD..." \              │    │
+│  │   -H "Authorization: Bearer lw_aBcD..." \               │    │
 │  │   -H "Content-Type: application/json" \                 │    │
 │  │   -d '{"resourceLogs":[{"scopeLogs":[{"logRecords":...}]}}]}'│    │
 │  └─────────────────────────────────────────────────────────┘    │
@@ -1393,9 +1393,9 @@ export async function load({ request }) {
 #### Key Format
 
 ```
-svl_[32 random alphanumeric characters]
+lw_[32 random alphanumeric characters]
 
-Example: svl_aBcDeFgHiJkLmNoPqRsTuVwXyZ123456
+Example: lw_aBcDeFgHiJkLmNoPqRsTuVwXyZ123456
 ```
 
 #### Generation & Validation with Caching
@@ -1414,11 +1414,11 @@ import { error } from '@sveltejs/kit';
 // --- Key Generation ---
 
 export function generateApiKey(): string {
-  return `svl_${nanoid(32)}`;
+  return `lw_${nanoid(32)}`;
 }
 
 export function validateApiKeyFormat(key: string): boolean {
-  return /^svl_[A-Za-z0-9_-]{32}$/.test(key);
+  return /^lw_[A-Za-z0-9_-]{32}$/.test(key);
 }
 
 // --- API Key Cache ---
@@ -1682,7 +1682,7 @@ bunx @better-auth/cli@latest generate
 
 ```env
 # Database
-DATABASE_URL=postgresql://user:password@localhost:5432/svlogger
+DATABASE_URL=postgresql://user:password@localhost:5432/logwell
 
 # Authentication
 ADMIN_PASSWORD=your-secure-admin-password
