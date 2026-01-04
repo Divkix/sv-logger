@@ -1,3 +1,13 @@
+<p align="center">
+  <img src="https://raw.githubusercontent.com/Divkix/Logwell/main/static/banner.png" alt="Logwell" width="600" />
+</p>
+
+<p align="center">
+  <a href="https://www.npmjs.com/package/logwell"><img src="https://img.shields.io/npm/v/logwell.svg" alt="npm version" /></a>
+  <a href="https://www.npmjs.com/package/logwell"><img src="https://img.shields.io/npm/dm/logwell.svg" alt="npm downloads" /></a>
+  <a href="https://github.com/Divkix/Logwell/blob/main/LICENSE"><img src="https://img.shields.io/npm/l/logwell.svg" alt="license" /></a>
+</p>
+
 # logwell
 
 Official TypeScript SDK for [Logwell](https://github.com/divkix/logwell) - a self-hosted logging platform with real-time streaming and full-text search.
