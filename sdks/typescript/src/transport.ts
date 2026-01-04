@@ -21,13 +21,6 @@ function delay(attempt: number, baseDelay = 100): Promise<void> {
 }
 
 /**
- * Check if error is retryable based on status code
- */
-function isRetryableStatus(status: number): boolean {
-  return status >= 500 || status === 429;
-}
-
-/**
  * HTTP transport for sending logs to Logwell server
  *
  * Features:
@@ -50,12 +43,16 @@ export class HttpTransport {
    * @throws LogwellError on failure after all retries
    */
   async send(logs: LogEntry[]): Promise<IngestResponse> {
-    let lastError: LogwellError | null = null;
+    let lastError: LogwellError = new LogwellError(
+      'Max retries exceeded',
+      'NETWORK_ERROR',
+      undefined,
+      true,
+    );
 
     for (let attempt = 0; attempt <= this.config.maxRetries; attempt++) {
       try {
-        const response = await this.doRequest(logs);
-        return response;
+        return await this.doRequest(logs);
       } catch (error) {
         lastError = error as LogwellError;
 
@@ -71,7 +68,7 @@ export class HttpTransport {
       }
     }
 
-    throw lastError!;
+    throw lastError;
   }
 
   private async doRequest(logs: LogEntry[]): Promise<IngestResponse> {
@@ -81,7 +78,7 @@ export class HttpTransport {
       response = await fetch(this.ingestUrl, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${this.config.apiKey}`,
+          Authorization: `Bearer ${this.config.apiKey}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(logs),
@@ -118,41 +115,16 @@ export class HttpTransport {
   private createError(status: number, message: string): LogwellError {
     switch (status) {
       case 401:
-        return new LogwellError(
-          `Unauthorized: ${message}`,
-          'UNAUTHORIZED',
-          status,
-          false,
-        );
+        return new LogwellError(`Unauthorized: ${message}`, 'UNAUTHORIZED', status, false);
       case 400:
-        return new LogwellError(
-          `Validation error: ${message}`,
-          'VALIDATION_ERROR',
-          status,
-          false,
-        );
+        return new LogwellError(`Validation error: ${message}`, 'VALIDATION_ERROR', status, false);
       case 429:
-        return new LogwellError(
-          `Rate limited: ${message}`,
-          'RATE_LIMITED',
-          status,
-          true,
-        );
+        return new LogwellError(`Rate limited: ${message}`, 'RATE_LIMITED', status, true);
       default:
         if (status >= 500) {
-          return new LogwellError(
-            `Server error: ${message}`,
-            'SERVER_ERROR',
-            status,
-            true,
-          );
+          return new LogwellError(`Server error: ${message}`, 'SERVER_ERROR', status, true);
         }
-        return new LogwellError(
-          `HTTP error ${status}: ${message}`,
-          'SERVER_ERROR',
-          status,
-          false,
-        );
+        return new LogwellError(`HTTP error ${status}: ${message}`, 'SERVER_ERROR', status, false);
     }
   }
 }

@@ -68,17 +68,16 @@ describe('LogwellError', () => {
       ['INVALID_CONFIG', 'Bad config', undefined, false],
     ];
 
-    it.each(testCases)(
-      'handles %s error code correctly',
-      (code, message, statusCode, retryable) => {
-        const error = new LogwellError(message, code, statusCode, retryable);
+    it.each(
+      testCases,
+    )('handles %s error code correctly', (code, message, statusCode, retryable) => {
+      const error = new LogwellError(message, code, statusCode, retryable);
 
-        expect(error.code).toBe(code);
-        expect(error.message).toBe(message);
-        expect(error.statusCode).toBe(statusCode);
-        expect(error.retryable).toBe(retryable);
-      },
-    );
+      expect(error.code).toBe(code);
+      expect(error.message).toBe(message);
+      expect(error.statusCode).toBe(statusCode);
+      expect(error.retryable).toBe(retryable);
+    });
   });
 
   describe('serialization', () => {
@@ -106,12 +105,7 @@ describe('LogwellError', () => {
   describe('cause support', () => {
     it('supports cause option for error chaining', () => {
       const cause = new Error('Original error');
-      const error = new LogwellError(
-        'Wrapped error',
-        'NETWORK_ERROR',
-        undefined,
-        true,
-      );
+      const error = new LogwellError('Wrapped error', 'NETWORK_ERROR', undefined, true);
       // Set cause manually since we need to support it
       Object.defineProperty(error, 'cause', { value: cause });
 

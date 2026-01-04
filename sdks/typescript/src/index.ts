@@ -5,15 +5,13 @@
  */
 
 // Main client
-export { Logwell, type ChildLoggerOptions } from './client';
-
-// Types
-export type {
-  LogLevel,
-  LogEntry,
-  LogwellConfig,
-  IngestResponse,
-} from './types';
-
+export { type ChildLoggerOptions, Logwell } from './client';
 // Errors
 export { LogwellError, type LogwellErrorCode } from './errors';
+// Types
+export type {
+  IngestResponse,
+  LogEntry,
+  LogLevel,
+  LogwellConfig,
+} from './types';

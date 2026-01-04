@@ -14,10 +14,7 @@ export function createLogFixture(overrides: Partial<LogEntry> = {}): LogEntry {
 /**
  * Creates an array of log entry fixtures
  */
-export function createLogBatch(
-  count: number,
-  overrides: Partial<LogEntry> = {},
-): LogEntry[] {
+export function createLogBatch(count: number, overrides: Partial<LogEntry> = {}): LogEntry[] {
   return Array.from({ length: count }, (_, i) =>
     createLogFixture({
       message: `Batch log ${i + 1}`,
@@ -77,9 +74,7 @@ export const logFixtures = {
   withLargeMetadata: {
     level: 'info' as LogLevel,
     message: 'Log with large metadata',
-    metadata: Object.fromEntries(
-      Array.from({ length: 100 }, (_, i) => [`key_${i}`, `value_${i}`]),
-    ),
+    metadata: Object.fromEntries(Array.from({ length: 100 }, (_, i) => [`key_${i}`, `value_${i}`])),
   },
 
   withUnicode: {

@@ -1,10 +1,10 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { http, HttpResponse, delay } from 'msw';
-import { HttpTransport, type TransportConfig } from '../../src/transport';
+import { HttpResponse, http } from 'msw';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { LogwellError } from '../../src/errors';
-import { server } from '../mocks/server';
-import { BASE_URL, errorHandlers } from '../mocks/handlers';
+import { HttpTransport, type TransportConfig } from '../../src/transport';
 import { createLogBatch, createLogFixture, logFixtures } from '../fixtures/logs';
+import { BASE_URL, errorHandlers } from '../mocks/handlers';
+import { server } from '../mocks/server';
 
 describe('HttpTransport', () => {
   let defaultConfig: TransportConfig;

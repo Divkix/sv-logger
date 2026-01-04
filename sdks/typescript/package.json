@@ -2,7 +2,13 @@
   "name": "logwell",
   "version": "0.1.0",
   "description": "Official TypeScript SDK for Logwell logging platform",
-  "keywords": ["logging", "logs", "observability", "logwell", "typescript"],
+  "keywords": [
+    "logging",
+    "logs",
+    "observability",
+    "logwell",
+    "typescript"
+  ],
   "license": "MIT",
   "author": "Logwell",
   "repository": {

@@ -316,7 +316,7 @@ describe('BatchQueue', () => {
       const flush1 = queue.flush();
       const flush2 = queue.flush();
 
-      resolveFirst!();
+      resolveFirst?.();
       await flush1;
       await flush2;
 

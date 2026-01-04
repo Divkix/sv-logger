@@ -1,4 +1,4 @@
-import { http, HttpResponse, delay } from 'msw';
+import { delay, HttpResponse, http } from 'msw';
 
 const BASE_URL = 'https://test.logwell.io';
 
@@ -42,10 +42,7 @@ export const handlers = [
  */
 export const errorHandlers = {
   unauthorized: http.post(`${BASE_URL}/v1/ingest`, () =>
-    HttpResponse.json(
-      { error: 'unauthorized', message: 'Invalid API key' },
-      { status: 401 },
-    ),
+    HttpResponse.json({ error: 'unauthorized', message: 'Invalid API key' }, { status: 401 }),
   ),
 
   serverError: http.post(`${BASE_URL}/v1/ingest`, () =>

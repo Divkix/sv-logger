@@ -1,14 +1,8 @@
 {
   "$schema": "https://biomejs.dev/schemas/2.3.11/schema.json",
-  "extends": [
-    "../../biome.json"
-  ],
+  "extends": ["../../biome.json"],
   "files": {
-    "includes": [
-      "src/**/*.ts",
-      "tests/**/*.ts",
-      "*.ts"
-    ]
+    "includes": ["src/**/*.ts", "tests/**/*.ts", "*.ts"]
   },
   "linter": {
     "rules": {

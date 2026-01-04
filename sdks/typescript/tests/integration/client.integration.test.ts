@@ -1,12 +1,12 @@
+import { HttpResponse, http } from 'msw';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { http, HttpResponse } from 'msw';
-import { Logwell, type ChildLoggerOptions } from '../../src/client';
-import type { LogwellConfig, LogEntry, LogLevel } from '../../src/types';
+import { Logwell } from '../../src/client';
 import { LogwellError } from '../../src/errors';
-import { server } from '../mocks/server';
-import { BASE_URL, errorHandlers } from '../mocks/handlers';
-import { allLogLevels, createLogFixture, logFixtures } from '../fixtures/logs';
+import type { LogEntry, LogwellConfig } from '../../src/types';
 import { validConfigs } from '../fixtures/configs';
+import { allLogLevels } from '../fixtures/logs';
+import { errorHandlers } from '../mocks/handlers';
+import { server } from '../mocks/server';
 
 describe('Logwell Client', () => {
   let defaultConfig: LogwellConfig;
@@ -103,7 +103,8 @@ describe('Logwell Client', () => {
 
       expect(capturedLogs[0].timestamp).toBeDefined();
       // Should be ISO8601 format
-      expect(new Date(capturedLogs[0].timestamp!).toISOString()).toBe(capturedLogs[0].timestamp);
+      const timestamp = capturedLogs[0].timestamp as string;
+      expect(new Date(timestamp).toISOString()).toBe(timestamp);
     });
   });
 
