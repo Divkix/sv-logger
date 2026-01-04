@@ -272,4 +272,4 @@ The app runs on port 3000 by default.
 
 ## License
 
-MIT
+[MIT](LICENSE)
