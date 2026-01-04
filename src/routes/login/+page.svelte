@@ -1,6 +1,7 @@
 <script lang="ts">
 import { goto, invalidateAll } from '$app/navigation';
 import { authClient } from '$lib/auth-client';
+import Logo from '$lib/components/logo.svelte';
 import { Button } from '$lib/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader } from '$lib/components/ui/card';
 import { Input } from '$lib/components/ui/input';
@@ -132,6 +133,9 @@ function handleKeyDown(event: KeyboardEvent) {
 <div class="flex min-h-screen items-center justify-center px-4">
   <Card class="w-full max-w-sm">
     <CardHeader class="text-center">
+      <div class="flex justify-center mb-4">
+        <Logo size={56} />
+      </div>
       <h1 class="text-2xl font-semibold leading-none">Sign In</h1>
       <CardDescription>Enter your credentials to access Logwell</CardDescription>
     </CardHeader>

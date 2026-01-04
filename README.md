@@ -1,6 +1,21 @@
-# Logwell
+<p align="center">
+  <img src="static/icon.svg" alt="Logwell" width="120" height="120">
+</p>
 
-A self-hosted logging platform with real-time log streaming, full-text search, and per-project API key authentication.
+<h1 align="center">Logwell</h1>
+
+<p align="center">
+  <strong>Self-hosted logging platform with real-time streaming</strong>
+</p>
+
+<p align="center">
+  <a href="#features">Features</a> •
+  <a href="#quick-start">Quick Start</a> •
+  <a href="#usage">Usage</a> •
+  <a href="#production-deployment">Deploy</a>
+</p>
+
+---
 
 ## Features
 

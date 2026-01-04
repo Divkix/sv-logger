@@ -2,6 +2,7 @@
 import LogOut from '@lucide/svelte/icons/log-out';
 import { goto } from '$app/navigation';
 import { authClient } from '$lib/auth-client';
+import Logo from '$lib/components/logo.svelte';
 import ThemeToggle from '$lib/components/theme-toggle.svelte';
 import { Button } from '$lib/components/ui/button/index.js';
 import { toastError } from '$lib/utils/toast';
@@ -28,7 +29,8 @@ async function handleLogout() {
     <div class="container mx-auto flex h-14 items-center justify-between px-4">
       <!-- Logo/Title -->
       <a href="/" class="flex items-center gap-2 font-semibold text-lg">
-        <span class="text-primary">Logwell</span>
+        <Logo size={24} />
+        <span>Logwell</span>
       </a>
 
       <!-- Right side: User info, Theme toggle, Logout -->
