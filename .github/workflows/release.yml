@@ -11,7 +11,7 @@ on:
         type: string
 
 permissions:
-  contents: read
+  contents: write
   packages: write
 
 # Cancel in-progress releases for same tag
@@ -349,13 +349,54 @@ jobs:
           echo "- **Platforms:** \`linux/amd64\`, \`linux/arm64\`" >> $GITHUB_STEP_SUMMARY
 
   # =============================================================================
+  # Create GitHub Release
+  # =============================================================================
+  github-release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    needs: [docker-publish]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Determine version tag
+        id: version
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "tag=${{ github.event.inputs.tag }}" >> $GITHUB_OUTPUT
+          else
+            echo "tag=${{ github.ref_name }}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.tag }}
+          name: ${{ steps.version.outputs.tag }}
+          generate_release_notes: true
+          body: |
+            ## Docker Images
+
+            Pull the image:
+            ```bash
+            docker pull ghcr.io/${{ github.repository }}:${{ steps.version.outputs.tag }}
+            ```
+
+            **Digest:** `${{ needs.docker-publish.outputs.image-digest }}`
+            **Platforms:** `linux/amd64`, `linux/arm64`
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # =============================================================================
   # Final Status Check (all jobs must pass)
   # =============================================================================
   release-success:
     name: Release Success
     runs-on: ubuntu-latest
     timeout-minutes: 5
-    needs: [lint, test-unit, test-integration, test-e2e, build, docker-publish]
+    needs: [lint, test-unit, test-integration, test-e2e, build, docker-publish, github-release]
     if: always()
 
     steps:
@@ -366,7 +407,8 @@ jobs:
              [[ "${{ needs.test-integration.result }}" != "success" ]] || \
              [[ "${{ needs.test-e2e.result }}" != "success" ]] || \
              [[ "${{ needs.build.result }}" != "success" ]] || \
-             [[ "${{ needs.docker-publish.result }}" != "success" ]]; then
+             [[ "${{ needs.docker-publish.result }}" != "success" ]] || \
+             [[ "${{ needs.github-release.result }}" != "success" ]]; then
             echo "❌ One or more release jobs failed"
             exit 1
           fi
