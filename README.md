@@ -3,6 +3,19 @@
 </p>
 
 <p align="center">
+  <strong>Logwell</strong> is a self-hosted logging platform with real-time streaming, full-text search, and OTLP-compatible ingestion. Deploy in minutes, own your data.
+</p>
+
+<p align="center">
+  <em>Alpha Software — Expect breaking changes. Not recommended for production workloads.</em>
+</p>
+
+<p align="center">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License: MIT"></a>
+  <a href="https://github.com/divkix/logwell/stargazers"><img src="https://img.shields.io/github/stars/divkix/logwell" alt="GitHub stars"></a>
+</p>
+
+<p align="center">
   <a href="#features">Features</a> •
   <a href="#quick-start">Quick Start</a> •
   <a href="#usage">Usage</a> •
@@ -14,12 +27,26 @@
 
 ## Features
 
-- **Real-time streaming** - SSE-powered live log updates
-- **Full-text search** - Search across log messages and metadata
-- **Per-project API keys** - Isolated logging for multiple applications
-- **Log levels** - debug, info, warn, error, fatal with color coding
-- **Standard ingestion (OTLP/HTTP)** - Send logs using the OpenTelemetry Protocol (OTLP) `/v1/logs` endpoint
-- **Clean UI** - Minimal, responsive interface with dark mode
+- **OTLP-native ingestion** — Standard OpenTelemetry protocol, no proprietary SDKs required
+- **PostgreSQL backend** — Full-text search via tsvector, no separate search cluster needed
+- **Real-time streaming** — SSE-powered live log tailing with batching
+- **Project isolation** — Per-project API keys with separate log streams
+- **Zero telemetry** — No phone-home, no tracking, fully air-gapped deployments supported
+- **Clean UI** — Minimal interface with dark mode and log level color coding
+
+## Preview
+
+<p align="center">
+  <img src="static/logview-screen.png" alt="Logwell Dashboard" width="100%">
+</p>
+
+## Why Logwell?
+
+| vs | Logwell advantage |
+|----|-------------------|
+| Loki/Grafana | Single binary, built-in UI, no stack to maintain |
+| ELK | Lightweight PostgreSQL backend, not Elasticsearch |
+| Datadog/etc | Self-hosted, no per-GB pricing, own your data |
 
 ## Tech Stack
 
@@ -132,6 +159,34 @@ curl -X POST http://localhost:5173/v1/logs \
   }'
 ```
 
+<details>
+<summary><strong>Node.js (OpenTelemetry SDK)</strong></summary>
+
+```typescript
+import { OTLPLogExporter } from '@opentelemetry/exporter-logs-otlp-http';
+
+const exporter = new OTLPLogExporter({
+  url: 'http://localhost:5173/v1/logs',
+  headers: { 'Authorization': 'Bearer lw_YOUR_API_KEY' },
+});
+```
+
+</details>
+
+<details>
+<summary><strong>Python (OpenTelemetry SDK)</strong></summary>
+
+```python
+from opentelemetry.exporter.otlp.proto.http._log_exporter import OTLPLogExporter
+
+exporter = OTLPLogExporter(
+    endpoint="http://localhost:5173/v1/logs",
+    headers={"Authorization": "Bearer lw_YOUR_API_KEY"},
+)
+```
+
+</details>
+
 ### OTLP Attribute Mapping
 
 Logwell derives some UI fields from common OTLP log attributes (if present):
@@ -173,8 +228,10 @@ Logwell derives some UI fields from common OTLP log attributes (if present):
 | `bun run test` | Run all tests |
 | `bun run test:unit` | Run unit tests |
 | `bun run test:integration` | Run integration tests |
+| `bun run test:component` | Run component tests |
 | `bun run test:e2e` | Run E2E tests (Playwright) |
 | `bun run test:coverage` | Run tests with coverage |
+| `bun run test:ui` | Open Vitest UI |
 
 ## Production Deployment
 
@@ -270,6 +327,18 @@ The app runs on port 3000 by default.
 | `/api/projects/[id]/logs` | GET | Query logs |
 | `/api/projects/[id]/logs/stream` | POST | SSE stream |
 | `/api/projects/[id]/stats` | GET | Level distribution |
+
+## Current Limitations
+
+- **No log retention/TTL** — Logs are stored indefinitely. Manual deletion via database required.
+- **Single-user auth** — Multi-user/team support planned.
+- **No log export** — Cannot export logs to file/S3 yet.
+
+## Security
+
+- **Always use TLS** — Run behind a reverse proxy (nginx, Caddy) with HTTPS in production
+- **Protect API keys** — Treat `lw_*` keys as secrets; they grant write access to your logs
+- **Network isolation** — Consider firewall rules to restrict `/v1/logs` access to known sources
 
 ## Troubleshooting
 
