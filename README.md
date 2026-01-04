@@ -1,18 +1,13 @@
 <p align="center">
-  <img src="static/icon.svg" alt="Logwell" width="120" height="120">
-</p>
-
-<h1 align="center">Logwell</h1>
-
-<p align="center">
-  <strong>Self-hosted logging platform with real-time streaming</strong>
+  <img src="static/banner.png" alt="Logwell - Self-hosted logging for high-performance apps" width="100%">
 </p>
 
 <p align="center">
   <a href="#features">Features</a> •
   <a href="#quick-start">Quick Start</a> •
   <a href="#usage">Usage</a> •
-  <a href="#production-deployment">Deploy</a>
+  <a href="#production-deployment">Deploy</a> •
+  <a href="#license">License</a>
 </p>
 
 ---
