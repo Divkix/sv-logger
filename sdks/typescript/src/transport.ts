@@ -1,0 +1,158 @@
+import { LogwellError } from './errors';
+import type { IngestResponse, LogEntry } from './types';
+
+/**
+ * Transport configuration
+ */
+export interface TransportConfig {
+  endpoint: string;
+  apiKey: string;
+  maxRetries: number;
+  timeout?: number;
+}
+
+/**
+ * Delay helper with exponential backoff
+ */
+function delay(attempt: number, baseDelay = 100): Promise<void> {
+  const ms = Math.min(baseDelay * 2 ** attempt, 10000);
+  const jitter = Math.random() * ms * 0.3;
+  return new Promise((resolve) => setTimeout(resolve, ms + jitter));
+}
+
+/**
+ * Check if error is retryable based on status code
+ */
+function isRetryableStatus(status: number): boolean {
+  return status >= 500 || status === 429;
+}
+
+/**
+ * HTTP transport for sending logs to Logwell server
+ *
+ * Features:
+ * - Automatic retry with exponential backoff
+ * - Error classification with retryable flag
+ * - Proper error handling for all HTTP status codes
+ */
+export class HttpTransport {
+  private readonly ingestUrl: string;
+
+  constructor(private config: TransportConfig) {
+    this.ingestUrl = `${config.endpoint}/v1/ingest`;
+  }
+
+  /**
+   * Send logs to the Logwell server
+   *
+   * @param logs - Array of log entries to send
+   * @returns Response with accepted/rejected counts
+   * @throws LogwellError on failure after all retries
+   */
+  async send(logs: LogEntry[]): Promise<IngestResponse> {
+    let lastError: LogwellError | null = null;
+
+    for (let attempt = 0; attempt <= this.config.maxRetries; attempt++) {
+      try {
+        const response = await this.doRequest(logs);
+        return response;
+      } catch (error) {
+        lastError = error as LogwellError;
+
+        // Don't retry non-retryable errors
+        if (!lastError.retryable) {
+          throw lastError;
+        }
+
+        // Don't delay after the last attempt
+        if (attempt < this.config.maxRetries) {
+          await delay(attempt);
+        }
+      }
+    }
+
+    throw lastError!;
+  }
+
+  private async doRequest(logs: LogEntry[]): Promise<IngestResponse> {
+    let response: Response;
+
+    try {
+      response = await fetch(this.ingestUrl, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${this.config.apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(logs),
+      });
+    } catch (error) {
+      // Network error (fetch failed)
+      throw new LogwellError(
+        `Network error: ${(error as Error).message}`,
+        'NETWORK_ERROR',
+        undefined,
+        true,
+      );
+    }
+
+    // Handle error responses
+    if (!response.ok) {
+      const errorBody = await this.tryParseError(response);
+      throw this.createError(response.status, errorBody);
+    }
+
+    // Parse successful response
+    return (await response.json()) as IngestResponse;
+  }
+
+  private async tryParseError(response: Response): Promise<string> {
+    try {
+      const body = await response.json();
+      return body.message || body.error || 'Unknown error';
+    } catch {
+      return `HTTP ${response.status}`;
+    }
+  }
+
+  private createError(status: number, message: string): LogwellError {
+    switch (status) {
+      case 401:
+        return new LogwellError(
+          `Unauthorized: ${message}`,
+          'UNAUTHORIZED',
+          status,
+          false,
+        );
+      case 400:
+        return new LogwellError(
+          `Validation error: ${message}`,
+          'VALIDATION_ERROR',
+          status,
+          false,
+        );
+      case 429:
+        return new LogwellError(
+          `Rate limited: ${message}`,
+          'RATE_LIMITED',
+          status,
+          true,
+        );
+      default:
+        if (status >= 500) {
+          return new LogwellError(
+            `Server error: ${message}`,
+            'SERVER_ERROR',
+            status,
+            true,
+          );
+        }
+        return new LogwellError(
+          `HTTP error ${status}: ${message}`,
+          'SERVER_ERROR',
+          status,
+          false,
+        );
+    }
+  }
+}

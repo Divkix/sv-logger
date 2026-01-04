@@ -1,0 +1,75 @@
+{
+  "name": "logwell",
+  "version": "0.1.0",
+  "description": "Official TypeScript SDK for Logwell logging platform",
+  "keywords": ["logging", "logs", "observability", "logwell", "typescript"],
+  "license": "MIT",
+  "author": "Logwell",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/divkix/logwell",
+    "directory": "sdks/typescript"
+  },
+  "homepage": "https://github.com/divkix/logwell/tree/main/sdks/typescript#readme",
+  "bugs": {
+    "url": "https://github.com/divkix/logwell/issues"
+  },
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "sideEffects": false,
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "check": "tsc --noEmit",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
+    "test": "vitest run",
+    "test:unit": "vitest run tests/unit/",
+    "test:integration": "vitest run tests/integration/",
+    "test:coverage": "vitest run --coverage",
+    "test:watch": "vitest --watch",
+    "prepublishOnly": "bun run build",
+    "size": "size-limit",
+    "attw": "attw --pack ."
+  },
+  "devDependencies": {
+    "@arethetypeswrong/cli": "^0.17.0",
+    "@biomejs/biome": "2.3.11",
+    "@size-limit/preset-small-lib": "^11.0.0",
+    "@vitest/coverage-v8": "^4.0.0",
+    "msw": "^2.7.0",
+    "size-limit": "^11.0.0",
+    "tsup": "^8.4.0",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.16"
+  },
+  "size-limit": [
+    {
+      "path": "./dist/index.js",
+      "limit": "10 KB"
+    }
+  ]
+}
