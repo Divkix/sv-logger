@@ -13,12 +13,12 @@
   "author": "Logwell",
   "repository": {
     "type": "git",
-    "url": "https://github.com/divkix/logwell",
+    "url": "https://github.com/Divkix/Logwell",
     "directory": "sdks/typescript"
   },
-  "homepage": "https://github.com/divkix/logwell/tree/main/sdks/typescript#readme",
+  "homepage": "https://github.com/Divkix/Logwell/tree/main/sdks/typescript#readme",
   "bugs": {
-    "url": "https://github.com/divkix/logwell/issues"
+    "url": "https://github.com/Divkix/Logwell/issues"
   },
   "type": "module",
   "main": "./dist/index.cjs",
