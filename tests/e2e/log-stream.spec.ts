@@ -539,6 +539,7 @@ test.describe('Log Stream Page - Project Settings Modal', () => {
 
     // Open settings modal
     await page.getByRole('button', { name: /settings/i }).click();
+    await expect(page.getByRole('dialog')).toBeVisible();
 
     // API key should be displayed
     await expect(page.locator('[data-testid="api-key-display"]')).toContainText('lw_');
@@ -549,10 +550,11 @@ test.describe('Log Stream Page - Project Settings Modal', () => {
 
     // Open settings modal
     await page.getByRole('button', { name: /settings/i }).click();
+    await expect(page.getByRole('dialog')).toBeVisible();
 
-    // Curl example should be visible
-    await expect(page.locator('[data-testid="curl-example"]')).toContainText('curl');
-    await expect(page.locator('[data-testid="curl-example"]')).toContainText('Authorization');
+    // Curl example should be visible (curl is selected by default)
+    await expect(page.locator('[data-testid="example-code"]')).toContainText('curl');
+    await expect(page.locator('[data-testid="example-code"]')).toContainText('Authorization');
   });
 
   test('should close settings modal on Escape', async ({ page }) => {
