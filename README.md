@@ -15,6 +15,7 @@
   <a href="https://github.com/divkix/logwell/stargazers"><img src="https://img.shields.io/github/stars/divkix/logwell" alt="GitHub stars"></a>
   <a href="https://github.com/divkix/logwell/actions"><img src="https://img.shields.io/github/actions/workflow/status/divkix/logwell/ci.yml?branch=main" alt="Build Status"></a>
   <a href="https://www.npmjs.com/package/logwell"><img src="https://img.shields.io/npm/v/logwell" alt="npm version"></a>
+  <a href="https://jsr.io/@divkix/logwell"><img src="https://jsr.io/badges/@divkix/logwell" alt="JSR"></a>
   <img src="https://img.shields.io/badge/TypeScript-5.9-blue?logo=typescript&logoColor=white" alt="TypeScript">
   <img src="https://img.shields.io/badge/Bun-1.0+-black?logo=bun&logoColor=white" alt="Bun">
 </p>

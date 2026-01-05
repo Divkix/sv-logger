@@ -4,6 +4,7 @@
 
 <p align="center">
   <a href="https://www.npmjs.com/package/logwell"><img src="https://img.shields.io/npm/v/logwell.svg" alt="npm version" /></a>
+  <a href="https://jsr.io/@divkix/logwell"><img src="https://jsr.io/badges/@divkix/logwell" alt="JSR" /></a>
   <a href="https://www.npmjs.com/package/logwell"><img src="https://img.shields.io/npm/dm/logwell.svg" alt="npm downloads" /></a>
   <a href="https://github.com/Divkix/Logwell/blob/main/LICENSE"><img src="https://img.shields.io/npm/l/logwell.svg" alt="license" /></a>
 </p>
