@@ -4,6 +4,7 @@ import ArrowUpIcon from '@lucide/svelte/icons/arrow-up';
 import ArrowUpDownIcon from '@lucide/svelte/icons/arrow-up-down';
 import type { Log } from '$lib/server/db/schema';
 import { cn } from '$lib/utils';
+import EmptyStateQuickstart from './empty-state-quickstart.svelte';
 import LogCard from './log-card.svelte';
 import LogRow from './log-row.svelte';
 
@@ -14,6 +15,8 @@ interface Props {
   onLogClick?: (log: Log) => void;
   class?: string;
   newLogIds?: Set<string>;
+  project?: { apiKey: string };
+  appUrl?: string;
 }
 
 const {
@@ -23,7 +26,12 @@ const {
   onLogClick,
   class: className,
   newLogIds,
+  project,
+  appUrl,
 }: Props = $props();
+
+// Show quick start empty state when no filters and project/appUrl provided
+const showQuickstartEmptyState = $derived(!hasFilters && project && appUrl);
 
 const SKELETON_ROW_COUNT = 8;
 
@@ -101,9 +109,13 @@ const sortedLogs = $derived.by(() => {
         </div>
       {/each}
     {:else if sortedLogs.length === 0}
-      <div data-testid={emptyStateTestId} class="text-center py-8 text-muted-foreground">
-        {emptyStateMessage}
-      </div>
+      {#if showQuickstartEmptyState && project && appUrl}
+        <EmptyStateQuickstart apiKey={project.apiKey} baseUrl={appUrl} />
+      {:else}
+        <div data-testid={emptyStateTestId} class="text-center py-8 text-muted-foreground">
+          {emptyStateMessage}
+        </div>
+      {/if}
     {:else}
       {#each sortedLogs as log (log.id)}
         <LogCard {log} onclick={onLogClick} isNew={newLogIds?.has(log.id)} />
@@ -190,11 +202,19 @@ const sortedLogs = $derived.by(() => {
           </tr>
         {/each}
       {:else if sortedLogs.length === 0}
-        <tr data-testid={emptyStateTestId} class="text-muted-foreground">
-          <td colspan="3" class="h-32 text-center">
-            {emptyStateMessage}
-          </td>
-        </tr>
+        {#if showQuickstartEmptyState && project && appUrl}
+          <tr>
+            <td colspan="3">
+              <EmptyStateQuickstart apiKey={project.apiKey} baseUrl={appUrl} />
+            </td>
+          </tr>
+        {:else}
+          <tr data-testid={emptyStateTestId} class="text-muted-foreground">
+            <td colspan="3" class="h-32 text-center">
+              {emptyStateMessage}
+            </td>
+          </tr>
+        {/if}
       {:else}
         {#each sortedLogs as log (log.id)}
           <LogRow {log} onclick={onLogClick} isNew={newLogIds?.has(log.id)} />

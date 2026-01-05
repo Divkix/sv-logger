@@ -8,6 +8,7 @@ import { cn } from '$lib/utils';
 import { announceToScreenReader, focusTrap } from '$lib/utils/focus-trap';
 import { toastError, toastSuccess } from '$lib/utils/toast';
 import Button from './ui/button/button.svelte';
+import * as Select from './ui/select';
 import Separator from './ui/separator/separator.svelte';
 
 interface Props {
@@ -38,6 +39,7 @@ let showRegenerateConfirm = $state(false);
 let showDeleteConfirm = $state(false);
 let deleteConfirmInput = $state('');
 let previouslyFocusedElement: HTMLElement | null = $state(null);
+let selectedExample = $state<string>('curl');
 
 // Project name editing state
 let isEditingName = $state(false);
@@ -72,34 +74,24 @@ const baseUrl = $derived(
   appUrl || (typeof window !== 'undefined' ? window.location.origin : 'https://your-domain.com'),
 );
 
-const otlpSamplePayload = {
-  resourceLogs: [
-    {
-      resource: {
-        attributes: [{ key: 'service.name', value: { stringValue: 'my-service' } }],
-      },
-      scopeLogs: [
-        {
-          scope: { name: 'logwell' },
-          logRecords: [
-            {
-              severityNumber: 9,
-              severityText: 'INFO',
-              body: { stringValue: 'Hello!' },
-            },
-          ],
-        },
-      ],
-    },
-  ],
-};
-
-// Full curl command for easy copy-paste
-const curlCommand = $derived(
-  `curl -X POST ${baseUrl}/v1/logs \\
+// Simple API curl command
+const simpleCurlCommand = $derived(
+  `curl -X POST ${baseUrl}/v1/ingest \\
   -H "Authorization: Bearer ${project.apiKey}" \\
   -H "Content-Type: application/json" \\
-  -d '${JSON.stringify(otlpSamplePayload)}'`,
+  -d '{"level": "info", "message": "Hello from my app"}'`,
+);
+
+// SDK example
+const sdkExample = $derived(
+  `import { Logwell } from 'logwell';
+
+const logger = new Logwell({
+  apiKey: '${project.apiKey}',
+  endpoint: '${baseUrl}',
+});
+
+logger.info('Hello from my app');`,
 );
 
 async function copyApiKey() {
@@ -112,11 +104,17 @@ async function copyApiKey() {
   }
 }
 
-async function copyCurlCommand() {
+// Get current example code based on selection
+const currentExampleCode = $derived(selectedExample === 'curl' ? simpleCurlCommand : sdkExample);
+const currentExampleInstall = $derived(
+  selectedExample === 'typescript' ? 'npm install logwell' : null,
+);
+
+async function copyExampleCode() {
   try {
-    await navigator.clipboard.writeText(curlCommand);
-    toastSuccess('Curl command copied to clipboard');
-    announceToScreenReader('Curl command copied to clipboard');
+    await navigator.clipboard.writeText(currentExampleCode);
+    toastSuccess('Code copied to clipboard');
+    announceToScreenReader('Code copied to clipboard');
   } catch {
     toastError('Failed to copy to clipboard');
   }
@@ -333,25 +331,41 @@ async function handleSaveName() {
           </div>
         </div>
 
-        <!-- Usage Example Section -->
+        <!-- Quick Start Section -->
         <div>
-          <span class="text-muted-foreground text-sm font-medium">OTLP/HTTP Example</span>
+          <div class="flex items-center justify-between">
+            <span class="text-muted-foreground text-sm font-medium">Quick Start</span>
+            <Select.Root type="single" bind:value={selectedExample}>
+              <Select.Trigger class="w-[140px] h-8" data-testid="example-selector">
+                <span class="capitalize">{selectedExample}</span>
+              </Select.Trigger>
+              <Select.Content>
+                <Select.Item value="curl" data-testid="example-option-curl">curl</Select.Item>
+                <Select.Item value="typescript" data-testid="example-option-typescript">TypeScript</Select.Item>
+              </Select.Content>
+            </Select.Root>
+          </div>
           <pre
-            data-testid="curl-example"
+            data-testid="example-code"
             aria-label="API usage example"
             class="bg-muted mt-2 rounded-md p-3 text-sm font-mono overflow-x-auto whitespace-pre-wrap"
-          >{curlCommand}</pre>
-          <div class="mt-2">
+          >{currentExampleCode}</pre>
+          <div class="mt-2 flex items-center gap-3">
             <Button
               variant="outline"
               size="sm"
-              data-testid="copy-curl-button"
-              aria-label="Copy curl command to clipboard"
-              onclick={copyCurlCommand}
+              data-testid="copy-example-button"
+              aria-label="Copy code to clipboard"
+              onclick={copyExampleCode}
             >
               <CopyIcon class="mr-2 size-4" aria-hidden="true" />
-              Copy Command
+              Copy
             </Button>
+            {#if currentExampleInstall}
+              <span class="text-muted-foreground text-xs">
+                Install: <code class="bg-muted rounded px-1">{currentExampleInstall}</code>
+              </span>
+            {/if}
           </div>
         </div>
 

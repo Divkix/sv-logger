@@ -272,55 +272,76 @@ describe('ProjectSettings', () => {
     });
   });
 
-  describe('shows usage example with curl', () => {
-    it('displays usage example section', () => {
+  describe('shows quick start examples', () => {
+    it('displays quick start section', () => {
       render(ProjectSettings, { props: { project: baseProject, open: true } });
 
-      expect(screen.getByText('OTLP/HTTP Example')).toBeInTheDocument();
+      expect(screen.getByText('Quick Start')).toBeInTheDocument();
     });
 
-    it('displays curl command', () => {
+    it('displays example selector dropdown', () => {
       render(ProjectSettings, { props: { project: baseProject, open: true } });
 
-      const curlExample = screen.getByTestId('curl-example');
-      expect(curlExample).toBeInTheDocument();
-      expect(curlExample).toHaveTextContent(/curl/);
+      expect(screen.getByTestId('example-selector')).toBeInTheDocument();
+    });
+
+    it('displays curl command by default', () => {
+      render(ProjectSettings, { props: { project: baseProject, open: true } });
+
+      const exampleCode = screen.getByTestId('example-code');
+      expect(exampleCode).toBeInTheDocument();
+      expect(exampleCode).toHaveTextContent(/curl/);
     });
 
     it('curl example includes API key', () => {
       render(ProjectSettings, { props: { project: baseProject, open: true } });
 
-      const curlExample = screen.getByTestId('curl-example');
-      expect(curlExample).toHaveTextContent(/lw_aBcD/);
+      const exampleCode = screen.getByTestId('example-code');
+      expect(exampleCode).toHaveTextContent(/lw_aBcD/);
     });
 
     it('curl example includes Authorization header', () => {
       render(ProjectSettings, { props: { project: baseProject, open: true } });
 
-      const curlExample = screen.getByTestId('curl-example');
-      expect(curlExample).toHaveTextContent(/Authorization.*Bearer/);
+      const exampleCode = screen.getByTestId('example-code');
+      expect(exampleCode).toHaveTextContent(/Authorization.*Bearer/);
     });
 
-    it('curl example includes correct endpoint', () => {
+    it('curl example uses simple API endpoint', () => {
       render(ProjectSettings, { props: { project: baseProject, open: true } });
 
-      const curlExample = screen.getByTestId('curl-example');
-      expect(curlExample).toHaveTextContent(/\/v1\/logs/);
+      const exampleCode = screen.getByTestId('example-code');
+      expect(exampleCode).toHaveTextContent(/\/v1\/ingest/);
     });
 
     it('curl example includes Content-Type header', () => {
       render(ProjectSettings, { props: { project: baseProject, open: true } });
 
-      const curlExample = screen.getByTestId('curl-example');
-      expect(curlExample).toHaveTextContent(/Content-Type.*application\/json/);
+      const exampleCode = screen.getByTestId('example-code');
+      expect(exampleCode).toHaveTextContent(/Content-Type.*application\/json/);
     });
 
-    it('curl example includes sample JSON body', () => {
+    it('curl example includes simple JSON body', () => {
       render(ProjectSettings, { props: { project: baseProject, open: true } });
 
-      const curlExample = screen.getByTestId('curl-example');
-      expect(curlExample).toHaveTextContent(/resourceLogs/);
-      expect(curlExample).toHaveTextContent(/logRecords/);
+      const exampleCode = screen.getByTestId('example-code');
+      expect(exampleCode).toHaveTextContent(/"level".*"info"/);
+      expect(exampleCode).toHaveTextContent(/"message"/);
+    });
+
+    it('has copy button for examples', () => {
+      render(ProjectSettings, { props: { project: baseProject, open: true } });
+
+      expect(screen.getByTestId('copy-example-button')).toBeInTheDocument();
+    });
+
+    it('copies code when copy button is clicked', async () => {
+      render(ProjectSettings, { props: { project: baseProject, open: true } });
+
+      const copyButton = screen.getByTestId('copy-example-button');
+      await fireEvent.click(copyButton);
+
+      expect(mockClipboard.writeText).toHaveBeenCalledWith(expect.stringContaining('curl'));
     });
   });
 

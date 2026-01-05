@@ -201,6 +201,6 @@ export const load: PageServerLoad = async (event) => {
       search: searchParam ?? '',
       range: rangeParam,
     },
-    appUrl: env.ORIGIN || null,
+    appUrl: env.ORIGIN || event.url.origin,
   };
 };

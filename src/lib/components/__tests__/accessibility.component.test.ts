@@ -451,11 +451,11 @@ describe('Accessibility: ARIA Labels', () => {
       expect(deleteButton).toHaveAttribute('aria-label', 'Delete project');
     });
 
-    it('curl example has aria-label', () => {
+    it('example code has aria-label', () => {
       render(ProjectSettings, { props: { project: baseProject, open: true } });
 
-      const curlExample = screen.getByTestId('curl-example');
-      expect(curlExample).toHaveAttribute('aria-label', 'API usage example');
+      const exampleCode = screen.getByTestId('example-code');
+      expect(exampleCode).toHaveAttribute('aria-label', 'API usage example');
     });
   });
 

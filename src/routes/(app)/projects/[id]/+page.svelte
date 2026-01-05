@@ -394,7 +394,15 @@ function handleRemoveRange() {
     </div>
 
     <!-- Log Table (responsive: cards on mobile, table on desktop) -->
-    <LogTable logs={allLogs} {loading} {hasFilters} onLogClick={handleLogClick} {newLogIds} />
+    <LogTable
+      logs={allLogs}
+      {loading}
+      {hasFilters}
+      onLogClick={handleLogClick}
+      {newLogIds}
+      project={projectData}
+      appUrl={data.appUrl ?? undefined}
+    />
 
     <!-- Load More Button -->
     {#if nextCursor}

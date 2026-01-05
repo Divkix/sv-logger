@@ -214,38 +214,39 @@ http.DefaultClient.Do(req)
 
 ---
 
-#### OTLP API (OpenTelemetry)
+#### TypeScript/JavaScript SDK
 
-For applications using OpenTelemetry SDKs, use the OTLP endpoint at `POST /v1/logs`.
+For Node.js, browsers, and edge runtimes (Cloudflare Workers, etc.):
 
 ```bash
-curl -X POST http://localhost:5173/v1/logs \
-  -H "Authorization: Bearer lw_YOUR_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "resourceLogs": [
-      {
-        "resource": {
-          "attributes": [
-            { "key": "service.name", "value": { "stringValue": "my-service" } }
-          ]
-        },
-        "scopeLogs": [
-          {
-            "scope": { "name": "logwell" },
-            "logRecords": [
-              {
-                "severityNumber": 9,
-                "severityText": "INFO",
-                "body": { "stringValue": "User signed in" }
-              }
-            ]
-          }
-        ]
-      }
-    ]
-  }'
+npm install logwell
 ```
+
+```typescript
+import { Logwell } from 'logwell';
+
+const logger = new Logwell({
+  apiKey: 'lw_YOUR_API_KEY',
+  endpoint: 'http://localhost:5173',
+});
+
+// Log at different levels
+logger.info('User signed in', { userId: '123' });
+logger.error('Database failed', { host: 'db.local' });
+
+// Flush before shutdown
+await logger.shutdown();
+```
+
+Features: Zero dependencies, automatic batching, retry with backoff, TypeScript-first.
+
+[Full SDK documentation →](./sdks/typescript/README.md)
+
+---
+
+#### OTLP API (For OpenTelemetry Users)
+
+For applications already using OpenTelemetry, point your OTLP log exporter to `POST /v1/logs` with your API key in the `Authorization` header.
 
 <details>
 <summary><strong>Node.js / TypeScript</strong></summary>
