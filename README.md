@@ -478,7 +478,10 @@ The easiest way to deploy Logwell with PostgreSQL:
 ```bash
 # Set required environment variables
 export BETTER_AUTH_SECRET=$(openssl rand -base64 32)
-export DB_PASSWORD="your-secure-db-password"
+export ADMIN_PASSWORD="your-secure-admin-password"
+
+# Optional: Set custom DB password (only needed if exposing port 5432 for backups)
+# export DB_PASSWORD="your-db-password"
 
 # Start the full stack
 docker compose -f compose.prod.yaml up -d
@@ -504,6 +507,7 @@ docker pull ghcr.io/divkix/logwell:latest
 docker run -p 3000:3000 \
   -e DATABASE_URL="postgresql://user:pass@host:5432/db" \
   -e BETTER_AUTH_SECRET="your-32-char-secret" \
+  -e ADMIN_PASSWORD="your-admin-password" \
   -e NODE_ENV=production \
   ghcr.io/divkix/logwell:latest
 ```
@@ -518,6 +522,7 @@ docker build -t logwell .
 docker run -p 3000:3000 \
   -e DATABASE_URL="postgresql://user:pass@host:5432/db" \
   -e BETTER_AUTH_SECRET="your-32-char-secret" \
+  -e ADMIN_PASSWORD="your-admin-password" \
   -e NODE_ENV=production \
   logwell
 ```
