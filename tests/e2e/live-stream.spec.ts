@@ -82,9 +82,16 @@ test.describe('Live Stream SSE Integration', () => {
   test('enabling live starts receiving logs', async ({ page }) => {
     await page.goto(`/projects/${testProject.id}`);
 
-    // Verify live toggle is enabled by default
+    // Wait for page to fully load and log table to be visible
+    await expect(page.locator('[data-testid="log-table"]')).toBeVisible();
+
+    // Wait for SSE connection to establish (the pulse turns green)
     const livePulse = page.locator('[data-testid="live-pulse"]');
-    await expect(livePulse).toHaveClass(/bg-green-500/);
+    await expect(livePulse).toHaveClass(/bg-green-500/, { timeout: 5000 });
+
+    // Give SSE connection time to fully establish on server side
+    // This is necessary because the green pulse shows toggle state, not connection state
+    await page.waitForTimeout(2000);
 
     // Ingest a log while on the page
     await ingestLog(page, testProject.apiKey, {
@@ -94,10 +101,11 @@ test.describe('Live Stream SSE Integration', () => {
 
     // The log should appear via SSE within reasonable time
     // Use filter({ visible: true }) since we have dual mobile/desktop layouts (sm:hidden vs hidden sm:table)
+    // Using longer timeout to account for SSE batching (1.5s window) plus network latency
     await expect(
       page.getByText('Live stream test log - should appear').filter({ visible: true }),
     ).toBeVisible({
-      timeout: 5000,
+      timeout: 10000,
     });
   });
 

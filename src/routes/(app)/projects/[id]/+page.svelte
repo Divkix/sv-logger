@@ -111,12 +111,18 @@ function handleIncomingLogs(logs: ClientLog[]) {
   streamedLogs = [...parsedLogs, ...streamedLogs];
 }
 
+// Track SSE connection state reactively for UI
+let sseConnected = $state(false);
+
 // Use the SSE hook for log streaming (connection managed reactively via $effect below)
 // svelte-ignore state_referenced_locally
 const logStream = useLogStream({
   projectId: data.project.id,
   enabled: false, // Initial state; $effect manages actual connection
   onLogs: handleIncomingLogs,
+  onConnectionChange: (connected) => {
+    sseConnected = connected;
+  },
 });
 
 // Manage stream connection based on liveEnabled and pause state
@@ -331,7 +337,7 @@ function handleRemoveRange() {
     <!-- Filters Bar -->
     <div class="flex flex-wrap items-center gap-2 sm:gap-4">
       <!-- Live Toggle - always visible -->
-      <LiveToggle bind:enabled={liveEnabled} disabled={isLivePaused} />
+      <LiveToggle bind:enabled={liveEnabled} disabled={isLivePaused} isConnected={sseConnected} />
 
       <!-- Connection Status -->
       <ConnectionStatus isConnecting={logStream.isConnecting} error={logStream.error} />
