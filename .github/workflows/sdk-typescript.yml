@@ -207,3 +207,47 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "Version \`${{ steps.version-check.outputs.local_version }}\` already exists on npm." >> $GITHUB_STEP_SUMMARY
           echo "Bump the version in \`sdks/typescript/package.json\` to trigger a new publish." >> $GITHUB_STEP_SUMMARY
+
+      # -------------------------------------------------------------------------
+      # JSR Publishing
+      # -------------------------------------------------------------------------
+      - name: Check if version exists on JSR
+        id: jsr-version-check
+        run: |
+          JSR_NAME=$(jq -r '.name' jsr.json)
+          LOCAL_VERSION=$(jq -r '.version' jsr.json)
+          echo "jsr_name=$JSR_NAME" >> $GITHUB_OUTPUT
+          echo "jsr_version=$LOCAL_VERSION" >> $GITHUB_OUTPUT
+
+          # Check if version exists on JSR (returns 404 if not found)
+          if curl -sf "https://jsr.io/${JSR_NAME}/${LOCAL_VERSION}_meta.json" > /dev/null 2>&1; then
+            echo "Version $LOCAL_VERSION already exists on JSR"
+            echo "should_publish_jsr=false" >> $GITHUB_OUTPUT
+          else
+            echo "Version $LOCAL_VERSION is new, will publish to JSR"
+            echo "should_publish_jsr=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Publish to JSR (OIDC)
+        if: steps.jsr-version-check.outputs.should_publish_jsr == 'true'
+        run: npx jsr publish
+
+      - name: Add JSR publish info to job summary
+        if: steps.jsr-version-check.outputs.should_publish_jsr == 'true'
+        run: |
+          echo "## 📦 SDK Published to JSR" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Package:** \`${{ steps.jsr-version-check.outputs.jsr_name }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Version:** \`${{ steps.jsr-version-check.outputs.jsr_version }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Install with:" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`bash" >> $GITHUB_STEP_SUMMARY
+          echo "npx jsr add ${{ steps.jsr-version-check.outputs.jsr_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+
+      - name: Skip JSR publish info
+        if: steps.jsr-version-check.outputs.should_publish_jsr == 'false'
+        run: |
+          echo "## ℹ️ JSR Publish Skipped" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Version \`${{ steps.jsr-version-check.outputs.jsr_version }}\` already exists on JSR." >> $GITHUB_STEP_SUMMARY
