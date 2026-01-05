@@ -462,6 +462,15 @@ Logwell derives some UI fields from common OTLP log attributes (if present):
 
 ## Production Deployment
 
+### One-Click Deploy
+
+[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/XYBrph?referralCode=Divkix)
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/divkix/logwell)
+
+**Fly.io:** Clone the repo and run `fly launch` (uses included `fly.toml`)
+
+> **Note:** PostgreSQL database required. Railway has $5/mo free credit. Render free tier expires after 30 days (paid plans from $7/mo). Fly.io offers 1GB free PostgreSQL.
+
 ### Docker Compose (Recommended)
 
 The easiest way to deploy Logwell with PostgreSQL:
