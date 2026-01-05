@@ -18,13 +18,6 @@ export type LogwellErrorCode =
  * throw new LogwellError('Invalid API key', 'UNAUTHORIZED', 401, false);
  * ```
  */
-// V8 specific type for captureStackTrace
-declare global {
-  interface ErrorConstructor {
-    captureStackTrace?(targetObject: object, constructorOpt?: NewableFunction): void;
-  }
-}
-
 export class LogwellError extends Error {
   /**
    * Creates a new LogwellError
@@ -44,6 +37,10 @@ export class LogwellError extends Error {
     this.name = 'LogwellError';
 
     // Maintains proper stack trace for where our error was thrown (V8 only)
-    Error.captureStackTrace?.(this, LogwellError);
+    // Use type assertion to avoid global augmentation (required for JSR compatibility)
+    const ErrorWithCapture = Error as unknown as {
+      captureStackTrace?: (target: object, ctor?: NewableFunction) => void;
+    };
+    ErrorWithCapture.captureStackTrace?.(this, LogwellError);
   }
 }
