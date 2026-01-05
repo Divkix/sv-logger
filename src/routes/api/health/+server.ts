@@ -12,7 +12,7 @@ const serverStartTime = Date.now();
 
 // Package version (read from package.json at build time would be ideal,
 // but for simplicity we use a constant that matches package.json)
-const VERSION = '0.0.1';
+const VERSION = '0.1.2';
 
 /**
  * Helper to get database client from locals or production db

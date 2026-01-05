@@ -13,6 +13,10 @@
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License: MIT"></a>
   <a href="https://github.com/divkix/logwell/stargazers"><img src="https://img.shields.io/github/stars/divkix/logwell" alt="GitHub stars"></a>
+  <a href="https://github.com/divkix/logwell/actions"><img src="https://img.shields.io/github/actions/workflow/status/divkix/logwell/ci.yml?branch=main" alt="Build Status"></a>
+  <a href="https://www.npmjs.com/package/logwell"><img src="https://img.shields.io/npm/v/logwell" alt="npm version"></a>
+  <img src="https://img.shields.io/badge/TypeScript-5.9-blue?logo=typescript&logoColor=white" alt="TypeScript">
+  <img src="https://img.shields.io/badge/Bun-1.0+-black?logo=bun&logoColor=white" alt="Bun">
 </p>
 
 <p align="center">
@@ -20,10 +24,28 @@
   <a href="#quick-start">Quick Start</a> •
   <a href="#usage">Usage</a> •
   <a href="#production-deployment">Deploy</a> •
+  <a href="#contributing">Contributing</a> •
   <a href="#license">License</a>
 </p>
 
 ---
+
+## What is Logwell?
+
+Logwell is a lightweight, self-hosted log aggregation platform for developers who want structured logging without the complexity of ELK or the costs of cloud services.
+
+**Use Logwell when you need:**
+- A simple logging backend for your side project or startup
+- Full-text search across logs without managing Elasticsearch
+- Real-time log streaming during development and debugging
+- Complete data ownership with no vendor lock-in
+
+**Logwell is NOT for:**
+- High-volume production systems (10k+ logs/second) — use Loki or Clickhouse
+- Teams needing RBAC, audit trails, or compliance features — use a managed service
+- Distributed tracing or metrics — Logwell is logs-only
+
+> **Current Status:** Alpha (v0.1.2). Single-user, no log retention policies, no export. See [Limitations](#current-limitations).
 
 ## Features
 
@@ -37,14 +59,38 @@
 ## Preview
 
 <p align="center">
-  <img src="static/logview-screen.png" alt="Logwell Dashboard" width="100%">
+  <img src="static/dashboard.png" alt="Dashboard" width="100%">
+  <em>Multi-project dashboard with log counts</em>
 </p>
+
+<table>
+  <tr>
+    <td width="50%">
+      <img src="static/logview-screen.png" alt="Log Viewer">
+      <p align="center"><em>Real-time log viewer with level filtering</em></p>
+    </td>
+    <td width="50%">
+      <img src="static/logs-view-empty.png" alt="Quick Start">
+      <p align="center"><em>Quick Start with pre-filled API key</em></p>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%">
+      <img src="static/project-settings.png" alt="Project Settings">
+      <p align="center"><em>API key management and code snippets</em></p>
+    </td>
+    <td width="50%">
+      <img src="static/stats-screen.png" alt="Statistics">
+      <p align="center"><em>Log level distribution analytics</em></p>
+    </td>
+  </tr>
+</table>
 
 ## Why Logwell?
 
 | vs | Logwell advantage |
 |----|-------------------|
-| Loki/Grafana | Single binary, built-in UI, no stack to maintain |
+| Loki/Grafana | Built-in UI, no LogQL to learn, just PostgreSQL |
 | ELK | Lightweight PostgreSQL backend, not Elasticsearch |
 | Datadog/etc | Self-hosted, no per-GB pricing, own your data |
 
@@ -95,6 +141,8 @@ bun run dev
 Open http://localhost:5173 and sign in with:
 - **Email**: `admin@example.com`
 - **Password**: Your `ADMIN_PASSWORD` from `.env`
+
+> **Note:** Development runs on port **5173** (Vite). Production builds run on port **3000**.
 
 ## Environment Variables
 
@@ -479,7 +527,7 @@ Response:
   "database": "connected",
   "timestamp": "2025-01-02T12:00:00.000Z",
   "uptime": 3600,
-  "version": "0.0.1"
+  "version": "0.1.2"
 }
 ```
 
@@ -525,9 +573,14 @@ The app runs on port 3000 by default.
 
 ## Current Limitations
 
-- **No log retention/TTL** — Logs are stored indefinitely. Manual deletion via database required.
-- **Single-user auth** — Multi-user/team support planned.
-- **No log export** — Cannot export logs to file/S3 yet.
+> **Important:** Logwell is alpha software. Evaluate these limitations before deploying.
+
+| Limitation | Impact | Workaround |
+|------------|--------|------------|
+| **No log retention/TTL** | Storage grows unbounded | Manual `DELETE FROM logs WHERE timestamp < ...` |
+| **Single-user auth** | No team collaboration | Share credentials (not recommended) |
+| **No log export** | Can't backup to S3/file | Direct database dumps via `pg_dump` |
+| **No rate limiting** | API keys have unlimited access | Implement at reverse proxy level |
 
 ## Security
 
@@ -553,6 +606,32 @@ Using Logwell? Add the badge to your project:
 ```
 
 [![Powered by Logwell](https://img.shields.io/badge/Powered%20by-Logwell-111111?style=flat&logo=data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgdmlld0JveD0iMCAwIDUxMiA1MTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjUxMiIgaGVpZ2h0PSI1MTIiIHJ4PSIxMTUiIGZpbGw9IndoaXRlIi8+PHJlY3QgeD0iMTI4IiB5PSIxNDgiIHdpZHRoPSIyNTYiIGhlaWdodD0iNDgiIHJ4PSIyNCIgZmlsbD0iIzExMTExMSIvPjxyZWN0IHg9IjEyOCIgeT0iMjI4IiB3aWR0aD0iMjU2IiBoZWlnaHQ9IjQ4IiByeD0iMjQiIGZpbGw9IiMxMTExMTEiIGZpbGwtb3BhY2l0eT0iMC42Ii8+PHJlY3QgeD0iMTI4IiB5PSIzMDgiIHdpZHRoPSIxNjAiIGhlaWdodD0iNDgiIHJ4PSIyNCIgZmlsbD0iIzExMTExMSIgZmlsbC1vcGFjaXR5PSIwLjI1Ii8+PC9zdmc+)](https://github.com/divkix/logwell)
+
+## Contributing
+
+Contributions are welcome! Here's how to get started:
+
+```bash
+# Fork and clone the repo
+git clone https://github.com/YOUR_USERNAME/logwell.git
+cd logwell
+
+# Install dependencies
+bun install
+
+# Start dev environment
+docker compose up -d
+bun run db:push
+bun run dev
+```
+
+**Before submitting a PR:**
+- Run `bun run check` (TypeScript)
+- Run `bun run lint` (Biome)
+- Run `bun run test` (Vitest)
+- Use conventional commits (`feat:`, `fix:`, `docs:`, etc.)
+
+**Report bugs:** [GitHub Issues](https://github.com/divkix/logwell/issues)
 
 ## License
 
