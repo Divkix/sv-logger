@@ -46,8 +46,6 @@ Logwell is a lightweight, self-hosted log aggregation platform for developers wh
 - Teams needing RBAC, audit trails, or compliance features — use a managed service
 - Distributed tracing or metrics — Logwell is logs-only
 
-> **Current Status:** Alpha (v0.1.2). Single-user, no log retention policies, no export. See [Limitations](#current-limitations).
-
 ## Features
 
 - **OTLP-native ingestion** — Standard OpenTelemetry protocol, no proprietary SDKs required
