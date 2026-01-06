@@ -140,7 +140,7 @@ bun run dev
 ```
 
 Open http://localhost:5173 and sign in with:
-- **Email**: `admin@example.com`
+- **Username**: `admin` (or your `ADMIN_USERNAME` from `.env`)
 - **Password**: Your `ADMIN_PASSWORD` from `.env`
 
 > **Note:** Development runs on port **5173** (Vite). Production builds run on port **3000**.
@@ -158,6 +158,9 @@ BETTER_AUTH_SECRET="your-32-character-secret-key-here"
 
 # Admin user password (minimum 8 characters)
 ADMIN_PASSWORD="your-admin-password"
+
+# Admin username (optional, defaults to "admin")
+# ADMIN_USERNAME="admin"
 
 # Production URL (required for auth behind reverse proxies)
 ORIGIN="https://your-domain.com"

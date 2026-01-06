@@ -7,13 +7,13 @@ import { Card, CardContent, CardDescription, CardHeader } from '$lib/components/
 import { Input } from '$lib/components/ui/input';
 
 // Form state
-let email = $state('');
+let username = $state('');
 let password = $state('');
 let error = $state('');
 let isLoading = $state(false);
 
 // Validation state
-let emailError = $state('');
+let usernameError = $state('');
 let passwordError = $state('');
 
 // Reference to password input for auto-focus
@@ -27,28 +27,17 @@ $effect(() => {
 });
 
 /**
- * Validates email format
- */
-function isValidEmail(email: string): boolean {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return emailRegex.test(email);
-}
-
-/**
  * Validates form fields
  * Returns true if valid, false otherwise
  */
 function validateForm(): boolean {
   let isValid = true;
-  emailError = '';
+  usernameError = '';
   passwordError = '';
 
-  // Check email
-  if (!email.trim()) {
-    emailError = 'Email is required';
-    isValid = false;
-  } else if (!isValidEmail(email)) {
-    emailError = 'Invalid email format';
+  // Check username
+  if (!username.trim()) {
+    usernameError = 'Username is required';
     isValid = false;
   }
 
@@ -78,9 +67,9 @@ async function handleSubmit(event: Event) {
   isLoading = true;
 
   try {
-    const { data, error: signInError } = await authClient.signIn.email(
+    const { data, error: signInError } = await authClient.signIn.username(
       {
-        email: email.trim(),
+        username: username.trim(),
         password,
       },
       {
@@ -141,21 +130,21 @@ function handleKeyDown(event: KeyboardEvent) {
     </CardHeader>
     <CardContent>
       <form onsubmit={(e) => { e.preventDefault(); handleSubmit(e); }} novalidate class="flex flex-col gap-4">
-        <!-- Email field -->
+        <!-- Username field -->
         <div class="flex flex-col gap-2">
-          <label for="email" class="text-sm font-medium">Email</label>
+          <label for="username" class="text-sm font-medium">Username</label>
           <Input
-            id="email"
-            type="email"
-            placeholder="admin@example.com"
-            bind:value={email}
+            id="username"
+            type="text"
+            placeholder="admin"
+            bind:value={username}
             disabled={isLoading}
-            aria-invalid={!!emailError}
-            aria-describedby={emailError ? 'email-error' : undefined}
+            aria-invalid={!!usernameError}
+            aria-describedby={usernameError ? 'username-error' : undefined}
             onkeydown={handleKeyDown}
           />
-          {#if emailError}
-            <p id="email-error" class="text-destructive text-sm">{emailError}</p>
+          {#if usernameError}
+            <p id="username-error" class="text-destructive text-sm">{usernameError}</p>
           {/if}
         </div>
 

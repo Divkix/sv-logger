@@ -1,3 +1,4 @@
+import { usernameClient } from 'better-auth/client/plugins';
 import { createAuthClient } from 'better-auth/svelte';
 
 /**
@@ -7,4 +8,6 @@ import { createAuthClient } from 'better-auth/svelte';
  * Note: baseURL is omitted to use relative paths, which automatically
  * works with whatever port the server is running on
  */
-export const authClient = createAuthClient();
+export const authClient = createAuthClient({
+  plugins: [usernameClient()],
+});

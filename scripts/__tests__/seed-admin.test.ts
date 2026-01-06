@@ -6,15 +6,19 @@ import type * as schema from '../../src/lib/server/db/schema';
 import { user } from '../../src/lib/server/db/schema';
 import { setupTestDatabase } from '../../src/lib/server/db/test-db';
 
-// Admin email constant (matches the one in seed-admin.ts)
-const ADMIN_EMAIL = 'admin@example.com';
+// Admin username constant (matches the one in seed-admin.ts)
+const ADMIN_USERNAME = 'admin';
 
 /**
  * Test helper that mimics the seed-admin script logic
+ * @param db - Database instance
+ * @param adminPassword - Admin password
+ * @param adminUsername - Admin username (defaults to ADMIN_USERNAME constant)
  */
 async function seedAdmin(
   db: PgliteDatabase<typeof schema>,
   adminPassword: string,
+  adminUsername: string = ADMIN_USERNAME,
 ): Promise<{ created: boolean; message: string }> {
   const auth = createAuth(db);
 
@@ -23,19 +27,23 @@ async function seedAdmin(
     throw new Error('ADMIN_PASSWORD must be at least 8 characters long');
   }
 
-  // Check if admin already exists
-  const existingAdmin = await db.select().from(user).where(eq(user.email, ADMIN_EMAIL));
+  // Generate email from username (using .local TLD as localhost is rejected by email validation)
+  const generatedEmail = `${adminUsername}@logwell.local`;
+
+  // Check if admin already exists by username
+  const existingAdmin = await db.select().from(user).where(eq(user.username, adminUsername));
 
   if (existingAdmin.length > 0) {
     return { created: false, message: 'Admin user already exists, skipping' };
   }
 
-  // Create admin user via better-auth
+  // Create admin user via better-auth with username
   const result = await auth.api.signUpEmail({
     body: {
-      email: ADMIN_EMAIL,
+      email: generatedEmail,
       password: adminPassword,
       name: 'Admin',
+      username: adminUsername,
     },
   });
 
@@ -68,11 +76,12 @@ describe('seed-admin', () => {
     expect(result.created).toBe(true);
     expect(result.message).toBe('Admin user created successfully');
 
-    // Verify user was created in database
-    const users = await db.select().from(user).where(eq(user.email, ADMIN_EMAIL));
+    // Verify user was created in database with username
+    const users = await db.select().from(user).where(eq(user.username, ADMIN_USERNAME));
     expect(users).toHaveLength(1);
     expect(users[0].name).toBe('Admin');
-    expect(users[0].email).toBe(ADMIN_EMAIL);
+    expect(users[0].username).toBe(ADMIN_USERNAME);
+    expect(users[0].email).toBe(`${ADMIN_USERNAME}@logwell.local`);
     expect(users[0].emailVerified).toBe(false);
   });
 
@@ -89,7 +98,7 @@ describe('seed-admin', () => {
     expect(secondResult.message).toBe('Admin user already exists, skipping');
 
     // Verify still only one user
-    const users = await db.select().from(user).where(eq(user.email, ADMIN_EMAIL));
+    const users = await db.select().from(user).where(eq(user.username, ADMIN_USERNAME));
     expect(users).toHaveLength(1);
   });
 
@@ -100,36 +109,51 @@ describe('seed-admin', () => {
 
     expect(result.created).toBe(true);
 
-    // Verify user was created
-    const users = await db.select().from(user).where(eq(user.email, ADMIN_EMAIL));
+    // Verify user was created with username
+    const users = await db.select().from(user).where(eq(user.username, ADMIN_USERNAME));
     expect(users).toHaveLength(1);
   });
 
-  it('should use admin@example.com as email', async () => {
+  it('should generate email as {username}@logwell.local', async () => {
     const adminPassword = 'test-admin-password-123';
 
     const result = await seedAdmin(db, adminPassword);
 
     expect(result.created).toBe(true);
 
-    // Verify the exact email
+    // Verify the generated email format
     const users = await db.select().from(user);
     expect(users).toHaveLength(1);
-    expect(users[0].email).toBe(ADMIN_EMAIL);
+    expect(users[0].username).toBe(ADMIN_USERNAME);
+    expect(users[0].email).toBe(`${ADMIN_USERNAME}@logwell.local`);
   });
 
-  it('should be able to sign in with created credentials', async () => {
+  it('should use custom ADMIN_USERNAME from environment', async () => {
+    const adminPassword = 'test-admin-password-123';
+    const customUsername = 'superadmin';
+
+    const result = await seedAdmin(db, adminPassword, customUsername);
+
+    expect(result.created).toBe(true);
+
+    // Verify user was created with custom username
+    const users = await db.select().from(user).where(eq(user.username, customUsername));
+    expect(users).toHaveLength(1);
+    expect(users[0].username).toBe(customUsername);
+    expect(users[0].email).toBe(`${customUsername}@logwell.local`);
+  });
+
+  it('should be able to sign in with created credentials using username', async () => {
     const adminPassword = 'test-admin-password-123';
     const auth = createAuth(db);
 
     // Create admin user
     await seedAdmin(db, adminPassword);
 
-    // Try to sign in - better-auth with autoSignIn creates session during signup
-    // So we should be able to verify credentials by checking the password works
-    const signInResult = await auth.api.signInEmail({
+    // Try to sign in using username (not email)
+    const signInResult = await auth.api.signInUsername({
       body: {
-        email: ADMIN_EMAIL,
+        username: ADMIN_USERNAME,
         password: adminPassword,
       },
     });
@@ -137,10 +161,10 @@ describe('seed-admin', () => {
     // Check that sign in succeeded (no error)
     expect(signInResult.error).toBeUndefined();
 
-    // Verify user exists in database with correct email
-    const users = await db.select().from(user).where(eq(user.email, ADMIN_EMAIL));
+    // Verify user exists in database with correct username
+    const users = await db.select().from(user).where(eq(user.username, ADMIN_USERNAME));
     expect(users).toHaveLength(1);
-    expect(users[0].email).toBe(ADMIN_EMAIL);
+    expect(users[0].username).toBe(ADMIN_USERNAME);
   });
 
   it('should throw error if password is empty', async () => {

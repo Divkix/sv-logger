@@ -18,14 +18,14 @@ vi.mock('$app/navigation', () => ({
   invalidateAll: mockInvalidateAll,
 }));
 
-// Mock authClient
+// Mock authClient with username-based authentication
 vi.mock('$lib/auth-client', () => ({
   authClient: {
     signIn: {
-      email: vi.fn().mockImplementation((_credentials, callbacks) => {
+      username: vi.fn().mockImplementation((_credentials, callbacks) => {
         capturedOnSuccess = callbacks?.onSuccess;
         return Promise.resolve({
-          data: { user: { id: '1', email: 'test@example.com' } },
+          data: { user: { id: '1', username: 'admin' } },
           error: null,
         });
       }),
@@ -53,19 +53,19 @@ describe('Login Page Navigation', () => {
     it('should call invalidateAll before goto on successful login', async () => {
       render(LoginPage);
 
-      // Fill in the form
-      const emailInput = screen.getByLabelText(/email/i);
+      // Fill in the form with username (not email)
+      const usernameInput = screen.getByLabelText(/username/i);
       const passwordInput = screen.getByLabelText(/password/i);
       const submitButton = screen.getByRole('button', { name: /sign in/i });
 
-      await user.clear(emailInput);
-      await user.type(emailInput, 'test@example.com');
+      await user.clear(usernameInput);
+      await user.type(usernameInput, 'admin');
       await user.type(passwordInput, 'password123');
       await user.click(submitButton);
 
       // Wait for the sign in to be called
       await waitFor(() => {
-        expect(authClient.signIn.email).toHaveBeenCalledTimes(1);
+        expect(authClient.signIn.username).toHaveBeenCalledTimes(1);
       });
 
       // Verify onSuccess callback was captured
@@ -90,19 +90,19 @@ describe('Login Page Navigation', () => {
       // This test verifies that goto is used instead of window.location.href
       render(LoginPage);
 
-      // Fill in the form
-      const emailInput = screen.getByLabelText(/email/i);
+      // Fill in the form with username
+      const usernameInput = screen.getByLabelText(/username/i);
       const passwordInput = screen.getByLabelText(/password/i);
       const submitButton = screen.getByRole('button', { name: /sign in/i });
 
-      await user.clear(emailInput);
-      await user.type(emailInput, 'test@example.com');
+      await user.clear(usernameInput);
+      await user.type(usernameInput, 'admin');
       await user.type(passwordInput, 'password123');
       await user.click(submitButton);
 
       // Wait for the sign in to be called
       await waitFor(() => {
-        expect(authClient.signIn.email).toHaveBeenCalledTimes(1);
+        expect(authClient.signIn.username).toHaveBeenCalledTimes(1);
       });
 
       // Trigger the onSuccess callback
@@ -117,21 +117,23 @@ describe('Login Page Navigation', () => {
     it('should use invalidateAll + goto for fallback redirect', async () => {
       // Mock signIn to return user data
       // The fallback redirect happens when data.user exists after signIn completes
-      vi.mocked(authClient.signIn.email).mockImplementationOnce(async (_credentials, callbacks) => {
-        capturedOnSuccess = callbacks?.onSuccess;
-        // Return data with user - the component checks this for fallback redirect
-        return { data: { user: { id: '1', email: 'test@example.com' } }, error: null };
-      });
+      vi.mocked(authClient.signIn.username).mockImplementationOnce(
+        async (_credentials, callbacks) => {
+          capturedOnSuccess = callbacks?.onSuccess;
+          // Return data with user - the component checks this for fallback redirect
+          return { data: { user: { id: '1', username: 'admin' } }, error: null };
+        },
+      );
 
       render(LoginPage);
 
-      // Fill in the form
-      const emailInput = screen.getByLabelText(/email/i);
+      // Fill in the form with username
+      const usernameInput = screen.getByLabelText(/username/i);
       const passwordInput = screen.getByLabelText(/password/i);
       const submitButton = screen.getByRole('button', { name: /sign in/i });
 
-      await user.clear(emailInput);
-      await user.type(emailInput, 'test@example.com');
+      await user.clear(usernameInput);
+      await user.type(usernameInput, 'admin');
       await user.type(passwordInput, 'password123');
       await user.click(submitButton);
 

@@ -5,12 +5,12 @@ import postgres from 'postgres';
 import { createAuth } from '../src/lib/server/auth';
 import * as schema from '../src/lib/server/db/schema';
 
-// Admin email constant
-const ADMIN_EMAIL = 'admin@example.com';
+// Admin username constant (configurable via ADMIN_USERNAME env var)
+const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'admin';
 
 /**
  * Seeds the admin user into the database
- * Uses ADMIN_PASSWORD from environment variable
+ * Uses ADMIN_PASSWORD and ADMIN_USERNAME from environment variables
  */
 async function seedAdmin() {
   // Check for required environment variables
@@ -29,29 +29,34 @@ async function seedAdmin() {
     throw new Error('ADMIN_PASSWORD must be at least 8 characters long');
   }
 
+  // Generate email from username (email is still required by better-auth internally)
+  // Using .local TLD as localhost is rejected by email validation
+  const generatedEmail = `${ADMIN_USERNAME}@logwell.local`;
+
   // Initialize database connection
   const client = postgres(DATABASE_URL);
   const db = drizzle(client, { schema });
 
   try {
-    // Check if admin already exists
+    // Check if admin already exists by username
     const existingAdmin = await db
       .select()
       .from(schema.user)
-      .where(eq(schema.user.email, ADMIN_EMAIL));
+      .where(eq(schema.user.username, ADMIN_USERNAME));
 
     if (existingAdmin.length > 0) {
       console.log('✓ Admin user already exists, skipping');
       return;
     }
 
-    // Create admin user via better-auth
+    // Create admin user via better-auth with username
     const auth = createAuth(db);
     const result = await auth.api.signUpEmail({
       body: {
-        email: ADMIN_EMAIL,
+        email: generatedEmail,
         password: ADMIN_PASSWORD,
         name: 'Admin',
+        username: ADMIN_USERNAME,
       },
     });
 
@@ -60,7 +65,7 @@ async function seedAdmin() {
     }
 
     console.log('✓ Admin user created successfully');
-    console.log(`  Email: ${ADMIN_EMAIL}`);
+    console.log(`  Username: ${ADMIN_USERNAME}`);
     console.log('  You can now sign in with the admin credentials');
   } catch (error) {
     console.error('✗ Failed to seed admin user:', error);
