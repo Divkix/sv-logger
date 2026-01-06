@@ -162,6 +162,10 @@ ADMIN_PASSWORD="your-admin-password"
 
 # Production URL (required for auth behind reverse proxies)
 ORIGIN="https://your-domain.com"
+
+# Log retention (optional, defaults shown)
+# LOG_RETENTION_DAYS="30"        # 0 = never auto-delete
+# LOG_CLEANUP_INTERVAL_MS="3600000"  # Cleanup job interval (1 hour)
 ```
 
 Generate a secure secret:
