@@ -588,6 +588,7 @@ The app runs on port 3000 by default.
 | `/api/projects` | GET | List all projects |
 | `/api/projects` | POST | Create project |
 | `/api/projects/[id]` | GET | Get project details |
+| `/api/projects/[id]` | PATCH | Update project (name, retention) |
 | `/api/projects/[id]` | DELETE | Delete project |
 | `/api/projects/[id]/regenerate` | POST | Regenerate API key |
 | `/api/projects/[id]/logs` | GET | Query logs |
