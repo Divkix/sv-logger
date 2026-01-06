@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1.4
 # =============================================================================
 # Logwell Production Dockerfile
 # =============================================================================
@@ -31,8 +32,9 @@ ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
 ENV PUPPETEER_SKIP_DOWNLOAD=1
 ENV PLAYWRIGHT_BROWSERS_PATH=/dev/null
 
-# Install production dependencies only
-RUN bun install --frozen-lockfile --production --ignore-scripts
+# Install production dependencies only (with Bun cache mount)
+RUN --mount=type=cache,target=/root/.bun/install/cache \
+    bun install --frozen-lockfile --production --ignore-scripts
 
 # -----------------------------------------------------------------------------
 # Stage 3: Install all dependencies (including dev) for build and migrations
@@ -44,7 +46,9 @@ COPY package.json bun.lock ./
 ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
 ENV PUPPETEER_SKIP_DOWNLOAD=1
 ENV PLAYWRIGHT_BROWSERS_PATH=/dev/null
-RUN bun install --frozen-lockfile --ignore-scripts && bun run prepare
+# Install all dependencies (with Bun cache mount)
+RUN --mount=type=cache,target=/root/.bun/install/cache \
+    bun install --frozen-lockfile --ignore-scripts && bun run prepare
 
 # -----------------------------------------------------------------------------
 # Stage 4: Build the SvelteKit application
@@ -52,8 +56,21 @@ RUN bun install --frozen-lockfile --ignore-scripts && bun run prepare
 FROM deps-dev AS build
 WORKDIR /app
 
-# Copy source code
-COPY . .
+# Copy files in order of change frequency (least to most) for optimal caching
+# 1. Config files (rarely change) - package.json needed for release stage
+COPY package.json svelte.config.js tsconfig.json vite.config.ts ./
+COPY drizzle.config.ts ./
+
+# 2. Static assets and migrations (change occasionally)
+COPY static ./static
+COPY drizzle ./drizzle
+
+# 3. Scripts and entrypoint (rarely change)
+COPY scripts ./scripts
+COPY entrypoint.sh ./
+
+# 4. Source code (changes most frequently - copy LAST)
+COPY src ./src
 
 # Set production environment for build optimizations
 ENV NODE_ENV=production

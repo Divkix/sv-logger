@@ -24,7 +24,7 @@ services:
   # Application Service
   # ---------------------------------------------------------------------------
   app:
-    image: ghcr.io/divkix/logwell:latest
+    image: ghcr.io/divkix/logwell:dev
     restart: unless-stopped
     ports:
       - "${PORT:-3000}:3000"
