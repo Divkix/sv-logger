@@ -505,14 +505,14 @@ test.describe('Log Stream Page - Log Detail Modal', () => {
   });
 });
 
-test.describe('Log Stream Page - Project Settings Modal', () => {
+test.describe('Log Stream Page - Settings Navigation', () => {
   test.describe.configure({ retries: 1 });
 
   let testProject: { id: string; name: string; apiKey: string };
 
   test.beforeEach(async ({ page }) => {
     await login(page);
-    testProject = await createProject(page, `settings-modal-test-${Date.now()}`);
+    testProject = await createProject(page, `settings-nav-test-${Date.now()}`);
   });
 
   test.afterEach(async ({ page }) => {
@@ -521,54 +521,39 @@ test.describe('Log Stream Page - Project Settings Modal', () => {
     }
   });
 
-  test('should open settings modal when clicking settings button', async ({ page }) => {
+  test('should navigate to settings page when clicking settings link', async ({ page }) => {
     await page.goto(`/projects/${testProject.id}`);
 
-    // Find and click settings button
-    const settingsButton = page.getByRole('button', { name: /settings/i });
-    await expect(settingsButton).toBeVisible();
-    await settingsButton.click();
+    // Find and click settings link
+    const settingsLink = page.getByRole('link', { name: /settings/i });
+    await expect(settingsLink).toBeVisible();
+    await settingsLink.click();
 
-    // Settings modal should open
-    await expect(page.getByRole('dialog')).toBeVisible();
-    await expect(page.getByText('Project Settings')).toBeVisible();
+    // Should navigate to settings page
+    await expect(page).toHaveURL(`/projects/${testProject.id}/settings`);
   });
 
-  test('should display API key in settings modal', async ({ page }) => {
+  test('should display API key on settings page', async ({ page }) => {
     await page.goto(`/projects/${testProject.id}`);
 
-    // Open settings modal
-    await page.getByRole('button', { name: /settings/i }).click();
-    await expect(page.getByRole('dialog')).toBeVisible();
+    // Navigate to settings page
+    await page.getByRole('link', { name: /settings/i }).click();
+    await expect(page).toHaveURL(`/projects/${testProject.id}/settings`);
 
     // API key should be displayed
     await expect(page.locator('[data-testid="api-key-display"]')).toContainText('lw_');
   });
 
-  test('should show curl example in settings modal', async ({ page }) => {
+  test('should show curl example on settings page', async ({ page }) => {
     await page.goto(`/projects/${testProject.id}`);
 
-    // Open settings modal
-    await page.getByRole('button', { name: /settings/i }).click();
-    await expect(page.getByRole('dialog')).toBeVisible();
+    // Navigate to settings page
+    await page.getByRole('link', { name: /settings/i }).click();
+    await expect(page).toHaveURL(`/projects/${testProject.id}/settings`);
 
     // Curl example should be visible (curl is selected by default)
     await expect(page.locator('[data-testid="example-code"]')).toContainText('curl');
     await expect(page.locator('[data-testid="example-code"]')).toContainText('Authorization');
-  });
-
-  test('should close settings modal on Escape', async ({ page }) => {
-    await page.goto(`/projects/${testProject.id}`);
-
-    // Open settings modal
-    await page.getByRole('button', { name: /settings/i }).click();
-    await expect(page.getByRole('dialog')).toBeVisible();
-
-    // Press Escape
-    await page.keyboard.press('Escape');
-
-    // Modal should close
-    await expect(page.getByRole('dialog')).not.toBeVisible();
   });
 });
 

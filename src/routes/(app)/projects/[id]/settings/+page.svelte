@@ -212,7 +212,7 @@ async function handleRetentionChange(value: string | undefined) {
 
 async function handleRegenerateApiKey() {
   try {
-    const response = await fetch(`/api/projects/${data.project.id}/regenerate-key`, {
+    const response = await fetch(`/api/projects/${data.project.id}/regenerate`, {
       method: 'POST',
     });
 

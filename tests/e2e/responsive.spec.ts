@@ -294,7 +294,7 @@ test.describe('Responsive Design - Desktop Viewport', () => {
     // Project action buttons in header should be visible
     // Stats link has aria-label="View statistics" which overrides visible text
     await expect(page.getByRole('link', { name: /view statistics/i })).toBeVisible();
-    await expect(page.getByRole('button', { name: /settings/i })).toBeVisible();
+    await expect(page.getByRole('link', { name: /settings/i })).toBeVisible();
   });
 });
 
@@ -536,15 +536,14 @@ test.describe('Responsive Design - Bottom Navigation', () => {
     await expect(page).toHaveURL(`/projects/${testProject.id}/stats`);
   });
 
-  test('should show settings from bottom nav', async ({ page }) => {
+  test('should navigate to settings from bottom nav', async ({ page }) => {
     await page.goto(`/projects/${testProject.id}`);
 
     const bottomNav = page.locator('[data-testid="bottom-nav"]');
-    await bottomNav.getByRole('button', { name: /settings/i }).click();
+    await bottomNav.locator('[data-testid="nav-settings"]').click();
 
-    // Settings modal should open
-    await expect(page.getByRole('dialog')).toBeVisible();
-    await expect(page.getByText('Project Settings')).toBeVisible();
+    // Should navigate to settings page
+    await expect(page).toHaveURL(`/projects/${testProject.id}/settings`);
   });
 
   test('should highlight active navigation item', async ({ page }) => {

@@ -355,7 +355,7 @@ test.describe('Project Settings - Danger Zone', () => {
 
     const dialog = page.getByTestId('delete-confirm-dialog');
     await expect(dialog).toBeVisible();
-    await expect(dialog.getByText(/delete project/i)).toBeVisible();
+    await expect(dialog.getByRole('heading', { name: /delete project/i })).toBeVisible();
     await expect(dialog.getByText(/cannot be undone/i)).toBeVisible();
   });
 
