@@ -2,6 +2,7 @@ import path from 'node:path';
 import { sveltekit } from '@sveltejs/kit/vite';
 import tailwindcss from '@tailwindcss/vite';
 import { defineConfig } from 'vitest/config';
+import pkg from './package.json';
 
 export default defineConfig({
   plugins: [tailwindcss(), sveltekit()],
@@ -18,6 +19,9 @@ export default defineConfig({
     exclude: ['node_modules', '.svelte-kit', 'build', 'tests/e2e/**'],
     projects: [
       {
+        define: {
+          __APP_VERSION__: JSON.stringify(pkg.version),
+        },
         test: {
           name: 'unit',
           include: ['src/**/*.unit.test.ts'],
@@ -27,6 +31,9 @@ export default defineConfig({
         },
       },
       {
+        define: {
+          __APP_VERSION__: JSON.stringify(pkg.version),
+        },
         resolve: {
           alias: {
             $lib: path.resolve(__dirname, './src/lib'),
@@ -41,6 +48,9 @@ export default defineConfig({
         },
       },
       {
+        define: {
+          __APP_VERSION__: JSON.stringify(pkg.version),
+        },
         plugins: [tailwindcss(), sveltekit()],
         resolve: {
           alias: {
