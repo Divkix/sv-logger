@@ -3,17 +3,22 @@ import { svelteKitHandler } from 'better-auth/svelte-kit';
 import { building } from '$app/environment';
 import { auth, initAuth } from '$lib/server/auth';
 import { createErrorHandler } from '$lib/server/error-handler';
+import { startCleanupScheduler } from '$lib/server/jobs/cleanup-scheduler';
 
 // Initialize auth on server startup
 let authInitialized = false;
 
 /**
- * Ensures auth is initialized before handling requests
+ * Ensures auth is initialized before handling requests.
+ * Also starts the cleanup scheduler on first initialization.
  */
 async function ensureAuthInitialized(): Promise<void> {
   if (!authInitialized) {
     await initAuth();
     authInitialized = true;
+
+    // Start log cleanup scheduler after auth initialization
+    startCleanupScheduler();
   }
 }
 

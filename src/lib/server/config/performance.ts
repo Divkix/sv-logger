@@ -10,6 +10,8 @@
  * - SSE_MAX_BATCH_SIZE: Maximum logs per batch before flush (default: 50)
  * - SSE_HEARTBEAT_INTERVAL_MS: Heartbeat interval (default: 30000ms)
  * - LOG_STREAM_MAX_LOGS: Maximum logs in memory per client (default: 1000)
+ * - LOG_RETENTION_DAYS: System default retention in days (default: 30, 0 = disabled)
+ * - LOG_CLEANUP_INTERVAL_MS: Cleanup job interval in ms (default: 3600000 = 1 hour)
  */
 
 /**
@@ -88,6 +90,36 @@ export const LOG_STREAM_CONFIG = {
     parseEnvInt('LOG_STREAM_MAX_LOGS', LOG_STREAM_DEFAULTS.DEFAULT_MAX_LOGS),
     1,
     LOG_STREAM_DEFAULTS.MAX_LOGS_UPPER_LIMIT,
+  ),
+} as const;
+
+// Retention Configuration defaults and bounds
+const RETENTION_DEFAULTS = {
+  LOG_RETENTION_DAYS: 30,
+  LOG_CLEANUP_INTERVAL_MS: 3600000, // 1 hour
+} as const;
+
+const RETENTION_BOUNDS = {
+  LOG_RETENTION_DAYS: { min: 0, max: 3650 }, // 0 = disabled, max 10 years
+  LOG_CLEANUP_INTERVAL_MS: { min: 60000, max: 86400000 }, // 1 minute to 24 hours
+} as const;
+
+/**
+ * Log retention and cleanup configuration.
+ *
+ * - LOG_RETENTION_DAYS: System default retention period in days (0 = disabled)
+ * - LOG_CLEANUP_INTERVAL_MS: Cleanup job interval in milliseconds
+ */
+export const RETENTION_CONFIG = {
+  LOG_RETENTION_DAYS: clamp(
+    parseEnvInt('LOG_RETENTION_DAYS', RETENTION_DEFAULTS.LOG_RETENTION_DAYS),
+    RETENTION_BOUNDS.LOG_RETENTION_DAYS.min,
+    RETENTION_BOUNDS.LOG_RETENTION_DAYS.max,
+  ),
+  LOG_CLEANUP_INTERVAL_MS: clamp(
+    parseEnvInt('LOG_CLEANUP_INTERVAL_MS', RETENTION_DEFAULTS.LOG_CLEANUP_INTERVAL_MS),
+    RETENTION_BOUNDS.LOG_CLEANUP_INTERVAL_MS.min,
+    RETENTION_BOUNDS.LOG_CLEANUP_INTERVAL_MS.max,
   ),
 } as const;
 

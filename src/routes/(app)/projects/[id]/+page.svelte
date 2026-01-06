@@ -3,7 +3,7 @@ import ArrowLeftIcon from '@lucide/svelte/icons/arrow-left';
 import ChartPieIcon from '@lucide/svelte/icons/chart-pie';
 import LoaderIcon from '@lucide/svelte/icons/loader';
 import SettingsIcon from '@lucide/svelte/icons/settings';
-import { goto, invalidateAll } from '$app/navigation';
+import { goto } from '$app/navigation';
 import { navigating } from '$app/stores';
 import ActiveFilterChips from '$lib/components/active-filter-chips.svelte';
 import BottomNav from '$lib/components/bottom-nav.svelte';
@@ -16,14 +16,13 @@ import LiveToggle from '$lib/components/live-toggle.svelte';
 import LogDetailModal from '$lib/components/log-detail-modal.svelte';
 import LogStreamSkeleton from '$lib/components/log-stream-skeleton.svelte';
 import LogTable from '$lib/components/log-table.svelte';
-import ProjectSettings from '$lib/components/project-settings.svelte';
 import SearchInput from '$lib/components/search-input.svelte';
 import TimeRangePicker, { type TimeRange } from '$lib/components/time-range-picker.svelte';
 import Button from '$lib/components/ui/button/button.svelte';
 import { useLogStream } from '$lib/hooks/use-log-stream.svelte';
 import type { Log, LogLevel, Project } from '$lib/server/db/schema';
 import type { ClientLog } from '$lib/stores/logs.svelte';
-import { toastError, toastSuccess } from '$lib/utils/toast';
+import { toastError } from '$lib/utils/toast';
 import type { PageData } from './$types';
 
 const { data }: { data: PageData } = $props();
@@ -55,6 +54,7 @@ const projectData = $derived<Project>({
   id: data.project.id,
   name: data.project.name,
   apiKey: data.project.apiKey,
+  retentionDays: data.project.retentionDays ?? null,
   createdAt: data.project.createdAt ? new Date(data.project.createdAt) : null,
   updatedAt: data.project.updatedAt ? new Date(data.project.updatedAt) : null,
 });
@@ -69,7 +69,6 @@ let selectedLevels = $state<LogLevel[]>(data.filters.levels);
 let selectedRange = $state<TimeRange>((data.filters.range as TimeRange) || '1h');
 let selectedLog = $state<Log | null>(null);
 let showDetailModal = $state(false);
-let showSettingsModal = $state(false);
 let loading = $state(false);
 
 // Track new log IDs for highlighting
@@ -191,68 +190,6 @@ function closeDetailModal() {
   selectedLog = null;
 }
 
-function openSettings() {
-  showSettingsModal = true;
-}
-
-function closeSettings() {
-  showSettingsModal = false;
-}
-
-async function handleRegenerate() {
-  try {
-    const response = await fetch(`/api/projects/${data.project.id}/regenerate`, {
-      method: 'POST',
-    });
-
-    if (response.ok) {
-      await invalidateAll();
-      closeSettings();
-      toastSuccess('API key regenerated successfully');
-    } else {
-      const result = await response.json();
-      toastError(result.message || 'Failed to regenerate API key');
-    }
-  } catch (error) {
-    toastError(error);
-  }
-}
-
-async function handleDelete() {
-  try {
-    const response = await fetch(`/api/projects/${data.project.id}`, {
-      method: 'DELETE',
-    });
-
-    if (response.ok) {
-      toastSuccess('Project deleted successfully');
-      await goto('/');
-    } else {
-      const result = await response.json();
-      toastError(result.message || 'Failed to delete project');
-    }
-  } catch (error) {
-    toastError(error);
-  }
-}
-
-async function handleRename(name: string) {
-  const response = await fetch(`/api/projects/${data.project.id}`, {
-    method: 'PATCH',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ name }),
-  });
-
-  if (!response.ok) {
-    const result = await response.json();
-    throw new Error(result.message || 'Failed to update project name');
-  }
-
-  await invalidateAll();
-}
-
 async function loadMore() {
   if (!nextCursor || isLoadingMore) return;
   isLoadingMore = true;
@@ -327,10 +264,14 @@ function handleRemoveRange() {
           <ChartPieIcon class="size-4 mr-2" />
           Stats
         </a>
-        <Button variant="outline" size="sm" onclick={openSettings} aria-label="Settings">
+        <a
+          href="/projects/{data.project.id}/settings"
+          class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-3"
+          aria-label="Settings"
+        >
           <SettingsIcon class="size-4 mr-2" />
           Settings
-        </Button>
+        </a>
       </div>
     </div>
 
@@ -446,16 +387,5 @@ function handleRemoveRange() {
   <LogDetailModal log={selectedLog} open={showDetailModal} onClose={closeDetailModal} />
 {/if}
 
-<!-- Project Settings Modal -->
-<ProjectSettings
-  project={projectData}
-  appUrl={data.appUrl}
-  open={showSettingsModal}
-  onClose={closeSettings}
-  onRename={handleRename}
-  onRegenerate={handleRegenerate}
-  onDelete={handleDelete}
-/>
-
 <!-- Mobile Bottom Navigation -->
-<BottomNav projectId={data.project.id} onSettingsClick={openSettings} />
+<BottomNav projectId={data.project.id} />

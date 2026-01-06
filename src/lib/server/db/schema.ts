@@ -18,6 +18,11 @@ export const project = pgTable(
     id: text('id').primaryKey(),
     name: text('name').notNull().unique(),
     apiKey: text('api_key').notNull().unique(),
+    // Log retention configuration:
+    // - null: use system default (LOG_RETENTION_DAYS env var)
+    // - 0: never auto-delete logs
+    // - >0: delete logs older than N days
+    retentionDays: integer('retention_days'),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
   },

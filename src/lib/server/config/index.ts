@@ -25,6 +25,7 @@ export {
 export {
   API_CONFIG,
   LOG_STREAM_CONFIG,
+  RETENTION_CONFIG,
   SSE_CONFIG,
   type SSEConfigType,
   validateSSEConfig,
