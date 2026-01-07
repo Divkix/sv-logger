@@ -218,7 +218,8 @@ test.describe('Project Settings - API Key Section', () => {
     await expect(apiKeyDisplay).toContainText(testProject.apiKey);
   });
 
-  test('should copy API key to clipboard', async ({ page, context }) => {
+  test('should copy API key to clipboard', async ({ page, context, browserName }) => {
+    test.skip(browserName !== 'chromium', 'Clipboard permissions only supported in Chromium');
     // Grant clipboard permissions
     await context.grantPermissions(['clipboard-read', 'clipboard-write']);
 
@@ -395,7 +396,8 @@ test.describe('Project Settings - Danger Zone', () => {
     testProject.id = '';
   });
 
-  test('should copy project name in delete dialog', async ({ page, context }) => {
+  test('should copy project name in delete dialog', async ({ page, context, browserName }) => {
+    test.skip(browserName !== 'chromium', 'Clipboard permissions only supported in Chromium');
     await context.grantPermissions(['clipboard-read', 'clipboard-write']);
 
     await page.getByTestId('delete-project-button').click();
@@ -448,7 +450,8 @@ test.describe('Project Settings - Quick Start Section', () => {
     await expect(codeBlock).toContainText(testProject.apiKey);
   });
 
-  test('should copy example code to clipboard', async ({ page, context }) => {
+  test('should copy example code to clipboard', async ({ page, context, browserName }) => {
+    test.skip(browserName !== 'chromium', 'Clipboard permissions only supported in Chromium');
     await context.grantPermissions(['clipboard-read', 'clipboard-write']);
 
     await page.getByTestId('copy-example-button').click();
