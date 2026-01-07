@@ -84,9 +84,11 @@ SSE_BATCH_WINDOW_MS=1500             # SSE batch window (100-10000)
 SSE_MAX_BATCH_SIZE=50                # Max logs per batch (1-500)
 SSE_HEARTBEAT_INTERVAL_MS=30000      # Keep-alive interval (5000-300000)
 LOG_STREAM_MAX_LOGS=1000             # Max logs in memory (1-10000)
+LOG_RETENTION_DAYS=30                # Auto-delete logs after N days (0 = disabled)
+LOG_CLEANUP_INTERVAL_MS=3600000      # Cleanup job interval (1 hour)
 ```
 
 ### Server Configuration (`src/lib/server/config/`)
 - `env.ts` - Environment validation with startup checks
-- `performance.ts` - SSE and log stream tuning parameters
+- `performance.ts` - SSE, log stream, and retention tuning parameters
 - `index.ts` - Unified exports for all config

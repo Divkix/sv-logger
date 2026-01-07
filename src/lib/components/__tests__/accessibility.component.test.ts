@@ -1,10 +1,8 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/svelte';
-import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { Log, Project } from '$lib/server/db/schema';
+import type { Log } from '$lib/server/db/schema';
 import CreateProjectModal from '../create-project-modal.svelte';
 import LogDetailModal from '../log-detail-modal.svelte';
-import ProjectSettings from '../project-settings.svelte';
 
 // Mock clipboard API
 const mockClipboard = {
@@ -56,14 +54,6 @@ describe('Accessibility: Modal Focus Management', () => {
     ipAddress: '127.0.0.1',
     timestamp: new Date('2024-01-15T14:30:45.123Z'),
     search: '',
-  };
-
-  const baseProject: Project = {
-    id: 'proj_123',
-    name: 'test-project',
-    apiKey: 'lw_test1234567890abcdefghijklmnop',
-    createdAt: new Date('2024-01-01'),
-    updatedAt: new Date('2024-01-01'),
   };
 
   beforeEach(() => {
@@ -220,124 +210,6 @@ describe('Accessibility: Modal Focus Management', () => {
       document.body.removeChild(triggerButton);
     });
   });
-
-  describe('ProjectSettings Focus Management', () => {
-    it('traps focus within the modal when open', async () => {
-      render(ProjectSettings, { props: { project: baseProject, open: true } });
-
-      const modal = screen.getByRole('dialog');
-      const focusableElements = modal.querySelectorAll(
-        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
-      );
-
-      expect(focusableElements.length).toBeGreaterThan(0);
-
-      const lastFocusable = focusableElements[focusableElements.length - 1] as HTMLElement;
-      const firstFocusable = focusableElements[0] as HTMLElement;
-
-      lastFocusable.focus();
-      await fireEvent.keyDown(modal, { key: 'Tab' });
-
-      // Verify focus trap is set up
-      expect(firstFocusable).toBeInTheDocument();
-      expect(lastFocusable).toBeInTheDocument();
-    });
-
-    it('close button is focusable when modal opens', async () => {
-      render(ProjectSettings, { props: { project: baseProject, open: true } });
-
-      const closeButton = screen.getByTestId('close-button');
-      // Verify the close button is in the document and focusable
-      expect(closeButton).toBeInTheDocument();
-      expect(closeButton).toHaveAttribute('aria-label', 'Close project settings');
-      // Manually focus and verify it can receive focus
-      closeButton.focus();
-      expect(document.activeElement).toBe(closeButton);
-    });
-
-    it('restores focus to trigger element when modal closes', async () => {
-      const triggerButton = document.createElement('button');
-      triggerButton.id = 'trigger';
-      document.body.appendChild(triggerButton);
-      triggerButton.focus();
-
-      const { rerender } = render(ProjectSettings, {
-        props: { project: baseProject, open: true, triggerElement: triggerButton },
-      });
-
-      // Wait for initial focus
-      await new Promise((resolve) => setTimeout(resolve, 50));
-
-      rerender({ project: baseProject, open: false, triggerElement: triggerButton });
-
-      await waitFor(
-        () => {
-          expect(document.activeElement).toBe(triggerButton);
-        },
-        { timeout: 500 },
-      );
-
-      document.body.removeChild(triggerButton);
-    });
-
-    describe('Nested Dialogs (Regenerate/Delete Confirmation)', () => {
-      it('nested regenerate dialog has proper role and aria attributes', async () => {
-        const user = userEvent.setup();
-        render(ProjectSettings, { props: { project: baseProject, open: true } });
-
-        const regenerateButton = screen.getByTestId('regenerate-button');
-        await user.click(regenerateButton);
-
-        const nestedDialog = screen.getByTestId('regenerate-confirm-dialog');
-        expect(nestedDialog).toHaveAttribute('role', 'alertdialog');
-        expect(nestedDialog).toHaveAttribute('aria-modal', 'true');
-        expect(nestedDialog).toHaveAttribute('aria-labelledby');
-      });
-
-      it('traps focus in nested regenerate dialog', async () => {
-        const user = userEvent.setup();
-        render(ProjectSettings, { props: { project: baseProject, open: true } });
-
-        const regenerateButton = screen.getByTestId('regenerate-button');
-        await user.click(regenerateButton);
-
-        // Verify the dialog buttons exist and are focusable
-        const cancelButton = screen.getByTestId('cancel-regenerate-button');
-        const confirmButton = screen.getByTestId('confirm-regenerate-button');
-
-        expect(cancelButton).toBeInTheDocument();
-        expect(confirmButton).toBeInTheDocument();
-      });
-
-      it('nested delete dialog has proper role and aria attributes', async () => {
-        const user = userEvent.setup();
-        render(ProjectSettings, { props: { project: baseProject, open: true } });
-
-        const deleteButton = screen.getByTestId('delete-project-button');
-        await user.click(deleteButton);
-
-        const nestedDialog = screen.getByTestId('delete-confirm-dialog');
-        expect(nestedDialog).toHaveAttribute('role', 'alertdialog');
-        expect(nestedDialog).toHaveAttribute('aria-modal', 'true');
-        expect(nestedDialog).toHaveAttribute('aria-labelledby');
-      });
-
-      it('focuses the input in nested delete dialog', async () => {
-        const user = userEvent.setup();
-        render(ProjectSettings, { props: { project: baseProject, open: true } });
-
-        const deleteButton = screen.getByTestId('delete-project-button');
-        await user.click(deleteButton);
-
-        const deleteInput = screen.getByTestId('delete-confirm-input');
-        // The input should be present and focusable
-        expect(deleteInput).toBeInTheDocument();
-        expect(deleteInput).toHaveAttribute('id', 'delete-confirm-input');
-        // It should have accessible labeling
-        expect(deleteInput).toHaveAttribute('aria-describedby');
-      });
-    });
-  });
 });
 
 describe('Accessibility: ARIA Labels', () => {
@@ -371,14 +243,6 @@ describe('Accessibility: ARIA Labels', () => {
     ipAddress: '127.0.0.1',
     timestamp: new Date('2024-01-15T14:30:45.123Z'),
     search: '',
-  };
-
-  const baseProject: Project = {
-    id: 'proj_123',
-    name: 'test-project',
-    apiKey: 'lw_test1234567890abcdefghijklmnop',
-    createdAt: new Date('2024-01-01'),
-    updatedAt: new Date('2024-01-01'),
   };
 
   afterEach(() => {
@@ -426,36 +290,6 @@ describe('Accessibility: ARIA Labels', () => {
 
       const metadataSection = screen.getByTestId('metadata-section');
       expect(metadataSection).toHaveAttribute('aria-label', 'Log metadata');
-    });
-  });
-
-  describe('ProjectSettings ARIA Labels', () => {
-    it('copy API key button has descriptive aria-label', () => {
-      render(ProjectSettings, { props: { project: baseProject, open: true } });
-
-      const copyButton = screen.getByTestId('copy-api-key-button');
-      expect(copyButton).toHaveAttribute('aria-label', 'Copy API key to clipboard');
-    });
-
-    it('regenerate button has descriptive aria-label', () => {
-      render(ProjectSettings, { props: { project: baseProject, open: true } });
-
-      const regenerateButton = screen.getByTestId('regenerate-button');
-      expect(regenerateButton).toHaveAttribute('aria-label', 'Regenerate API key');
-    });
-
-    it('delete button has descriptive aria-label', () => {
-      render(ProjectSettings, { props: { project: baseProject, open: true } });
-
-      const deleteButton = screen.getByTestId('delete-project-button');
-      expect(deleteButton).toHaveAttribute('aria-label', 'Delete project');
-    });
-
-    it('example code has aria-label', () => {
-      render(ProjectSettings, { props: { project: baseProject, open: true } });
-
-      const exampleCode = screen.getByTestId('example-code');
-      expect(exampleCode).toHaveAttribute('aria-label', 'API usage example');
     });
   });
 

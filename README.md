@@ -162,6 +162,10 @@ ADMIN_PASSWORD="your-admin-password"
 
 # Production URL (required for auth behind reverse proxies)
 ORIGIN="https://your-domain.com"
+
+# Log retention (optional, defaults shown)
+# LOG_RETENTION_DAYS="30"        # 0 = never auto-delete
+# LOG_CLEANUP_INTERVAL_MS="3600000"  # Cleanup job interval (1 hour)
 ```
 
 Generate a secure secret:
@@ -584,6 +588,7 @@ The app runs on port 3000 by default.
 | `/api/projects` | GET | List all projects |
 | `/api/projects` | POST | Create project |
 | `/api/projects/[id]` | GET | Get project details |
+| `/api/projects/[id]` | PATCH | Update project (name, retention) |
 | `/api/projects/[id]` | DELETE | Delete project |
 | `/api/projects/[id]/regenerate` | POST | Regenerate API key |
 | `/api/projects/[id]/logs` | GET | Query logs |
@@ -596,7 +601,6 @@ The app runs on port 3000 by default.
 
 | Limitation | Impact | Workaround |
 |------------|--------|------------|
-| **No log retention/TTL** | Storage grows unbounded | Manual `DELETE FROM logs WHERE timestamp < ...` |
 | **Single-user auth** | No team collaboration | Share credentials (not recommended) |
 | **No log export** | Can't backup to S3/file | Direct database dumps via `pg_dump` |
 | **No rate limiting** | API keys have unlimited access | Implement at reverse proxy level |

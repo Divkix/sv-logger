@@ -11,19 +11,16 @@ interface Props {
    * Project ID for project-specific navigation (logs, stats, settings)
    */
   projectId?: string;
-  /**
-   * Callback when settings button is clicked
-   */
-  onSettingsClick?: () => void;
 }
 
-const { projectId, onSettingsClick }: Props = $props();
+const { projectId }: Props = $props();
 
 // Determine active page
 const currentPath = $derived($page.url.pathname);
 const isHomePage = $derived(currentPath === '/');
 const isLogsPage = $derived(projectId && currentPath === `/projects/${projectId}`);
 const isStatsPage = $derived(projectId && currentPath === `/projects/${projectId}/stats`);
+const isSettingsPage = $derived(projectId && currentPath === `/projects/${projectId}/settings`);
 
 const navItemClass = 'flex flex-col items-center gap-1 py-2 px-3 text-xs transition-colors';
 const activeClass = 'text-primary';
@@ -75,16 +72,16 @@ const inactiveClass = 'text-muted-foreground hover:text-foreground';
       </a>
 
       <!-- Settings -->
-      <button
+      <a
+        href="/projects/{projectId}/settings"
         data-testid="nav-settings"
-        type="button"
-        class={cn(navItemClass, inactiveClass)}
-        onclick={onSettingsClick}
-        aria-label="Settings"
+        data-active={isSettingsPage}
+        class={cn(navItemClass, isSettingsPage ? activeClass : inactiveClass)}
+        aria-current={isSettingsPage ? 'page' : undefined}
       >
         <SettingsIcon class="size-5" />
         <span>Settings</span>
-      </button>
+      </a>
     {/if}
   </div>
 </nav>

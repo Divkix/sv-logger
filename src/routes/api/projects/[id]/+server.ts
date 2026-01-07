@@ -34,6 +34,7 @@ async function getDbClient(locals: App.Locals): Promise<DatabaseClient> {
  *   id: string,
  *   name: string,
  *   apiKey: string,
+ *   retentionDays: number | null,
  *   createdAt: string,
  *   updatedAt: string,
  *   stats: {
@@ -93,6 +94,7 @@ export async function GET(event: RequestEvent): Promise<Response> {
     id: projectData.id,
     name: projectData.name,
     apiKey: projectData.apiKey,
+    retentionDays: projectData.retentionDays,
     createdAt: projectData.createdAt?.toISOString(),
     updatedAt: projectData.updatedAt?.toISOString(),
     stats: {
@@ -105,12 +107,13 @@ export async function GET(event: RequestEvent): Promise<Response> {
 /**
  * PATCH /api/projects/[id]
  *
- * Updates a project's editable fields (currently: name).
+ * Updates a project's editable fields (name, retentionDays).
  * Requires session authentication.
  *
  * Request body:
  * {
  *   name?: string  // Optional. Must be unique, 1-50 chars, alphanumeric with hyphens/underscores
+ *   retentionDays?: number | null  // Optional. null = system default, 0 = never delete, 1-3650 = days
  * }
  *
  * Response:
@@ -118,12 +121,13 @@ export async function GET(event: RequestEvent): Promise<Response> {
  *   id: string,
  *   name: string,
  *   apiKey: string,
+ *   retentionDays: number | null,
  *   createdAt: string,
  *   updatedAt: string
  * }
  *
  * Error responses:
- * - 400 validation_error: Invalid name format
+ * - 400 validation_error: Invalid name format or retentionDays value
  * - 400 duplicate_name: Name already in use by another project
  * - 404 not_found: Project does not exist
  */
@@ -142,7 +146,7 @@ export async function PATCH(event: RequestEvent): Promise<Response> {
     return json({ code: 'validation_error', message: errorMessage }, { status: 400 });
   }
 
-  const { name } = result.data;
+  const { name, retentionDays } = result.data;
 
   // Check for duplicate name (if name is being updated)
   if (name) {
@@ -157,10 +161,23 @@ export async function PATCH(event: RequestEvent): Promise<Response> {
     }
   }
 
+  // Build update object dynamically to only include provided fields
+  const updateData: { name?: string; retentionDays?: number | null; updatedAt: Date } = {
+    updatedAt: new Date(),
+  };
+
+  if (name !== undefined) {
+    updateData.name = name;
+  }
+
+  if (retentionDays !== undefined) {
+    updateData.retentionDays = retentionDays;
+  }
+
   // Update project
   const [updated] = await db
     .update(project)
-    .set({ name, updatedAt: new Date() })
+    .set(updateData)
     .where(eq(project.id, projectId))
     .returning();
 
@@ -172,6 +189,7 @@ export async function PATCH(event: RequestEvent): Promise<Response> {
     id: updated.id,
     name: updated.name,
     apiKey: updated.apiKey,
+    retentionDays: updated.retentionDays,
     createdAt: updated.createdAt?.toISOString(),
     updatedAt: updated.updatedAt?.toISOString(),
   });

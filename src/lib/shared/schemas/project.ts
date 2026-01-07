@@ -29,6 +29,10 @@ export const projectCreatePayloadSchema = z.object({
  * Project update payload schema for PATCH /api/projects/[id]
  *
  * Name field is optional but must follow same rules as create when provided
+ * retentionDays field is optional and can be:
+ * - null: use system default
+ * - 0: never delete logs
+ * - 1-3650: delete logs after N days (max 10 years)
  */
 export const projectUpdatePayloadSchema = z.object({
   name: z
@@ -39,5 +43,16 @@ export const projectUpdatePayloadSchema = z.object({
       PROJECT_NAME_PATTERN,
       'Project name must contain only alphanumeric characters, hyphens, and underscores',
     )
+    .optional(),
+  retentionDays: z
+    .union([
+      z.null(), // System default
+      z.literal(0), // Never delete
+      z
+        .number()
+        .int()
+        .min(1)
+        .max(3650), // 1 day to 10 years
+    ])
     .optional(),
 });
