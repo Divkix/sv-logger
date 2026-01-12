@@ -7,16 +7,28 @@ export interface SourceLocation {
 }
 
 /**
- * V8 format regex (Node.js, Bun, Chrome):
- * "    at functionName (/path/to/file.ts:42:15)"
- * "    at /path/to/file.ts:42:15"
- * "    at async functionName (/path/to/file.ts:42:15)"
+ * V8 format with parentheses (Node.js, Bun, Chrome):
+ * Handles all named function variants including:
+ * - "    at functionName (/path/to/file.ts:42:15)"
+ * - "    at async functionName (/path/to/file.ts:42:15)"
+ * - "    at new ClassName (/path/to/file.ts:42:15)"
+ * - "    at Object.method [as alias] (/path/to/file.ts:42:15)"
  *
  * Captures:
  * - Group 1: file path (including protocols like webpack://, file://, http://)
  * - Group 2: line number
  */
-const V8_REGEX = /^\s*at\s+(?:async\s+)?(?:\S+\s+)?\(?(.+):(\d+):\d+\)?$/;
+const V8_PAREN_REGEX = /\((.+):(\d+):\d+\)\s*$/;
+
+/**
+ * V8 format without parentheses (anonymous functions):
+ * "    at /path/to/file.ts:42:15"
+ *
+ * Captures:
+ * - Group 1: file path
+ * - Group 2: line number
+ */
+const V8_BARE_REGEX = /^\s*at\s+(.+):(\d+):\d+$/;
 
 /**
  * SpiderMonkey/JSC format regex (Firefox, Safari):
@@ -47,8 +59,8 @@ export function parseStackFrame(frameLine: string): SourceLocation | undefined {
     return undefined;
   }
 
-  // Try V8 format first (most common in Node.js/Bun)
-  let match = V8_REGEX.exec(frameLine);
+  // Try V8 format with parentheses first (most common, handles all edge cases)
+  let match = V8_PAREN_REGEX.exec(frameLine);
   if (match) {
     const sourceFile = match[1];
     const lineStr = match[2];
@@ -60,7 +72,20 @@ export function parseStackFrame(frameLine: string): SourceLocation | undefined {
     }
   }
 
-  // Try SpiderMonkey/JSC format
+  // Try V8 format without parentheses (anonymous functions)
+  match = V8_BARE_REGEX.exec(frameLine);
+  if (match) {
+    const sourceFile = match[1];
+    const lineStr = match[2];
+    if (sourceFile && lineStr) {
+      const lineNumber = parseInt(lineStr, 10);
+      if (!Number.isNaN(lineNumber)) {
+        return { sourceFile, lineNumber };
+      }
+    }
+  }
+
+  // Try SpiderMonkey/JSC format (Firefox/Safari)
   match = SPIDERMONKEY_REGEX.exec(frameLine);
   if (match) {
     const sourceFile = match[1];
@@ -99,10 +124,16 @@ export function captureSourceLocation(skipFrames: number): SourceLocation | unde
 
   const lines = stack.split('\n');
 
-  // Skip the "Error" message line and internal frames
-  // Frame 0: captureSourceLocation
-  // Frame 1+: caller frames based on skipFrames
-  const targetFrameIndex = 1 + skipFrames + 1; // +1 for "Error" line, +1 for this function
+  // Detect stack format:
+  // - V8 (Node/Bun/Chrome): Has "Error" header line, frames start with "at"
+  // - SpiderMonkey/JSC (Firefox/Safari): No header, frames contain "@"
+  const firstLine = lines[0] || '';
+  const hasErrorHeader = !firstLine.includes('@') && !/^\s*at\s/.test(firstLine);
+
+  // Calculate target frame index:
+  // Skip: header (if present) + captureSourceLocation frame + skipFrames
+  const headerOffset = hasErrorHeader ? 1 : 0;
+  const targetFrameIndex = headerOffset + 1 + skipFrames;
 
   const targetFrame = lines[targetFrameIndex];
   if (targetFrame === undefined) {
