@@ -66,6 +66,7 @@
     "@lucide/svelte": "^0.562.0",
     "better-auth": "^1.4.10",
     "clsx": "^2.1.1",
+    "layerchart": "^1.0.13",
     "nanoid": "^5.1.6",
     "postgres": "^3.4.8",
     "tailwind-merge": "^3.4.0",
