@@ -99,14 +99,16 @@ function formatTooltipDate(date: Date): string {
                 line={{ stroke: CHART_COLOR, strokeWidth: 2 }}
               />
             </Svg>
-            <Tooltip.Root let:data>
-              <div
-                class="bg-popover text-popover-foreground p-2 rounded shadow-lg border text-sm"
-              >
-                <div class="font-medium">{formatTooltipDate(data.date)}</div>
-                <div>{data.count.toLocaleString()} logs</div>
-              </div>
-            </Tooltip.Root>
+            <Tooltip.Root>
+              {#snippet children({ data }: { data: { date: Date; count: number } })}
+                                        <div
+                  class="bg-popover text-popover-foreground p-2 rounded shadow-lg border text-sm"
+                >
+                  <div class="font-medium">{formatTooltipDate(data.date)}</div>
+                  <div>{data.count.toLocaleString()} logs</div>
+                </div>
+                                                    {/snippet}
+                                    </Tooltip.Root>
           </Chart>
         </div>
       {/await}
