@@ -14,6 +14,8 @@ export interface SimpleLogInput {
   timestamp?: string;
   service?: string;
   metadata?: Record<string, unknown>;
+  sourceFile?: string;
+  lineNumber?: number;
 }
 
 /**
@@ -25,6 +27,8 @@ export interface NormalizedSimpleLog {
   timestamp: Date;
   resourceAttributes: { 'service.name': string } | null;
   metadata: Record<string, unknown> | null;
+  sourceFile: string | null;
+  lineNumber: number | null;
 }
 
 /**
@@ -114,6 +118,9 @@ function validateLogEntry(
     entry.metadata && typeof entry.metadata === 'object'
       ? (entry.metadata as Record<string, unknown>)
       : null;
+  const sourceFile = typeof entry.sourceFile === 'string' ? entry.sourceFile : null;
+  const lineNumber =
+    typeof entry.lineNumber === 'number' && entry.lineNumber > 0 ? entry.lineNumber : null;
 
   return {
     log: {
@@ -122,6 +129,8 @@ function validateLogEntry(
       timestamp,
       resourceAttributes: service ? { 'service.name': service } : null,
       metadata,
+      sourceFile,
+      lineNumber,
     },
     error: null,
   };
