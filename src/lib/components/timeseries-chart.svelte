@@ -4,6 +4,10 @@ import { cn } from '$lib/utils';
 import type { TimeSeriesBucket } from '$lib/utils/timeseries';
 import type { TimeRange } from './time-range-picker.svelte';
 
+// Chart colors - using a blue that works in both light and dark modes
+// CSS variables don't work in SVG/D3 context, so we use actual values
+const CHART_COLOR = 'hsl(210, 100%, 50%)'; // Blue (same as info level)
+
 interface Props {
   data: TimeSeriesBucket[];
   range: TimeRange;
@@ -90,9 +94,9 @@ function formatTooltipDate(date: Date): string {
               <Axis placement="bottom" format={formatAxisLabel} />
               <Axis placement="left" format={(d) => d.toLocaleString()} />
               <Area
-                fill="hsl(var(--primary))"
+                fill={CHART_COLOR}
                 fillOpacity={0.2}
-                line={{ stroke: 'hsl(var(--primary))', strokeWidth: 2 }}
+                line={{ stroke: CHART_COLOR, strokeWidth: 2 }}
               />
             </Svg>
             <Tooltip.Root let:data>
