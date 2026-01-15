@@ -319,7 +319,7 @@ After POC validated, clean up code and add polish.
   - **Commit**: `test(keyboard): add component tests for LogRow isSelected`
   - _Design: Test Strategy - Component Tests_
 
-- [ ] 3.3 Component tests for LogCard isSelected
+- [x] 3.3 Component tests for LogCard isSelected
   - **Do**:
     1. Add tests to existing `src/lib/components/log-card.test.ts` (or create if missing)
     2. Test:
