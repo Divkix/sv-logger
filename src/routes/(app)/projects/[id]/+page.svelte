@@ -285,6 +285,11 @@ function handleKeyboardShortcut(event: KeyboardEvent) {
       event.preventDefault();
       searchInputRef?.focus();
       break;
+    case 'l':
+      // Toggle live mode (skip if paused due to search)
+      if (isLivePaused) return;
+      liveEnabled = !liveEnabled;
+      break;
   }
 }
 </script>

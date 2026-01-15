@@ -148,7 +148,7 @@ Focus: Validate the idea works end-to-end. Skip tests, accept hardcoded values.
   - _Requirements: FR-8, FR-9, FR-15, AC-4.1, AC-4.2, AC-4.3, AC-4.4_
   - _Design: SearchInput Component, Interface Changes_
 
-- [ ] 1.9 Add l to toggle live mode
+- [x] 1.9 Add l to toggle live mode
   - **Do**:
     1. In `handleKeyboardShortcut`, add case for `l`:
        - If `isLivePaused`, return (don't toggle when paused due to search)
