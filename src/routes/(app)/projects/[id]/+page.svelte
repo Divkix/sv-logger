@@ -262,8 +262,13 @@ function handleKeyboardShortcut(event: KeyboardEvent) {
     return;
   }
 
+  // Block navigation during loading state
+  const isLoading = loading || isLoadingMore;
+
   switch (event.key) {
     case 'j': {
+      // Skip navigation when loading or no logs
+      if (isLoading || allLogs.length === 0) return;
       // Navigate to next log
       const prevIndexJ = selectedIndex;
       if (selectedIndex < allLogs.length - 1) {
@@ -278,6 +283,8 @@ function handleKeyboardShortcut(event: KeyboardEvent) {
       break;
     }
     case 'k': {
+      // Skip navigation when loading or no logs
+      if (isLoading || allLogs.length === 0) return;
       // Navigate to previous log
       const prevIndexK = selectedIndex;
       if (selectedIndex > 0) {

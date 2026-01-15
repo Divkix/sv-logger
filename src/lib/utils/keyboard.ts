@@ -11,7 +11,7 @@ export const FORM_ELEMENTS = ['INPUT', 'TEXTAREA', 'SELECT'] as const;
 /**
  * Shortcut definition for the help modal.
  */
-export interface ShortcutDefinition {
+interface ShortcutDefinition {
   key: string;
   description: string;
   group: 'navigation' | 'search' | 'other';
