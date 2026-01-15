@@ -160,7 +160,7 @@ Focus: Validate the idea works end-to-end. Skip tests, accept hardcoded values.
   - _Requirements: FR-10, AC-5.1, AC-5.2, AC-5.3, AC-5.4_
   - _Design: Live Toggle Analysis_
 
-- [ ] V2 [VERIFY] Quality checkpoint: `bun run lint && bun run check`
+- [x] V2 [VERIFY] Quality checkpoint: `bun run lint && bun run check`
   - **Do**: Run quality commands and verify all pass
   - **Verify**: All commands exit 0
   - **Done when**: No lint errors, no type errors
