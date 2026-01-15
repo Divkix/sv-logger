@@ -16,7 +16,7 @@ created: 2026-01-15
 
 Focus: Validate the idea works end-to-end. Skip tests, accept hardcoded values.
 
-- [ ] 1.1 Create keyboard utilities module
+- [x] 1.1 Create keyboard utilities module
   - **Do**:
     1. Create `src/lib/utils/keyboard.ts`
     2. Implement `shouldBlockShortcut(event: KeyboardEvent): boolean` function
