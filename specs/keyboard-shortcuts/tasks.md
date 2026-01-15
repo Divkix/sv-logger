@@ -81,7 +81,7 @@ Focus: Validate the idea works end-to-end. Skip tests, accept hardcoded values.
   - _Requirements: FR-13, AC-1.7_
   - _Design: LogRow Component, Selected style_
 
-- [ ] 1.5 Add visual selection highlight to LogCard
+- [x] 1.5 Add visual selection highlight to LogCard
   - **Do**:
     1. In `src/lib/components/log-card.svelte`, add `isSelected?: boolean` to Props interface
     2. Destructure `isSelected = false` from `$props()`
