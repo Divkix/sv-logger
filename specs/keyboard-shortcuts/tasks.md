@@ -230,7 +230,7 @@ Focus: Validate the idea works end-to-end. Skip tests, accept hardcoded values.
 
 After POC validated, clean up code and add polish.
 
-- [ ] 2.1 Add selection reset on filter changes
+- [x] 2.1 Add selection reset on filter changes
   - **Do**:
     1. In `handleSearch`, add `selectedIndex = -1` after setting `searchValue`
     2. In `handleLevelChange`, add `selectedIndex = -1` after setting `selectedLevels`

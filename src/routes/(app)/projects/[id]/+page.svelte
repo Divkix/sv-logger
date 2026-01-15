@@ -155,16 +155,19 @@ const allLogs = $derived([...streamedLogs, ...data.logs.map(parseLogTimestamp), 
 
 function handleSearch(value: string) {
   searchValue = value;
+  selectedIndex = -1;
   updateFilters();
 }
 
 function handleLevelChange(levels: LogLevel[]) {
   selectedLevels = levels;
+  selectedIndex = -1;
   updateFilters();
 }
 
 function handleTimeRangeChange(range: TimeRange) {
   selectedRange = range;
+  selectedIndex = -1;
   updateFilters();
 }
 
@@ -223,6 +226,7 @@ function clearFilters() {
   searchValue = '';
   selectedLevels = [];
   selectedRange = '1h';
+  selectedIndex = -1;
   updateFilters();
 }
 
