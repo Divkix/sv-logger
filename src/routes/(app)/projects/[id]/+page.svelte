@@ -23,6 +23,7 @@ import Button from '$lib/components/ui/button/button.svelte';
 import { useLogStream } from '$lib/hooks/use-log-stream.svelte';
 import type { Log, LogLevel, Project } from '$lib/server/db/schema';
 import type { ClientLog } from '$lib/stores/logs.svelte';
+import { announceToScreenReader } from '$lib/utils/focus-trap';
 import { shouldBlockShortcut } from '$lib/utils/keyboard';
 import { toastError } from '$lib/utils/toast';
 import type { PageData } from './$types';
@@ -262,22 +263,32 @@ function handleKeyboardShortcut(event: KeyboardEvent) {
   }
 
   switch (event.key) {
-    case 'j':
+    case 'j': {
       // Navigate to next log
+      const prevIndexJ = selectedIndex;
       if (selectedIndex < allLogs.length - 1) {
         selectedIndex++;
       } else if (selectedIndex === -1 && allLogs.length > 0) {
         selectedIndex = 0;
       }
-      scrollSelectedIntoView();
-      break;
-    case 'k':
-      // Navigate to previous log
-      if (selectedIndex > 0) {
-        selectedIndex--;
+      if (selectedIndex !== prevIndexJ) {
         scrollSelectedIntoView();
+        announceToScreenReader(`Log ${selectedIndex + 1} of ${allLogs.length}`);
       }
       break;
+    }
+    case 'k': {
+      // Navigate to previous log
+      const prevIndexK = selectedIndex;
+      if (selectedIndex > 0) {
+        selectedIndex--;
+      }
+      if (selectedIndex !== prevIndexK) {
+        scrollSelectedIntoView();
+        announceToScreenReader(`Log ${selectedIndex + 1} of ${allLogs.length}`);
+      }
+      break;
+    }
     case 'Enter':
       // Open modal for selected log
       if (selectedIndex >= 0 && selectedIndex < allLogs.length) {

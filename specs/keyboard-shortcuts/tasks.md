@@ -243,7 +243,7 @@ After POC validated, clean up code and add polish.
   - _Requirements: FR-12, AC-7.1, AC-7.2, AC-7.3, AC-7.4_
   - _Design: Filter Change Reset Flow_
 
-- [ ] 2.2 Add screen reader announcements for navigation
+- [x] 2.2 Add screen reader announcements for navigation
   - **Do**:
     1. Import `announceToScreenReader` from `$lib/utils/focus-trap`
     2. After j/k navigation changes `selectedIndex`, call:
