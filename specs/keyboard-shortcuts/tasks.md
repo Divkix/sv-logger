@@ -67,7 +67,7 @@ Focus: Validate the idea works end-to-end. Skip tests, accept hardcoded values.
   - _Requirements: FR-13, FR-14_
   - _Design: LogTable Component, Interface Changes_
 
-- [ ] 1.4 Add visual selection highlight to LogRow
+- [x] 1.4 Add visual selection highlight to LogRow
   - **Do**:
     1. In `src/lib/components/log-row.svelte`, add `isSelected?: boolean` to Props interface
     2. Destructure `isSelected = false` from `$props()`
