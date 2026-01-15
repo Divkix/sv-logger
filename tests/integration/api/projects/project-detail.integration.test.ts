@@ -68,6 +68,7 @@ describe('GET /api/projects/[id]', () => {
   let cleanup: () => Promise<void>;
   let auth: ReturnType<typeof createAuth>;
   let authenticatedLocals: Partial<App.Locals>;
+  let userId: string;
 
   beforeEach(async () => {
     const setup = await setupTestDatabase();
@@ -93,6 +94,7 @@ describe('GET /api/projects/[id]', () => {
 
     const sessionData = await getSession(mockRequest.headers, db);
     if (!sessionData) throw new Error('Session data should not be null');
+    userId = sessionData.user.id;
 
     authenticatedLocals = {
       user: sessionData.user,
@@ -106,7 +108,7 @@ describe('GET /api/projects/[id]', () => {
 
   describe('Authentication', () => {
     it('throws redirect for unauthenticated request', async () => {
-      const testProject = await seedProject(db);
+      const testProject = await seedProject(db, { ownerId: userId });
       const request = new Request(`http://localhost/api/projects/${testProject.id}`, {
         method: 'GET',
       });
@@ -118,7 +120,7 @@ describe('GET /api/projects/[id]', () => {
 
   describe('Project Detail', () => {
     it('returns project with stats', async () => {
-      const testProject = await seedProject(db, { name: 'my-test-project' });
+      const testProject = await seedProject(db, { name: 'my-test-project', ownerId: userId });
       // Add 10 logs with various levels
       await seedLogs(db, testProject.id, 3, { level: 'info' });
       await seedLogs(db, testProject.id, 2, { level: 'error' });
@@ -164,7 +166,7 @@ describe('GET /api/projects/[id]', () => {
     });
 
     it('returns empty level counts when project has no logs', async () => {
-      const testProject = await seedProject(db);
+      const testProject = await seedProject(db, { ownerId: userId });
 
       const request = new Request(`http://localhost/api/projects/${testProject.id}`, {
         method: 'GET',
@@ -185,6 +187,7 @@ describe('DELETE /api/projects/[id]', () => {
   let cleanup: () => Promise<void>;
   let auth: ReturnType<typeof createAuth>;
   let authenticatedLocals: Partial<App.Locals>;
+  let userId: string;
 
   beforeEach(async () => {
     const setup = await setupTestDatabase();
@@ -210,6 +213,7 @@ describe('DELETE /api/projects/[id]', () => {
 
     const sessionData = await getSession(mockRequest.headers, db);
     if (!sessionData) throw new Error('Session data should not be null');
+    userId = sessionData.user.id;
 
     authenticatedLocals = {
       user: sessionData.user,
@@ -223,7 +227,7 @@ describe('DELETE /api/projects/[id]', () => {
 
   describe('Authentication', () => {
     it('throws redirect for unauthenticated request', async () => {
-      const testProject = await seedProject(db);
+      const testProject = await seedProject(db, { ownerId: userId });
       const request = new Request(`http://localhost/api/projects/${testProject.id}`, {
         method: 'DELETE',
       });
@@ -235,7 +239,7 @@ describe('DELETE /api/projects/[id]', () => {
 
   describe('Project Deletion', () => {
     it('removes project and logs', async () => {
-      const testProject = await seedProject(db);
+      const testProject = await seedProject(db, { ownerId: userId });
       await seedLogs(db, testProject.id, 5);
 
       // Verify logs exist before deletion
@@ -277,7 +281,7 @@ describe('DELETE /api/projects/[id]', () => {
     });
 
     it('invalidates API key cache on deletion', async () => {
-      const testProject = await seedProject(db);
+      const testProject = await seedProject(db, { ownerId: userId });
 
       // Validate API key to add to cache
       const apiKeyRequest = new Request('http://localhost', {
@@ -306,6 +310,7 @@ describe('POST /api/projects/[id]/regenerate', () => {
   let cleanup: () => Promise<void>;
   let auth: ReturnType<typeof createAuth>;
   let authenticatedLocals: Partial<App.Locals>;
+  let userId: string;
 
   beforeEach(async () => {
     const setup = await setupTestDatabase();
@@ -331,6 +336,7 @@ describe('POST /api/projects/[id]/regenerate', () => {
 
     const sessionData = await getSession(mockRequest.headers, db);
     if (!sessionData) throw new Error('Session data should not be null');
+    userId = sessionData.user.id;
 
     authenticatedLocals = {
       user: sessionData.user,
@@ -344,7 +350,7 @@ describe('POST /api/projects/[id]/regenerate', () => {
 
   describe('Authentication', () => {
     it('throws redirect for unauthenticated request', async () => {
-      const testProject = await seedProject(db);
+      const testProject = await seedProject(db, { ownerId: userId });
       const request = new Request(`http://localhost/api/projects/${testProject.id}/regenerate`, {
         method: 'POST',
       });
@@ -356,7 +362,7 @@ describe('POST /api/projects/[id]/regenerate', () => {
 
   describe('API Key Regeneration', () => {
     it('returns new API key', async () => {
-      const testProject = await seedProject(db);
+      const testProject = await seedProject(db, { ownerId: userId });
       const oldApiKey = testProject.apiKey;
 
       const request = new Request(`http://localhost/api/projects/${testProject.id}/regenerate`, {
@@ -382,7 +388,7 @@ describe('POST /api/projects/[id]/regenerate', () => {
     });
 
     it('invalidates old API key', async () => {
-      const testProject = await seedProject(db);
+      const testProject = await seedProject(db, { ownerId: userId });
       const oldApiKey = testProject.apiKey;
 
       // Validate old API key to add to cache
@@ -429,7 +435,7 @@ describe('POST /api/projects/[id]/regenerate', () => {
     });
 
     it('updates updatedAt timestamp', async () => {
-      const testProject = await seedProject(db);
+      const testProject = await seedProject(db, { ownerId: userId });
       const originalUpdatedAt = testProject.updatedAt;
 
       // Wait a bit to ensure timestamp difference

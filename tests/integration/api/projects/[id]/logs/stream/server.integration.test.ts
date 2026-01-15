@@ -1,7 +1,7 @@
 import type { PgliteDatabase } from 'drizzle-orm/pglite';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import type * as schema from '../../../../../../../src/lib/server/db/schema';
-import type { Log } from '../../../../../../../src/lib/server/db/schema';
+import { type Log, user } from '../../../../../../../src/lib/server/db/schema';
 import { setupTestDatabase } from '../../../../../../../src/lib/server/db/test-db';
 import { logEventBus } from '../../../../../../../src/lib/server/events';
 import { seedProject } from '../../../../../../fixtures/db';
@@ -173,12 +173,21 @@ function createMockLog(projectId: string, overrides: Partial<Log> = {}): Log {
 describe('POST /api/projects/[id]/logs/stream', () => {
   let db: PgliteDatabase<typeof schema>;
   let cleanup: () => Promise<void>;
+  let userId: string;
 
   beforeEach(async () => {
     const setup = await setupTestDatabase();
     db = setup.db;
     cleanup = setup.cleanup;
     logEventBus.clear();
+    // Create the test user in the database (matches the mock in createRequestEvent)
+    userId = 'test-user-id';
+    await db.insert(user).values({
+      id: userId,
+      name: 'Test User',
+      email: 'admin@test.com',
+      emailVerified: false,
+    });
   });
 
   afterEach(async () => {
@@ -188,7 +197,7 @@ describe('POST /api/projects/[id]/logs/stream', () => {
 
   describe('Authentication & Authorization', () => {
     it('returns 303 redirect when not authenticated', async () => {
-      const project = await seedProject(db);
+      const project = await seedProject(db, { ownerId: userId });
 
       const request = new Request(`http://localhost/api/projects/${project.id}/logs/stream`, {
         method: 'POST',
@@ -232,7 +241,7 @@ describe('POST /api/projects/[id]/logs/stream', () => {
 
   describe('SSE Response Format', () => {
     it('returns SSE content-type header', async () => {
-      const project = await seedProject(db);
+      const project = await seedProject(db, { ownerId: userId });
 
       const request = new Request(`http://localhost/api/projects/${project.id}/logs/stream`, {
         method: 'POST',
@@ -254,7 +263,7 @@ describe('POST /api/projects/[id]/logs/stream', () => {
 
   describe('Log Streaming', () => {
     it('emits logs when event bus fires', async () => {
-      const project = await seedProject(db);
+      const project = await seedProject(db, { ownerId: userId });
 
       const request = new Request(`http://localhost/api/projects/${project.id}/logs/stream`, {
         method: 'POST',
@@ -290,8 +299,8 @@ describe('POST /api/projects/[id]/logs/stream', () => {
     });
 
     it('only receives logs for subscribed project', async () => {
-      const project1 = await seedProject(db);
-      const project2 = await seedProject(db);
+      const project1 = await seedProject(db, { ownerId: userId });
+      const project2 = await seedProject(db, { ownerId: userId });
 
       const request = new Request(`http://localhost/api/projects/${project1.id}/logs/stream`, {
         method: 'POST',
@@ -331,7 +340,7 @@ describe('POST /api/projects/[id]/logs/stream', () => {
 
   describe('Batching', () => {
     it('batches logs within 1.5s window', async () => {
-      const project = await seedProject(db);
+      const project = await seedProject(db, { ownerId: userId });
 
       const request = new Request(`http://localhost/api/projects/${project.id}/logs/stream`, {
         method: 'POST',
@@ -377,7 +386,7 @@ describe('POST /api/projects/[id]/logs/stream', () => {
     });
 
     it('flushes immediately when batch reaches 50 logs', async () => {
-      const project = await seedProject(db);
+      const project = await seedProject(db, { ownerId: userId });
 
       const request = new Request(`http://localhost/api/projects/${project.id}/logs/stream`, {
         method: 'POST',
@@ -414,7 +423,7 @@ describe('POST /api/projects/[id]/logs/stream', () => {
     it('sends heartbeat events periodically', async () => {
       // Note: This test uses a shorter interval for testing purposes
       // The actual implementation uses 30s, but we'll configure it for tests
-      const project = await seedProject(db);
+      const project = await seedProject(db, { ownerId: userId });
 
       const request = new Request(`http://localhost/api/projects/${project.id}/logs/stream`, {
         method: 'POST',
@@ -437,7 +446,7 @@ describe('POST /api/projects/[id]/logs/stream', () => {
 
   describe('Cleanup', () => {
     it('removes listener from event bus on disconnect', async () => {
-      const project = await seedProject(db);
+      const project = await seedProject(db, { ownerId: userId });
 
       const request = new Request(`http://localhost/api/projects/${project.id}/logs/stream`, {
         method: 'POST',

@@ -2,23 +2,29 @@ import type { Handle, HandleServerError } from '@sveltejs/kit';
 import { svelteKitHandler } from 'better-auth/svelte-kit';
 import { building } from '$app/environment';
 import { auth, initAuth } from '$lib/server/auth';
+import { runMigrations } from '$lib/server/db/migrate';
 import { createErrorHandler } from '$lib/server/error-handler';
 import { startCleanupScheduler } from '$lib/server/jobs/cleanup-scheduler';
 
-// Initialize auth on server startup
-let authInitialized = false;
+// Initialize on server startup
+let initialized = false;
 
 /**
- * Ensures auth is initialized before handling requests.
- * Also starts the cleanup scheduler on first initialization.
+ * Ensures database and auth are initialized before handling requests.
+ * Runs migrations, initializes auth, and starts cleanup scheduler.
  */
-async function ensureAuthInitialized(): Promise<void> {
-  if (!authInitialized) {
-    await initAuth();
-    authInitialized = true;
+async function ensureInitialized(): Promise<void> {
+  if (!initialized) {
+    // Run migrations first (idempotent - only applies new ones)
+    await runMigrations();
 
-    // Start log cleanup scheduler after auth initialization
+    // Then initialize auth
+    await initAuth();
+
+    // Start log cleanup scheduler after initialization
     startCleanupScheduler();
+
+    initialized = true;
   }
 }
 
@@ -33,7 +39,7 @@ export const handle: Handle = async ({ event, resolve }) => {
     return resolve(event);
   }
 
-  await ensureAuthInitialized();
+  await ensureInitialized();
 
   // Fetch current session from Better Auth
   const session = await auth.api.getSession({

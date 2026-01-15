@@ -1,5 +1,5 @@
 import { error } from '@sveltejs/kit';
-import { count, eq, min } from 'drizzle-orm';
+import { and, count, eq, min } from 'drizzle-orm';
 import { RETENTION_CONFIG } from '$lib/server/config';
 import { log, project } from '$lib/server/db/schema';
 import { requireAuth } from '$lib/server/utils/auth-guard';
@@ -7,13 +7,16 @@ import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async (event) => {
   // Require session authentication
-  await requireAuth(event);
+  const { user } = await requireAuth(event);
 
   const { db } = await import('$lib/server/db');
   const projectId = event.params.id;
 
-  // Fetch project data
-  const [projectData] = await db.select().from(project).where(eq(project.id, projectId));
+  // Fetch project data - verify ownership
+  const [projectData] = await db
+    .select()
+    .from(project)
+    .where(and(eq(project.id, projectId), eq(project.ownerId, user.id)));
 
   if (!projectData) {
     throw error(404, { message: 'Project not found' });

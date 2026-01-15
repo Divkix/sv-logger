@@ -65,6 +65,7 @@ describe('GET /api/projects/[id]/logs/export', () => {
   let cleanup: () => Promise<void>;
   let auth: ReturnType<typeof createAuth>;
   let authenticatedLocals: Partial<App.Locals>;
+  let userId: string;
 
   beforeEach(async () => {
     const setup = await setupTestDatabase();
@@ -90,6 +91,7 @@ describe('GET /api/projects/[id]/logs/export', () => {
 
     const sessionData = await getSession(mockRequest.headers, db);
     if (!sessionData) throw new Error('Session data should not be null');
+    userId = sessionData.user.id;
 
     authenticatedLocals = {
       user: sessionData.user,
@@ -103,7 +105,7 @@ describe('GET /api/projects/[id]/logs/export', () => {
 
   describe('Authentication', () => {
     it('throws redirect for unauthenticated request', async () => {
-      const testProject = await seedProject(db);
+      const testProject = await seedProject(db, { ownerId: userId });
       const request = new Request(`http://localhost/api/projects/${testProject.id}/logs/export`, {
         method: 'GET',
       });
@@ -113,7 +115,7 @@ describe('GET /api/projects/[id]/logs/export', () => {
     });
 
     it('returns 200 for authenticated request', async () => {
-      const testProject = await seedProject(db);
+      const testProject = await seedProject(db, { ownerId: userId });
       await seedLog(db, testProject.id);
 
       const request = new Request(`http://localhost/api/projects/${testProject.id}/logs/export`, {
@@ -129,7 +131,7 @@ describe('GET /api/projects/[id]/logs/export', () => {
 
   describe('Format Validation', () => {
     it('returns 400 for invalid format parameter', async () => {
-      const testProject = await seedProject(db);
+      const testProject = await seedProject(db, { ownerId: userId });
 
       const request = new Request(
         `http://localhost/api/projects/${testProject.id}/logs/export?format=xml`,
@@ -145,7 +147,7 @@ describe('GET /api/projects/[id]/logs/export', () => {
     });
 
     it('defaults to JSON when format not specified', async () => {
-      const testProject = await seedProject(db);
+      const testProject = await seedProject(db, { ownerId: userId });
       await seedLog(db, testProject.id);
 
       const request = new Request(`http://localhost/api/projects/${testProject.id}/logs/export`, {
@@ -162,7 +164,7 @@ describe('GET /api/projects/[id]/logs/export', () => {
 
   describe('JSON Export', () => {
     it('returns application/json content-type', async () => {
-      const testProject = await seedProject(db);
+      const testProject = await seedProject(db, { ownerId: userId });
       await seedLog(db, testProject.id);
 
       const request = new Request(
@@ -178,7 +180,7 @@ describe('GET /api/projects/[id]/logs/export', () => {
     });
 
     it('returns Content-Disposition header with filename', async () => {
-      const testProject = await seedProject(db, { name: 'test-app' });
+      const testProject = await seedProject(db, { name: 'test-app', ownerId: userId });
       await seedLog(db, testProject.id);
 
       const request = new Request(
@@ -197,7 +199,7 @@ describe('GET /api/projects/[id]/logs/export', () => {
     });
 
     it('returns array of logs matching filters', async () => {
-      const testProject = await seedProject(db);
+      const testProject = await seedProject(db, { ownerId: userId });
       const log1 = await seedLog(db, testProject.id, { message: 'Test log 1' });
       const log2 = await seedLog(db, testProject.id, { message: 'Test log 2' });
 
@@ -219,7 +221,7 @@ describe('GET /api/projects/[id]/logs/export', () => {
     });
 
     it('respects level filter', async () => {
-      const testProject = await seedProject(db);
+      const testProject = await seedProject(db, { ownerId: userId });
       await seedLogs(db, testProject.id, 5, { level: 'info' });
       await seedLogs(db, testProject.id, 3, { level: 'error' });
 
@@ -239,7 +241,7 @@ describe('GET /api/projects/[id]/logs/export', () => {
     });
 
     it('respects time range filters', async () => {
-      const testProject = await seedProject(db);
+      const testProject = await seedProject(db, { ownerId: userId });
 
       const now = new Date();
       await seedLog(db, testProject.id, {
@@ -269,7 +271,7 @@ describe('GET /api/projects/[id]/logs/export', () => {
     });
 
     it('handles empty result set', async () => {
-      const testProject = await seedProject(db);
+      const testProject = await seedProject(db, { ownerId: userId });
       // No logs seeded
 
       const request = new Request(
@@ -290,7 +292,7 @@ describe('GET /api/projects/[id]/logs/export', () => {
 
   describe('CSV Export', () => {
     it('returns text/csv content-type', async () => {
-      const testProject = await seedProject(db);
+      const testProject = await seedProject(db, { ownerId: userId });
       await seedLog(db, testProject.id);
 
       const request = new Request(
@@ -306,7 +308,7 @@ describe('GET /api/projects/[id]/logs/export', () => {
     });
 
     it('returns Content-Disposition header', async () => {
-      const testProject = await seedProject(db, { name: 'my-service' });
+      const testProject = await seedProject(db, { name: 'my-service', ownerId: userId });
       await seedLog(db, testProject.id);
 
       const request = new Request(
@@ -325,7 +327,7 @@ describe('GET /api/projects/[id]/logs/export', () => {
     });
 
     it('first row contains headers', async () => {
-      const testProject = await seedProject(db);
+      const testProject = await seedProject(db, { ownerId: userId });
       await seedLog(db, testProject.id);
 
       const request = new Request(
@@ -346,7 +348,7 @@ describe('GET /api/projects/[id]/logs/export', () => {
     });
 
     it('properly escapes special characters', async () => {
-      const testProject = await seedProject(db);
+      const testProject = await seedProject(db, { ownerId: userId });
       await seedLog(db, testProject.id, {
         message: 'Test message with, comma',
       });
@@ -379,7 +381,7 @@ describe('GET /api/projects/[id]/logs/export', () => {
     });
 
     it('handles metadata JSON in fields', async () => {
-      const testProject = await seedProject(db);
+      const testProject = await seedProject(db, { ownerId: userId });
       await seedLog(db, testProject.id, {
         message: 'Log with metadata',
         metadata: { key: 'value', count: 42 },
@@ -403,7 +405,7 @@ describe('GET /api/projects/[id]/logs/export', () => {
 
   describe('Limits', () => {
     it('returns 400 if export exceeds maximum logs', async () => {
-      const testProject = await seedProject(db);
+      const testProject = await seedProject(db, { ownerId: userId });
       // Seed a reasonable number of logs to test count check without breaking PGlite
       // We'll seed just enough to trigger the limit check
       await seedLogs(db, testProject.id, 100);

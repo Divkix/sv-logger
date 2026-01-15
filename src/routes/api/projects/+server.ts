@@ -27,7 +27,7 @@ async function getDbClient(locals: App.Locals): Promise<DatabaseClient> {
 /**
  * GET /api/projects
  *
- * Returns all projects with their log counts.
+ * Returns all projects owned by the authenticated user with their log counts.
  * Requires session authentication.
  *
  * Response:
@@ -45,11 +45,11 @@ async function getDbClient(locals: App.Locals): Promise<DatabaseClient> {
  */
 export async function GET(event: RequestEvent): Promise<Response> {
   // Require session authentication
-  await requireAuth(event);
+  const { user } = await requireAuth(event);
 
   const db = await getDbClient(event.locals);
 
-  // Query projects with log counts using a subquery
+  // Query projects owned by the authenticated user
   const projects = await db
     .select({
       id: project.id,
@@ -58,6 +58,7 @@ export async function GET(event: RequestEvent): Promise<Response> {
       updatedAt: project.updatedAt,
     })
     .from(project)
+    .where(eq(project.ownerId, user.id))
     .orderBy(desc(project.createdAt));
 
   // Get log counts for each project
@@ -85,6 +86,7 @@ export async function GET(event: RequestEvent): Promise<Response> {
  * POST /api/projects
  *
  * Creates a new project with auto-generated API key.
+ * The authenticated user becomes the owner.
  * Requires session authentication.
  *
  * Request body:
@@ -107,7 +109,7 @@ export async function GET(event: RequestEvent): Promise<Response> {
  */
 export async function POST(event: RequestEvent): Promise<Response> {
   // Require session authentication
-  await requireAuth(event);
+  const { user } = await requireAuth(event);
 
   const db = await getDbClient(event.locals);
 
@@ -145,11 +147,12 @@ export async function POST(event: RequestEvent): Promise<Response> {
     );
   }
 
-  // Generate new project
+  // Generate new project with current user as owner
   const newProject = {
     id: nanoid(),
     name,
     apiKey: generateApiKey(),
+    ownerId: user.id,
   };
 
   // Insert project

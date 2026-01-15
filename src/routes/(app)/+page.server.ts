@@ -1,14 +1,18 @@
 import { count, desc, eq, max } from 'drizzle-orm';
 import { db } from '$lib/server/db';
 import { log, project } from '$lib/server/db/schema';
+import { requireAuth } from '$lib/server/utils/auth-guard';
 import type { PageServerLoad } from './$types';
 
 /**
  * Dashboard page server load function.
- * Fetches all projects with log counts and last activity.
+ * Fetches all projects owned by the current user with log counts and last activity.
  */
-export const load: PageServerLoad = async () => {
-  // Query all projects ordered by creation date (newest first)
+export const load: PageServerLoad = async (event) => {
+  // Require session authentication
+  const { user } = await requireAuth(event);
+
+  // Query only projects owned by the current user
   const projects = await db
     .select({
       id: project.id,
@@ -17,6 +21,7 @@ export const load: PageServerLoad = async () => {
       updatedAt: project.updatedAt,
     })
     .from(project)
+    .where(eq(project.ownerId, user.id))
     .orderBy(desc(project.createdAt));
 
   // Get log counts and last activity for each project

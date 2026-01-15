@@ -65,6 +65,7 @@ describe('GET /api/projects/[id]/stats', () => {
   let cleanup: () => Promise<void>;
   let auth: ReturnType<typeof createAuth>;
   let authenticatedLocals: Partial<App.Locals>;
+  let userId: string;
 
   beforeEach(async () => {
     const setup = await setupTestDatabase();
@@ -90,6 +91,7 @@ describe('GET /api/projects/[id]/stats', () => {
 
     const sessionData = await getSession(mockRequest.headers, db);
     if (!sessionData) throw new Error('Session data should not be null');
+    userId = sessionData.user.id;
 
     authenticatedLocals = {
       user: sessionData.user,
@@ -103,7 +105,7 @@ describe('GET /api/projects/[id]/stats', () => {
 
   describe('Authentication', () => {
     it('throws redirect for unauthenticated request', async () => {
-      const testProject = await seedProject(db);
+      const testProject = await seedProject(db, { ownerId: userId });
       const request = new Request(`http://localhost/api/projects/${testProject.id}/stats`, {
         method: 'GET',
       });
@@ -115,7 +117,7 @@ describe('GET /api/projects/[id]/stats', () => {
 
   describe('Level Distribution Counts', () => {
     it('returns level distribution counts', async () => {
-      const testProject = await seedProject(db);
+      const testProject = await seedProject(db, { ownerId: userId });
 
       // Seed logs with different levels
       await seedLogs(db, testProject.id, 10, { level: 'debug' });
@@ -146,7 +148,7 @@ describe('GET /api/projects/[id]/stats', () => {
     });
 
     it('returns only levels that have logs', async () => {
-      const testProject = await seedProject(db);
+      const testProject = await seedProject(db, { ownerId: userId });
 
       // Only seed info and error logs
       await seedLogs(db, testProject.id, 15, { level: 'info' });
@@ -175,7 +177,7 @@ describe('GET /api/projects/[id]/stats', () => {
 
   describe('Percentage Calculations', () => {
     it('calculates percentages correctly', async () => {
-      const testProject = await seedProject(db);
+      const testProject = await seedProject(db, { ownerId: userId });
 
       // Total of 100 logs for easy percentage calculation
       await seedLogs(db, testProject.id, 50, { level: 'info' }); // 50%
@@ -199,7 +201,7 @@ describe('GET /api/projects/[id]/stats', () => {
     });
 
     it('handles percentages with decimal precision', async () => {
-      const testProject = await seedProject(db);
+      const testProject = await seedProject(db, { ownerId: userId });
 
       // Total of 3 logs for fractional percentages
       await seedLogs(db, testProject.id, 1, { level: 'info' }); // 33.33%
@@ -224,7 +226,7 @@ describe('GET /api/projects/[id]/stats', () => {
     });
 
     it('percentages sum to approximately 100', async () => {
-      const testProject = await seedProject(db);
+      const testProject = await seedProject(db, { ownerId: userId });
 
       await seedLogs(db, testProject.id, 7, { level: 'debug' });
       await seedLogs(db, testProject.id, 13, { level: 'info' });
@@ -252,7 +254,7 @@ describe('GET /api/projects/[id]/stats', () => {
 
   describe('Time Range Parameters', () => {
     it('respects from timestamp parameter', async () => {
-      const testProject = await seedProject(db);
+      const testProject = await seedProject(db, { ownerId: userId });
 
       const now = new Date();
       // Old logs (before the 'from' filter - should be excluded)
@@ -285,7 +287,7 @@ describe('GET /api/projects/[id]/stats', () => {
     });
 
     it('respects to timestamp parameter', async () => {
-      const testProject = await seedProject(db);
+      const testProject = await seedProject(db, { ownerId: userId });
 
       const now = new Date();
       // Old logs (before the 'to' filter - should be included)
@@ -318,7 +320,7 @@ describe('GET /api/projects/[id]/stats', () => {
     });
 
     it('respects both from and to timestamp parameters', async () => {
-      const testProject = await seedProject(db);
+      const testProject = await seedProject(db, { ownerId: userId });
 
       const now = new Date();
       // Very old logs (before the 'from' - should be excluded)
@@ -379,7 +381,7 @@ describe('GET /api/projects/[id]/stats', () => {
 
   describe('Empty State', () => {
     it('returns zero counts when project has no logs', async () => {
-      const testProject = await seedProject(db);
+      const testProject = await seedProject(db, { ownerId: userId });
 
       const request = new Request(`http://localhost/api/projects/${testProject.id}/stats`, {
         method: 'GET',
@@ -397,7 +399,7 @@ describe('GET /api/projects/[id]/stats', () => {
     });
 
     it('returns zero counts when time range has no logs', async () => {
-      const testProject = await seedProject(db);
+      const testProject = await seedProject(db, { ownerId: userId });
 
       const now = new Date();
       // All logs are old

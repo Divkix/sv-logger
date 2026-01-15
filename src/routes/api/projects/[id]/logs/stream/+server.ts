@@ -1,30 +1,11 @@
-import { json } from '@sveltejs/kit';
-import { eq } from 'drizzle-orm';
-import type { PgliteDatabase } from 'drizzle-orm/pglite';
-import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import { SSE_CONFIG } from '$lib/server/config/performance';
-import type * as schema from '$lib/server/db/schema';
-import { type Log, project } from '$lib/server/db/schema';
+import type { Log } from '$lib/server/db/schema';
 import { logEventBus } from '$lib/server/events';
-import { requireAuth } from '$lib/server/utils/auth-guard';
+import { isErrorResponse, requireProjectOwnership } from '$lib/server/utils/project-guard';
 import type { RequestEvent } from './$types';
-
-type DatabaseClient = PostgresJsDatabase<typeof schema> | PgliteDatabase<typeof schema>;
 
 // Destructure SSE configuration for cleaner access
 const { BATCH_WINDOW_MS, MAX_BATCH_SIZE, HEARTBEAT_INTERVAL_MS } = SSE_CONFIG;
-
-/**
- * Helper to get database client from locals or production db
- * Supports test injection via locals.db
- */
-async function getDbClient(locals: App.Locals): Promise<DatabaseClient> {
-  if (locals.db) {
-    return locals.db as DatabaseClient;
-  }
-  const { db } = await import('$lib/server/db');
-  return db;
-}
 
 /**
  * Format an SSE event
@@ -37,7 +18,7 @@ function formatSSEEvent(event: string, data: string): string {
  * POST /api/projects/[id]/logs/stream
  *
  * Server-Sent Events endpoint for real-time log streaming.
- * Requires session authentication.
+ * Requires session authentication and project ownership.
  *
  * SSE Events:
  * - `logs`: Batched array of Log objects
@@ -49,21 +30,11 @@ function formatSSEEvent(event: string, data: string): string {
  * - Only logs for the subscribed project are emitted
  */
 export async function POST(event: RequestEvent): Promise<Response> {
-  // Require session authentication first
-  await requireAuth(event);
+  // Require authentication and project ownership
+  const authResult = await requireProjectOwnership(event, event.params.id);
+  if (isErrorResponse(authResult)) return authResult;
 
-  const db = await getDbClient(event.locals);
   const projectId = event.params.id;
-
-  // Verify project exists before starting stream
-  const [projectData] = await db
-    .select({ id: project.id })
-    .from(project)
-    .where(eq(project.id, projectId));
-
-  if (!projectData) {
-    return json({ error: 'not_found', message: 'Project not found' }, { status: 404 });
-  }
 
   // Store cleanup function outside the stream for cancel handler access
   let cleanupFn: (() => void) | null = null;

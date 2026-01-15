@@ -65,6 +65,7 @@ describe('GET /api/projects/[id]/stats/timeseries', () => {
   let cleanup: () => Promise<void>;
   let auth: ReturnType<typeof createAuth>;
   let authenticatedLocals: Partial<App.Locals>;
+  let userId: string;
 
   beforeEach(async () => {
     const setup = await setupTestDatabase();
@@ -90,6 +91,7 @@ describe('GET /api/projects/[id]/stats/timeseries', () => {
 
     const sessionData = await getSession(mockRequest.headers, db);
     if (!sessionData) throw new Error('Session data should not be null');
+    userId = sessionData.user.id;
 
     authenticatedLocals = {
       user: sessionData.user,
@@ -103,7 +105,7 @@ describe('GET /api/projects/[id]/stats/timeseries', () => {
 
   describe('Authentication', () => {
     it('throws redirect for unauthenticated request', async () => {
-      const testProject = await seedProject(db);
+      const testProject = await seedProject(db, { ownerId: userId });
       const request = new Request(
         `http://localhost/api/projects/${testProject.id}/stats/timeseries`,
         { method: 'GET' },
@@ -133,7 +135,7 @@ describe('GET /api/projects/[id]/stats/timeseries', () => {
 
   describe('Default Behavior', () => {
     it('defaults to 24h range when not specified', async () => {
-      const testProject = await seedProject(db);
+      const testProject = await seedProject(db, { ownerId: userId });
       const request = new Request(
         `http://localhost/api/projects/${testProject.id}/stats/timeseries`,
         { method: 'GET' },
@@ -149,7 +151,7 @@ describe('GET /api/projects/[id]/stats/timeseries', () => {
     });
 
     it('returns buckets for 15m range with minute granularity', async () => {
-      const testProject = await seedProject(db);
+      const testProject = await seedProject(db, { ownerId: userId });
       const request = new Request(
         `http://localhost/api/projects/${testProject.id}/stats/timeseries?range=15m`,
         { method: 'GET' },
@@ -164,7 +166,7 @@ describe('GET /api/projects/[id]/stats/timeseries', () => {
     });
 
     it('returns buckets for 1h range with 5-minute granularity', async () => {
-      const testProject = await seedProject(db);
+      const testProject = await seedProject(db, { ownerId: userId });
       const request = new Request(
         `http://localhost/api/projects/${testProject.id}/stats/timeseries?range=1h`,
         { method: 'GET' },
@@ -179,7 +181,7 @@ describe('GET /api/projects/[id]/stats/timeseries', () => {
     });
 
     it('returns buckets for 7d range with 6-hour granularity', async () => {
-      const testProject = await seedProject(db);
+      const testProject = await seedProject(db, { ownerId: userId });
       const request = new Request(
         `http://localhost/api/projects/${testProject.id}/stats/timeseries?range=7d`,
         { method: 'GET' },
@@ -194,7 +196,7 @@ describe('GET /api/projects/[id]/stats/timeseries', () => {
     });
 
     it('falls back to 24h for invalid range parameter', async () => {
-      const testProject = await seedProject(db);
+      const testProject = await seedProject(db, { ownerId: userId });
       const request = new Request(
         `http://localhost/api/projects/${testProject.id}/stats/timeseries?range=invalid`,
         { method: 'GET' },
@@ -211,7 +213,7 @@ describe('GET /api/projects/[id]/stats/timeseries', () => {
 
   describe('Empty State', () => {
     it('returns all zero counts when no logs in range', async () => {
-      const testProject = await seedProject(db);
+      const testProject = await seedProject(db, { ownerId: userId });
       // Don't seed any logs
 
       const request = new Request(
@@ -230,7 +232,7 @@ describe('GET /api/projects/[id]/stats/timeseries', () => {
 
   describe('Log Counting', () => {
     it('returns correct count per bucket', async () => {
-      const testProject = await seedProject(db);
+      const testProject = await seedProject(db, { ownerId: userId });
       const now = new Date();
 
       // Seed exactly 7 logs 30 minutes ago (should be in one specific bucket for 1h range)
@@ -254,7 +256,7 @@ describe('GET /api/projects/[id]/stats/timeseries', () => {
     });
 
     it('returns buckets with logs at different times', async () => {
-      const testProject = await seedProject(db);
+      const testProject = await seedProject(db, { ownerId: userId });
       const now = new Date();
 
       // Seed logs at different hours
@@ -282,7 +284,7 @@ describe('GET /api/projects/[id]/stats/timeseries', () => {
 
   describe('Bucket Order', () => {
     it('returns buckets in chronological order', async () => {
-      const testProject = await seedProject(db);
+      const testProject = await seedProject(db, { ownerId: userId });
       const request = new Request(
         `http://localhost/api/projects/${testProject.id}/stats/timeseries?range=24h`,
         { method: 'GET' },
@@ -301,7 +303,7 @@ describe('GET /api/projects/[id]/stats/timeseries', () => {
     });
 
     it('returns buckets with valid ISO timestamps', async () => {
-      const testProject = await seedProject(db);
+      const testProject = await seedProject(db, { ownerId: userId });
       const request = new Request(
         `http://localhost/api/projects/${testProject.id}/stats/timeseries?range=24h`,
         { method: 'GET' },
@@ -320,8 +322,8 @@ describe('GET /api/projects/[id]/stats/timeseries', () => {
 
   describe('Project Isolation', () => {
     it('respects projectId filter (no cross-project leakage)', async () => {
-      const project1 = await seedProject(db, { name: 'Project 1' });
-      const project2 = await seedProject(db, { name: 'Project 2' });
+      const project1 = await seedProject(db, { name: 'Project 1', ownerId: userId });
+      const project2 = await seedProject(db, { name: 'Project 2', ownerId: userId });
 
       const now = new Date();
       await seedLogs(db, project1.id, 10, { timestamp: now });
@@ -342,7 +344,7 @@ describe('GET /api/projects/[id]/stats/timeseries', () => {
 
   describe('Time Range Boundary', () => {
     it('excludes logs outside the time range', async () => {
-      const testProject = await seedProject(db);
+      const testProject = await seedProject(db, { ownerId: userId });
       const now = new Date();
 
       // Seed old logs (before the 24h range - should be excluded)

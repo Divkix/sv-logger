@@ -66,6 +66,7 @@ describe('PATCH /api/projects/[id] with retentionDays', () => {
   let cleanup: () => Promise<void>;
   let auth: ReturnType<typeof createAuth>;
   let authenticatedLocals: Partial<App.Locals>;
+  let userId: string;
 
   beforeEach(async () => {
     const setup = await setupTestDatabase();
@@ -90,6 +91,7 @@ describe('PATCH /api/projects/[id] with retentionDays', () => {
 
     const sessionData = await getSession(mockRequest.headers, db);
     if (!sessionData) throw new Error('Session data should not be null');
+    userId = sessionData.user.id;
 
     authenticatedLocals = {
       user: sessionData.user,
@@ -103,7 +105,7 @@ describe('PATCH /api/projects/[id] with retentionDays', () => {
 
   describe('Authentication', () => {
     it('throws redirect for unauthenticated request', async () => {
-      const testProject = await seedProject(db);
+      const testProject = await seedProject(db, { ownerId: userId });
 
       const request = new Request(`http://localhost/api/projects/${testProject.id}`, {
         method: 'PATCH',
@@ -121,7 +123,7 @@ describe('PATCH /api/projects/[id] with retentionDays', () => {
   describe('retentionDays updates', () => {
     it('should update retentionDays to null', async () => {
       // Seed project with existing retentionDays value
-      const testProject = await seedProject(db, { retentionDays: 30 });
+      const testProject = await seedProject(db, { retentionDays: 30, ownerId: userId });
 
       const request = new Request(`http://localhost/api/projects/${testProject.id}`, {
         method: 'PATCH',
@@ -144,7 +146,7 @@ describe('PATCH /api/projects/[id] with retentionDays', () => {
     });
 
     it('should update retentionDays to 0 (never delete)', async () => {
-      const testProject = await seedProject(db, { retentionDays: 30 });
+      const testProject = await seedProject(db, { retentionDays: 30, ownerId: userId });
 
       const request = new Request(`http://localhost/api/projects/${testProject.id}`, {
         method: 'PATCH',
@@ -167,7 +169,7 @@ describe('PATCH /api/projects/[id] with retentionDays', () => {
     });
 
     it('should update retentionDays to positive value', async () => {
-      const testProject = await seedProject(db);
+      const testProject = await seedProject(db, { ownerId: userId });
 
       const request = new Request(`http://localhost/api/projects/${testProject.id}`, {
         method: 'PATCH',
@@ -190,7 +192,7 @@ describe('PATCH /api/projects/[id] with retentionDays', () => {
     });
 
     it('should reject invalid retentionDays (negative)', async () => {
-      const testProject = await seedProject(db);
+      const testProject = await seedProject(db, { ownerId: userId });
 
       const request = new Request(`http://localhost/api/projects/${testProject.id}`, {
         method: 'PATCH',
@@ -209,7 +211,7 @@ describe('PATCH /api/projects/[id] with retentionDays', () => {
     });
 
     it('should reject invalid retentionDays (exceeds max)', async () => {
-      const testProject = await seedProject(db);
+      const testProject = await seedProject(db, { ownerId: userId });
 
       const request = new Request(`http://localhost/api/projects/${testProject.id}`, {
         method: 'PATCH',
@@ -228,7 +230,7 @@ describe('PATCH /api/projects/[id] with retentionDays', () => {
     });
 
     it('should reject invalid retentionDays (non-integer)', async () => {
-      const testProject = await seedProject(db);
+      const testProject = await seedProject(db, { ownerId: userId });
 
       const request = new Request(`http://localhost/api/projects/${testProject.id}`, {
         method: 'PATCH',
@@ -247,7 +249,7 @@ describe('PATCH /api/projects/[id] with retentionDays', () => {
     });
 
     it('should not change retentionDays when not provided', async () => {
-      const testProject = await seedProject(db, { retentionDays: 45 });
+      const testProject = await seedProject(db, { retentionDays: 45, ownerId: userId });
 
       const request = new Request(`http://localhost/api/projects/${testProject.id}`, {
         method: 'PATCH',
@@ -272,7 +274,7 @@ describe('PATCH /api/projects/[id] with retentionDays', () => {
     });
 
     it('should update both name and retentionDays together', async () => {
-      const testProject = await seedProject(db, { retentionDays: 30 });
+      const testProject = await seedProject(db, { retentionDays: 30, ownerId: userId });
 
       const request = new Request(`http://localhost/api/projects/${testProject.id}`, {
         method: 'PATCH',
@@ -303,6 +305,7 @@ describe('GET /api/projects/[id] retentionDays', () => {
   let cleanup: () => Promise<void>;
   let auth: ReturnType<typeof createAuth>;
   let authenticatedLocals: Partial<App.Locals>;
+  let userId: string;
 
   beforeEach(async () => {
     const setup = await setupTestDatabase();
@@ -327,6 +330,7 @@ describe('GET /api/projects/[id] retentionDays', () => {
 
     const sessionData = await getSession(mockRequest.headers, db);
     if (!sessionData) throw new Error('Session data should not be null');
+    userId = sessionData.user.id;
 
     authenticatedLocals = {
       user: sessionData.user,
@@ -340,7 +344,7 @@ describe('GET /api/projects/[id] retentionDays', () => {
 
   describe('Authentication', () => {
     it('throws redirect for unauthenticated request', async () => {
-      const testProject = await seedProject(db);
+      const testProject = await seedProject(db, { ownerId: userId });
 
       const request = new Request(`http://localhost/api/projects/${testProject.id}`, {
         method: 'GET',
@@ -353,7 +357,7 @@ describe('GET /api/projects/[id] retentionDays', () => {
 
   describe('retentionDays retrieval', () => {
     it('should include retentionDays in response', async () => {
-      const testProject = await seedProject(db, { retentionDays: 30 });
+      const testProject = await seedProject(db, { retentionDays: 30, ownerId: userId });
 
       const request = new Request(`http://localhost/api/projects/${testProject.id}`, {
         method: 'GET',
@@ -369,7 +373,7 @@ describe('GET /api/projects/[id] retentionDays', () => {
     });
 
     it('should return null when retentionDays not set', async () => {
-      const testProject = await seedProject(db, { retentionDays: null });
+      const testProject = await seedProject(db, { retentionDays: null, ownerId: userId });
 
       const request = new Request(`http://localhost/api/projects/${testProject.id}`, {
         method: 'GET',
@@ -385,7 +389,7 @@ describe('GET /api/projects/[id] retentionDays', () => {
     });
 
     it('should return 0 when set to never delete', async () => {
-      const testProject = await seedProject(db, { retentionDays: 0 });
+      const testProject = await seedProject(db, { retentionDays: 0, ownerId: userId });
 
       const request = new Request(`http://localhost/api/projects/${testProject.id}`, {
         method: 'GET',
@@ -401,7 +405,7 @@ describe('GET /api/projects/[id] retentionDays', () => {
     });
 
     it('should return positive value when set', async () => {
-      const testProject = await seedProject(db, { retentionDays: 365 });
+      const testProject = await seedProject(db, { retentionDays: 365, ownerId: userId });
 
       const request = new Request(`http://localhost/api/projects/${testProject.id}`, {
         method: 'GET',

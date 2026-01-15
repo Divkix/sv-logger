@@ -3,9 +3,9 @@ import { and, count, desc, eq, gte, inArray, lt, lte, or, type SQL, sql } from '
 import type { PgliteDatabase } from 'drizzle-orm/pglite';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import type * as schema from '$lib/server/db/schema';
-import { log, project } from '$lib/server/db/schema';
-import { requireAuth } from '$lib/server/utils/auth-guard';
+import { log } from '$lib/server/db/schema';
 import { decodeCursor, encodeCursor } from '$lib/server/utils/cursor';
+import { isErrorResponse, requireProjectOwnership } from '$lib/server/utils/project-guard';
 import { LOG_LEVELS, type LogLevel } from '$lib/shared/types';
 import type { RequestEvent } from './$types';
 
@@ -67,7 +67,7 @@ function buildSearchQuery(searchTerm: string): string {
  * GET /api/projects/[id]/logs
  *
  * Query logs with pagination, filtering, and full-text search.
- * Requires session authentication.
+ * Requires session authentication and project ownership.
  *
  * Query Parameters:
  * - limit: number (100-500, default 100) - Logs per page
@@ -89,24 +89,15 @@ function buildSearchQuery(searchTerm: string): string {
  * Error responses:
  * - 303 redirect to /login: Not authenticated
  * - 400 invalid_cursor: Cursor is malformed
- * - 404 not_found: Project does not exist
+ * - 404 not_found: Project does not exist or not owned by user
  */
 export async function GET(event: RequestEvent): Promise<Response> {
-  // Require session authentication
-  await requireAuth(event);
+  // Require authentication and project ownership
+  const authResult = await requireProjectOwnership(event, event.params.id);
+  if (isErrorResponse(authResult)) return authResult;
 
   const db = await getDbClient(event.locals);
   const projectId = event.params.id;
-
-  // Verify project exists
-  const [projectData] = await db
-    .select({ id: project.id })
-    .from(project)
-    .where(eq(project.id, projectId));
-
-  if (!projectData) {
-    return json({ error: 'not_found', message: 'Project not found' }, { status: 404 });
-  }
 
   // Parse query parameters
   const url = event.url;

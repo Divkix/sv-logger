@@ -46,6 +46,7 @@ describe('Cursor-based Pagination', () => {
   let cleanup: () => Promise<void>;
   let auth: ReturnType<typeof createAuth>;
   let authenticatedLocals: Partial<App.Locals>;
+  let userId: string;
 
   beforeEach(async () => {
     const setup = await setupTestDatabase();
@@ -72,6 +73,7 @@ describe('Cursor-based Pagination', () => {
     const sessionData = await getSession(mockRequest.headers, db);
     if (!sessionData) throw new Error('Session data should not be null');
 
+    userId = sessionData.user.id;
     authenticatedLocals = {
       user: sessionData.user,
       session: sessionData.session,
@@ -84,7 +86,7 @@ describe('Cursor-based Pagination', () => {
 
   describe('Basic Cursor Pagination', () => {
     it('returns nextCursor when more logs exist', async () => {
-      const testProject = await seedProject(db);
+      const testProject = await seedProject(db, { ownerId: userId });
 
       // Create 150 logs (more than default limit of 100)
       await seedLogs(db, testProject.id, 150);
@@ -106,7 +108,7 @@ describe('Cursor-based Pagination', () => {
     });
 
     it('returns null nextCursor when no more logs exist', async () => {
-      const testProject = await seedProject(db);
+      const testProject = await seedProject(db, { ownerId: userId });
 
       // Create 50 logs (less than default limit)
       await seedLogs(db, testProject.id, 50);
@@ -127,7 +129,7 @@ describe('Cursor-based Pagination', () => {
     });
 
     it('fetches next page using cursor', async () => {
-      const testProject = await seedProject(db);
+      const testProject = await seedProject(db, { ownerId: userId });
 
       // Create logs with specific timestamps to verify ordering
       const now = new Date();
@@ -193,7 +195,7 @@ describe('Cursor-based Pagination', () => {
     });
 
     it('returns 400 for invalid cursor', async () => {
-      const testProject = await seedProject(db);
+      const testProject = await seedProject(db, { ownerId: userId });
 
       const request = new Request(
         `http://localhost/api/projects/${testProject.id}/logs?cursor=invalid-cursor-123`,
@@ -211,7 +213,7 @@ describe('Cursor-based Pagination', () => {
 
   describe('Cursor with Filters', () => {
     it('maintains level filter across cursor pagination', async () => {
-      const testProject = await seedProject(db);
+      const testProject = await seedProject(db, { ownerId: userId });
 
       // Create mixed logs - 200 error logs and 100 info logs
       await seedLogs(db, testProject.id, 200, { level: 'error' });
@@ -246,7 +248,7 @@ describe('Cursor-based Pagination', () => {
     });
 
     it('maintains search filter across cursor pagination', async () => {
-      const testProject = await seedProject(db);
+      const testProject = await seedProject(db, { ownerId: userId });
 
       // Create 200 logs with "database" in message
       for (let i = 0; i < 200; i++) {
@@ -283,7 +285,7 @@ describe('Cursor-based Pagination', () => {
     });
 
     it('maintains time range filter across cursor pagination', async () => {
-      const testProject = await seedProject(db);
+      const testProject = await seedProject(db, { ownerId: userId });
 
       const now = new Date();
       const twoHoursAgo = new Date(now.getTime() - 2 * 60 * 60 * 1000);
@@ -330,7 +332,7 @@ describe('Cursor-based Pagination', () => {
 
   describe('Edge Cases', () => {
     it('handles empty cursor correctly', async () => {
-      const testProject = await seedProject(db);
+      const testProject = await seedProject(db, { ownerId: userId });
       await seedLogs(db, testProject.id, 50);
 
       const request = new Request(`http://localhost/api/projects/${testProject.id}/logs?cursor=`, {
@@ -347,7 +349,7 @@ describe('Cursor-based Pagination', () => {
     });
 
     it('handles cursor pointing to last log', async () => {
-      const testProject = await seedProject(db);
+      const testProject = await seedProject(db, { ownerId: userId });
 
       // Create exactly 100 logs
       await seedLogs(db, testProject.id, 100);

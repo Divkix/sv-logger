@@ -11,13 +11,17 @@ import {
   invalidateApiKeyCache,
   validateApiKey,
 } from '../../../src/lib/server/utils/api-key';
+import { getOrCreateDefaultUser } from '../../fixtures/db';
 
 describe('API Key Validation with Database', () => {
   let db: PgliteDatabase<typeof schema>;
+  let userId: string;
 
   beforeEach(async () => {
     const setup = await setupTestDatabase();
     db = setup.db;
+    const user = await getOrCreateDefaultUser(db);
+    userId = user.id;
     // Clear cache before each test
     clearApiKeyCache();
   });
@@ -32,6 +36,7 @@ describe('API Key Validation with Database', () => {
       id: projectId,
       name: projectName,
       apiKey: apiKey,
+      ownerId: userId,
     });
 
     // Create mock request with Authorization header
@@ -100,6 +105,7 @@ describe('API Key Validation with Database', () => {
       id: projectId,
       name: projectName,
       apiKey: apiKey,
+      ownerId: userId,
     });
 
     const request1 = new Request('http://localhost', {
@@ -136,6 +142,7 @@ describe('API Key Validation with Database', () => {
       id: projectId,
       name: projectName,
       apiKey: apiKey,
+      ownerId: userId,
     });
 
     const request1 = new Request('http://localhost', {
@@ -176,6 +183,7 @@ describe('API Key Validation with Database', () => {
       id: projectId,
       name: projectName,
       apiKey: apiKey,
+      ownerId: userId,
     });
 
     const request = new Request('http://localhost', {
@@ -220,6 +228,7 @@ describe('API Key Validation with Database', () => {
       id: projectId,
       name: projectName,
       apiKey: apiKey,
+      ownerId: userId,
     });
 
     const request = new Request('http://localhost', {
@@ -249,8 +258,8 @@ describe('API Key Validation with Database', () => {
 
     // Create two projects
     await db.insert(project).values([
-      { id: project1Id, name: 'project-1', apiKey: apiKey1 },
-      { id: project2Id, name: 'project-2', apiKey: apiKey2 },
+      { id: project1Id, name: 'project-1', apiKey: apiKey1, ownerId: userId },
+      { id: project2Id, name: 'project-2', apiKey: apiKey2, ownerId: userId },
     ]);
 
     const request1 = new Request('http://localhost', {

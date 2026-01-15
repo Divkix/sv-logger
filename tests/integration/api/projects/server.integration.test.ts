@@ -65,6 +65,7 @@ describe('GET /api/projects', () => {
   let cleanup: () => Promise<void>;
   let auth: ReturnType<typeof createAuth>;
   let authenticatedLocals: Partial<App.Locals>;
+  let userId: string;
 
   beforeEach(async () => {
     const setup = await setupTestDatabase();
@@ -89,6 +90,7 @@ describe('GET /api/projects', () => {
 
     const sessionData = await getSession(mockRequest.headers, db);
     if (!sessionData) throw new Error('Session data should not be null');
+    userId = sessionData.user.id;
 
     authenticatedLocals = {
       user: sessionData.user,
@@ -128,7 +130,7 @@ describe('GET /api/projects', () => {
 
     it('returns projects with log counts', async () => {
       // Create 2 projects
-      const [project1, project2] = await seedProjects(db, 2);
+      const [project1, project2] = await seedProjects(db, 2, { ownerId: userId });
 
       // Add logs: 5 to project1, 0 to project2
       await seedLogs(db, project1.id, 5);
@@ -161,10 +163,10 @@ describe('GET /api/projects', () => {
 
     it('returns projects ordered by createdAt descending', async () => {
       // Create projects with specific timestamps
-      const oldProject = await seedProject(db, { name: 'old-project' });
+      const oldProject = await seedProject(db, { name: 'old-project', ownerId: userId });
       // Wait a bit to ensure different timestamps
       await new Promise((resolve) => setTimeout(resolve, 10));
-      const newProject = await seedProject(db, { name: 'new-project' });
+      const newProject = await seedProject(db, { name: 'new-project', ownerId: userId });
 
       const request = new Request('http://localhost/api/projects', {
         method: 'GET',
@@ -182,7 +184,7 @@ describe('GET /api/projects', () => {
     });
 
     it('does not expose API keys in list response', async () => {
-      await seedProject(db);
+      await seedProject(db, { ownerId: userId });
 
       const request = new Request('http://localhost/api/projects', {
         method: 'GET',
@@ -203,6 +205,7 @@ describe('POST /api/projects', () => {
   let cleanup: () => Promise<void>;
   let auth: ReturnType<typeof createAuth>;
   let authenticatedLocals: Partial<App.Locals>;
+  let userId: string;
 
   beforeEach(async () => {
     const setup = await setupTestDatabase();
@@ -227,6 +230,7 @@ describe('POST /api/projects', () => {
 
     const sessionData = await getSession(mockRequest.headers, db);
     if (!sessionData) throw new Error('Session data should not be null');
+    userId = sessionData.user.id;
 
     authenticatedLocals = {
       user: sessionData.user,
@@ -285,7 +289,7 @@ describe('POST /api/projects', () => {
 
     it('returns 400 for duplicate name', async () => {
       // Create existing project
-      await seedProject(db, { name: 'existing-project' });
+      await seedProject(db, { name: 'existing-project', ownerId: userId });
 
       const request = new Request('http://localhost/api/projects', {
         method: 'POST',

@@ -18,6 +18,10 @@ export const project = pgTable(
     id: text('id').primaryKey(),
     name: text('name').notNull().unique(),
     apiKey: text('api_key').notNull().unique(),
+    // Owner of the project - required for authorization
+    ownerId: text('owner_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
     // Log retention configuration:
     // - null: use system default (LOG_RETENTION_DAYS env var)
     // - 0: never auto-delete logs
@@ -26,7 +30,10 @@ export const project = pgTable(
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
   },
-  (table) => [index('idx_project_api_key').on(table.apiKey)],
+  (table) => [
+    index('idx_project_api_key').on(table.apiKey),
+    index('idx_project_owner_id').on(table.ownerId),
+  ],
 );
 
 // Type exports for project

@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import type * as schema from '../../../src/lib/server/db/schema';
 import { project } from '../../../src/lib/server/db/schema';
 import { setupTestDatabase } from '../../../src/lib/server/db/test-db';
+import { getOrCreateDefaultUser } from '../../fixtures/db';
 
 /**
  * Generates a unique API key in the format: lw_<32-random-chars>
@@ -15,10 +16,13 @@ function generateApiKey(): string {
 
 describe('Project Table Schema', () => {
   let db: PgliteDatabase<typeof schema>;
+  let userId: string;
 
   beforeEach(async () => {
     const setup = await setupTestDatabase();
     db = setup.db;
+    const user = await getOrCreateDefaultUser(db);
+    userId = user.id;
   });
 
   it('should create a project with API key', async () => {
@@ -32,6 +36,7 @@ describe('Project Table Schema', () => {
         id: projectId,
         name: projectName,
         apiKey: apiKey,
+        ownerId: userId,
       })
       .returning();
 
@@ -53,6 +58,7 @@ describe('Project Table Schema', () => {
       id: nanoid(),
       name: projectName,
       apiKey: apiKey1,
+      ownerId: userId,
     });
 
     // Attempt to create second project with same name should fail
@@ -61,6 +67,7 @@ describe('Project Table Schema', () => {
         id: nanoid(),
         name: projectName,
         apiKey: apiKey2,
+        ownerId: userId,
       }),
     ).rejects.toThrow();
   });
@@ -75,6 +82,7 @@ describe('Project Table Schema', () => {
       id: projectId,
       name: projectName,
       apiKey: apiKey,
+      ownerId: userId,
     });
 
     // Find by API key

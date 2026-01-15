@@ -65,6 +65,7 @@ describe('GET /api/projects/[id]/logs', () => {
   let cleanup: () => Promise<void>;
   let auth: ReturnType<typeof createAuth>;
   let authenticatedLocals: Partial<App.Locals>;
+  let userId: string;
 
   beforeEach(async () => {
     const setup = await setupTestDatabase();
@@ -90,6 +91,7 @@ describe('GET /api/projects/[id]/logs', () => {
 
     const sessionData = await getSession(mockRequest.headers, db);
     if (!sessionData) throw new Error('Session data should not be null');
+    userId = sessionData.user.id;
 
     authenticatedLocals = {
       user: sessionData.user,
@@ -103,7 +105,7 @@ describe('GET /api/projects/[id]/logs', () => {
 
   describe('Authentication', () => {
     it('throws redirect for unauthenticated request', async () => {
-      const testProject = await seedProject(db);
+      const testProject = await seedProject(db, { ownerId: userId });
       const request = new Request(`http://localhost/api/projects/${testProject.id}/logs`, {
         method: 'GET',
       });
@@ -115,7 +117,7 @@ describe('GET /api/projects/[id]/logs', () => {
 
   describe('Ordering', () => {
     it('returns logs ordered by timestamp DESC', async () => {
-      const testProject = await seedProject(db);
+      const testProject = await seedProject(db, { ownerId: userId });
 
       // Create logs with specific timestamps to verify ordering
       const now = new Date();
@@ -152,7 +154,7 @@ describe('GET /api/projects/[id]/logs', () => {
 
   describe('Limit Parameter', () => {
     it('respects limit parameter (default 100)', async () => {
-      const testProject = await seedProject(db);
+      const testProject = await seedProject(db, { ownerId: userId });
       await seedLogs(db, testProject.id, 150); // More than default limit
 
       const request = new Request(`http://localhost/api/projects/${testProject.id}/logs`, {
@@ -169,7 +171,7 @@ describe('GET /api/projects/[id]/logs', () => {
     });
 
     it('accepts custom limit within range (100-500)', async () => {
-      const testProject = await seedProject(db);
+      const testProject = await seedProject(db, { ownerId: userId });
       await seedLogs(db, testProject.id, 300);
 
       const request = new Request(
@@ -187,7 +189,7 @@ describe('GET /api/projects/[id]/logs', () => {
     });
 
     it('clamps limit to minimum 100', async () => {
-      const testProject = await seedProject(db);
+      const testProject = await seedProject(db, { ownerId: userId });
       await seedLogs(db, testProject.id, 150);
 
       const request = new Request(`http://localhost/api/projects/${testProject.id}/logs?limit=50`, {
@@ -205,7 +207,7 @@ describe('GET /api/projects/[id]/logs', () => {
     });
 
     it('clamps limit to maximum 500', async () => {
-      const testProject = await seedProject(db);
+      const testProject = await seedProject(db, { ownerId: userId });
       await seedLogs(db, testProject.id, 600);
 
       const request = new Request(
@@ -226,7 +228,7 @@ describe('GET /api/projects/[id]/logs', () => {
 
   describe('Offset Parameter', () => {
     it('respects offset parameter for pagination', async () => {
-      const testProject = await seedProject(db);
+      const testProject = await seedProject(db, { ownerId: userId });
 
       // Create logs with specific order
       const now = new Date();
@@ -259,7 +261,7 @@ describe('GET /api/projects/[id]/logs', () => {
 
   describe('Level Filter', () => {
     it('filters by single level parameter', async () => {
-      const testProject = await seedProject(db);
+      const testProject = await seedProject(db, { ownerId: userId });
       await seedLogs(db, testProject.id, 5, { level: 'info' });
       await seedLogs(db, testProject.id, 3, { level: 'error' });
       await seedLogs(db, testProject.id, 2, { level: 'debug' });
@@ -280,7 +282,7 @@ describe('GET /api/projects/[id]/logs', () => {
     });
 
     it('filters by multiple comma-separated levels', async () => {
-      const testProject = await seedProject(db);
+      const testProject = await seedProject(db, { ownerId: userId });
       await seedLogs(db, testProject.id, 5, { level: 'info' });
       await seedLogs(db, testProject.id, 3, { level: 'error' });
       await seedLogs(db, testProject.id, 2, { level: 'debug' });
@@ -306,7 +308,7 @@ describe('GET /api/projects/[id]/logs', () => {
 
   describe('Time Range Filter', () => {
     it('filters by from timestamp', async () => {
-      const testProject = await seedProject(db);
+      const testProject = await seedProject(db, { ownerId: userId });
 
       const now = new Date();
       // Old log (before the 'from' filter - should be excluded)
@@ -337,7 +339,7 @@ describe('GET /api/projects/[id]/logs', () => {
     });
 
     it('filters by to timestamp', async () => {
-      const testProject = await seedProject(db);
+      const testProject = await seedProject(db, { ownerId: userId });
 
       const now = new Date();
       const oldLog = await seedLog(db, testProject.id, {
@@ -368,7 +370,7 @@ describe('GET /api/projects/[id]/logs', () => {
     });
 
     it('filters by both from and to timestamps', async () => {
-      const testProject = await seedProject(db);
+      const testProject = await seedProject(db, { ownerId: userId });
 
       const now = new Date();
       await seedLog(db, testProject.id, {
@@ -405,7 +407,7 @@ describe('GET /api/projects/[id]/logs', () => {
 
   describe('Full-Text Search', () => {
     it('performs full-text search on message', async () => {
-      const testProject = await seedProject(db);
+      const testProject = await seedProject(db, { ownerId: userId });
 
       await seedLog(db, testProject.id, { message: 'Database connection failed' });
       await seedLog(db, testProject.id, { message: 'User logged in successfully' });
@@ -431,7 +433,7 @@ describe('GET /api/projects/[id]/logs', () => {
     });
 
     it('performs full-text search on metadata', async () => {
-      const testProject = await seedProject(db);
+      const testProject = await seedProject(db, { ownerId: userId });
 
       await seedLog(db, testProject.id, {
         message: 'Error occurred',
@@ -458,7 +460,7 @@ describe('GET /api/projects/[id]/logs', () => {
     });
 
     it('handles multi-word search query', async () => {
-      const testProject = await seedProject(db);
+      const testProject = await seedProject(db, { ownerId: userId });
 
       await seedLog(db, testProject.id, { message: 'Database connection failed' });
       await seedLog(db, testProject.id, { message: 'Database query succeeded' });
@@ -482,7 +484,7 @@ describe('GET /api/projects/[id]/logs', () => {
 
   describe('Pagination Response', () => {
     it('returns total count and has_more flag', async () => {
-      const testProject = await seedProject(db);
+      const testProject = await seedProject(db, { ownerId: userId });
       await seedLogs(db, testProject.id, 150);
 
       const request = new Request(
@@ -502,7 +504,7 @@ describe('GET /api/projects/[id]/logs', () => {
     });
 
     it('returns has_more=false when all logs returned', async () => {
-      const testProject = await seedProject(db);
+      const testProject = await seedProject(db, { ownerId: userId });
       await seedLogs(db, testProject.id, 50);
 
       const request = new Request(
@@ -522,7 +524,7 @@ describe('GET /api/projects/[id]/logs', () => {
     });
 
     it('returns correct total with filters applied', async () => {
-      const testProject = await seedProject(db);
+      const testProject = await seedProject(db, { ownerId: userId });
       await seedLogs(db, testProject.id, 100, { level: 'info' });
       await seedLogs(db, testProject.id, 30, { level: 'error' });
 
@@ -560,7 +562,7 @@ describe('GET /api/projects/[id]/logs', () => {
 
   describe('Empty State', () => {
     it('returns empty array when project has no logs', async () => {
-      const testProject = await seedProject(db);
+      const testProject = await seedProject(db, { ownerId: userId });
 
       const request = new Request(`http://localhost/api/projects/${testProject.id}/logs`, {
         method: 'GET',
@@ -580,7 +582,7 @@ describe('GET /api/projects/[id]/logs', () => {
 
   describe('Log Fields', () => {
     it('returns all log fields in response', async () => {
-      const testProject = await seedProject(db);
+      const testProject = await seedProject(db, { ownerId: userId });
 
       const log = await seedLog(db, testProject.id, {
         message: 'Test message',

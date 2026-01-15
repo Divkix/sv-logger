@@ -5,7 +5,7 @@ import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import type * as schema from '$lib/server/db/schema';
 import { log, project } from '$lib/server/db/schema';
 import { invalidateApiKeyCache } from '$lib/server/utils/api-key';
-import { requireAuth } from '$lib/server/utils/auth-guard';
+import { isErrorResponse, requireProjectOwnership } from '$lib/server/utils/project-guard';
 import { projectUpdatePayloadSchema } from '$lib/shared/schemas/project';
 import type { RequestEvent } from './$types';
 
@@ -27,7 +27,7 @@ async function getDbClient(locals: App.Locals): Promise<DatabaseClient> {
  * GET /api/projects/[id]
  *
  * Returns a single project with its stats including log count and level distribution.
- * Requires session authentication.
+ * Requires session authentication and project ownership.
  *
  * Response:
  * {
@@ -50,21 +50,16 @@ async function getDbClient(locals: App.Locals): Promise<DatabaseClient> {
  * }
  *
  * Error responses:
- * - 404 not_found: Project does not exist
+ * - 404 not_found: Project does not exist or not owned by user
  */
 export async function GET(event: RequestEvent): Promise<Response> {
-  // Require session authentication
-  await requireAuth(event);
+  // Require authentication and project ownership
+  const result = await requireProjectOwnership(event, event.params.id);
+  if (isErrorResponse(result)) return result;
 
+  const { project: projectData } = result;
   const db = await getDbClient(event.locals);
   const projectId = event.params.id;
-
-  // Fetch project
-  const [projectData] = await db.select().from(project).where(eq(project.id, projectId));
-
-  if (!projectData) {
-    return json({ error: 'not_found', message: 'Project not found' }, { status: 404 });
-  }
 
   // Get total log count
   const [logCountResult] = await db
@@ -108,7 +103,7 @@ export async function GET(event: RequestEvent): Promise<Response> {
  * PATCH /api/projects/[id]
  *
  * Updates a project's editable fields (name, retentionDays).
- * Requires session authentication.
+ * Requires session authentication and project ownership.
  *
  * Request body:
  * {
@@ -129,11 +124,12 @@ export async function GET(event: RequestEvent): Promise<Response> {
  * Error responses:
  * - 400 validation_error: Invalid name format or retentionDays value
  * - 400 duplicate_name: Name already in use by another project
- * - 404 not_found: Project does not exist
+ * - 404 not_found: Project does not exist or not owned by user
  */
 export async function PATCH(event: RequestEvent): Promise<Response> {
-  // Require session authentication
-  await requireAuth(event);
+  // Require authentication and project ownership
+  const authResult = await requireProjectOwnership(event, event.params.id);
+  if (isErrorResponse(authResult)) return authResult;
 
   const db = await getDbClient(event.locals);
   const projectId = event.params.id;
@@ -174,7 +170,7 @@ export async function PATCH(event: RequestEvent): Promise<Response> {
     updateData.retentionDays = retentionDays;
   }
 
-  // Update project
+  // Update project (ownership already verified)
   const [updated] = await db
     .update(project)
     .set(updateData)
@@ -200,7 +196,7 @@ export async function PATCH(event: RequestEvent): Promise<Response> {
  *
  * Deletes a project and all associated logs (via cascade).
  * Also invalidates the project's API key from cache.
- * Requires session authentication.
+ * Requires session authentication and project ownership.
  *
  * Response:
  * {
@@ -209,24 +205,16 @@ export async function PATCH(event: RequestEvent): Promise<Response> {
  * }
  *
  * Error responses:
- * - 404 not_found: Project does not exist
+ * - 404 not_found: Project does not exist or not owned by user
  */
 export async function DELETE(event: RequestEvent): Promise<Response> {
-  // Require session authentication
-  await requireAuth(event);
+  // Require authentication and project ownership
+  const authResult = await requireProjectOwnership(event, event.params.id);
+  if (isErrorResponse(authResult)) return authResult;
 
+  const { project: projectData } = authResult;
   const db = await getDbClient(event.locals);
   const projectId = event.params.id;
-
-  // Fetch project to get API key for cache invalidation
-  const [projectData] = await db
-    .select({ id: project.id, apiKey: project.apiKey })
-    .from(project)
-    .where(eq(project.id, projectId));
-
-  if (!projectData) {
-    return json({ error: 'not_found', message: 'Project not found' }, { status: 404 });
-  }
 
   // Delete project (logs will cascade delete via FK constraint)
   await db.delete(project).where(eq(project.id, projectId));

@@ -67,6 +67,7 @@ describe('PATCH /api/projects/[id]', () => {
   let cleanup: () => Promise<void>;
   let auth: ReturnType<typeof createAuth>;
   let authenticatedLocals: Partial<App.Locals>;
+  let userId: string;
 
   beforeEach(async () => {
     const setup = await setupTestDatabase();
@@ -92,6 +93,7 @@ describe('PATCH /api/projects/[id]', () => {
 
     const sessionData = await getSession(mockRequest.headers, db);
     if (!sessionData) throw new Error('Session data should not be null');
+    userId = sessionData.user.id;
 
     authenticatedLocals = {
       user: sessionData.user,
@@ -105,7 +107,7 @@ describe('PATCH /api/projects/[id]', () => {
 
   describe('Authentication', () => {
     it('throws redirect for unauthenticated request', async () => {
-      const testProject = await seedProject(db);
+      const testProject = await seedProject(db, { ownerId: userId });
       const request = new Request(`http://localhost/api/projects/${testProject.id}`, {
         method: 'PATCH',
         headers: {
@@ -121,7 +123,7 @@ describe('PATCH /api/projects/[id]', () => {
 
   describe('Project Rename', () => {
     it('updates project name successfully', async () => {
-      const testProject = await seedProject(db, { name: 'old-name' });
+      const testProject = await seedProject(db, { name: 'old-name', ownerId: userId });
 
       const request = new Request(`http://localhost/api/projects/${testProject.id}`, {
         method: 'PATCH',
@@ -151,8 +153,8 @@ describe('PATCH /api/projects/[id]', () => {
     });
 
     it('rejects duplicate project name', async () => {
-      await seedProject(db, { name: 'existing-project' });
-      const testProject = await seedProject(db, { name: 'my-project' });
+      await seedProject(db, { name: 'existing-project', ownerId: userId });
+      const testProject = await seedProject(db, { name: 'my-project', ownerId: userId });
 
       const request = new Request(`http://localhost/api/projects/${testProject.id}`, {
         method: 'PATCH',
@@ -179,7 +181,7 @@ describe('PATCH /api/projects/[id]', () => {
     });
 
     it('validates name format - empty string', async () => {
-      const testProject = await seedProject(db, { name: 'my-project' });
+      const testProject = await seedProject(db, { name: 'my-project', ownerId: userId });
 
       const request = new Request(`http://localhost/api/projects/${testProject.id}`, {
         method: 'PATCH',
@@ -199,7 +201,7 @@ describe('PATCH /api/projects/[id]', () => {
     });
 
     it('validates name format - exceeds max length', async () => {
-      const testProject = await seedProject(db, { name: 'my-project' });
+      const testProject = await seedProject(db, { name: 'my-project', ownerId: userId });
       const longName = 'a'.repeat(51);
 
       const request = new Request(`http://localhost/api/projects/${testProject.id}`, {
@@ -220,7 +222,7 @@ describe('PATCH /api/projects/[id]', () => {
     });
 
     it('validates name format - invalid characters', async () => {
-      const testProject = await seedProject(db, { name: 'my-project' });
+      const testProject = await seedProject(db, { name: 'my-project', ownerId: userId });
 
       const request = new Request(`http://localhost/api/projects/${testProject.id}`, {
         method: 'PATCH',
@@ -253,11 +255,11 @@ describe('PATCH /api/projects/[id]', () => {
 
       expect(response.status).toBe(404);
       const body = await response.json();
-      expect(body).toHaveProperty('code', 'not_found');
+      expect(body).toHaveProperty('error', 'not_found');
     });
 
     it('updates updatedAt timestamp', async () => {
-      const testProject = await seedProject(db, { name: 'old-name' });
+      const testProject = await seedProject(db, { name: 'old-name', ownerId: userId });
       const originalUpdatedAt = testProject.updatedAt;
 
       // Wait a bit to ensure timestamp difference
@@ -284,7 +286,7 @@ describe('PATCH /api/projects/[id]', () => {
     });
 
     it('allows renaming to same name (no-op)', async () => {
-      const testProject = await seedProject(db, { name: 'my-project' });
+      const testProject = await seedProject(db, { name: 'my-project', ownerId: userId });
 
       const request = new Request(`http://localhost/api/projects/${testProject.id}`, {
         method: 'PATCH',
@@ -303,7 +305,7 @@ describe('PATCH /api/projects/[id]', () => {
     });
 
     it('accepts empty body (no updates)', async () => {
-      const testProject = await seedProject(db, { name: 'my-project' });
+      const testProject = await seedProject(db, { name: 'my-project', ownerId: userId });
 
       const request = new Request(`http://localhost/api/projects/${testProject.id}`, {
         method: 'PATCH',

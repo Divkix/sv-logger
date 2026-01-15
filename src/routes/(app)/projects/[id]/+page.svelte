@@ -50,7 +50,8 @@ function parseClientLog(log: ClientLog): Log {
 }
 
 // Convert server project data to Project type (reactive to handle invalidateAll)
-const projectData = $derived<Project>({
+// Note: ownerId is intentionally not exposed to client
+const projectData = $derived<Omit<Project, 'ownerId'>>({
   id: data.project.id,
   name: data.project.name,
   apiKey: data.project.apiKey,

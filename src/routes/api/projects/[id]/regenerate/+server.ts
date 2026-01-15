@@ -5,7 +5,7 @@ import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import type * as schema from '$lib/server/db/schema';
 import { project } from '$lib/server/db/schema';
 import { generateApiKey, invalidateApiKeyCache } from '$lib/server/utils/api-key';
-import { requireAuth } from '$lib/server/utils/auth-guard';
+import { isErrorResponse, requireProjectOwnership } from '$lib/server/utils/project-guard';
 import type { RequestEvent } from './$types';
 
 type DatabaseClient = PostgresJsDatabase<typeof schema> | PgliteDatabase<typeof schema>;
@@ -27,7 +27,7 @@ async function getDbClient(locals: App.Locals): Promise<DatabaseClient> {
  *
  * Regenerates the API key for a project.
  * The old API key is immediately invalidated and a new one is generated.
- * Requires session authentication.
+ * Requires session authentication and project ownership.
  *
  * Response:
  * {
@@ -35,24 +35,16 @@ async function getDbClient(locals: App.Locals): Promise<DatabaseClient> {
  * }
  *
  * Error responses:
- * - 404 not_found: Project does not exist
+ * - 404 not_found: Project does not exist or not owned by user
  */
 export async function POST(event: RequestEvent): Promise<Response> {
-  // Require session authentication
-  await requireAuth(event);
+  // Require authentication and project ownership
+  const authResult = await requireProjectOwnership(event, event.params.id);
+  if (isErrorResponse(authResult)) return authResult;
 
+  const { project: projectData } = authResult;
   const db = await getDbClient(event.locals);
   const projectId = event.params.id;
-
-  // Fetch project to get old API key for cache invalidation
-  const [projectData] = await db
-    .select({ id: project.id, apiKey: project.apiKey })
-    .from(project)
-    .where(eq(project.id, projectId));
-
-  if (!projectData) {
-    return json({ error: 'not_found', message: 'Project not found' }, { status: 404 });
-  }
 
   // Generate new API key
   const newApiKey = generateApiKey();

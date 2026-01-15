@@ -4,8 +4,8 @@ import type { PgliteDatabase } from 'drizzle-orm/pglite';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import type { TimeRange } from '$lib/components/time-range-picker.svelte';
 import type * as schema from '$lib/server/db/schema';
-import { log, project } from '$lib/server/db/schema';
-import { requireAuth } from '$lib/server/utils/auth-guard';
+import { log } from '$lib/server/db/schema';
+import { isErrorResponse, requireProjectOwnership } from '$lib/server/utils/project-guard';
 import { getTimeRangeStart } from '$lib/utils/format';
 import { bucketTimestamps, fillMissingBuckets, getTimeBucketConfig } from '$lib/utils/timeseries';
 import type { RequestEvent } from './$types';
@@ -30,7 +30,7 @@ const VALID_RANGES: TimeRange[] = ['15m', '1h', '24h', '7d'];
  * GET /api/projects/[id]/stats/timeseries
  *
  * Returns time-bucketed log counts for visualization in an area chart.
- * Requires session authentication.
+ * Requires session authentication and project ownership.
  *
  * Query Parameters:
  * - range: string ('15m' | '1h' | '24h' | '7d') - Time range, defaults to '24h'
@@ -48,24 +48,15 @@ const VALID_RANGES: TimeRange[] = ['15m', '1h', '24h', '7d'];
  *
  * Error responses:
  * - 303 redirect to /login: Not authenticated
- * - 404 not_found: Project does not exist
+ * - 404 not_found: Project does not exist or not owned by user
  */
 export async function GET(event: RequestEvent): Promise<Response> {
-  // Require session authentication
-  await requireAuth(event);
+  // Require authentication and project ownership
+  const authResult = await requireProjectOwnership(event, event.params.id);
+  if (isErrorResponse(authResult)) return authResult;
 
   const db = await getDbClient(event.locals);
   const projectId = event.params.id;
-
-  // Verify project exists
-  const [projectData] = await db
-    .select({ id: project.id })
-    .from(project)
-    .where(eq(project.id, projectId));
-
-  if (!projectData) {
-    return json({ error: 'not_found', message: 'Project not found' }, { status: 404 });
-  }
 
   // Parse range parameter (default to 24h)
   const rangeParam = event.url.searchParams.get('range') || '24h';

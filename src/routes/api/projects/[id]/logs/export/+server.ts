@@ -4,9 +4,9 @@ import type { PgliteDatabase } from 'drizzle-orm/pglite';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import { EXPORT_CONFIG } from '$lib/server/config/performance';
 import type * as schema from '$lib/server/db/schema';
-import { log, project } from '$lib/server/db/schema';
-import { requireAuth } from '$lib/server/utils/auth-guard';
+import { log } from '$lib/server/db/schema';
 import { serializeToCsv } from '$lib/server/utils/csv-serializer';
+import { isErrorResponse, requireProjectOwnership } from '$lib/server/utils/project-guard';
 import { LOG_LEVELS, type LogLevel } from '$lib/shared/types';
 import type { ExportableLog, ExportFormat } from '$lib/types/export';
 import type { RequestEvent } from './$types';
@@ -80,7 +80,7 @@ function generateFilename(projectName: string, format: ExportFormat): string {
  * GET /api/projects/[id]/logs/export
  *
  * Export logs in CSV or JSON format with optional filters.
- * Requires session authentication.
+ * Requires session authentication and project ownership.
  *
  * Query Parameters:
  * - format: string ('csv' | 'json', default: 'json') - Export format
@@ -97,24 +97,16 @@ function generateFilename(projectName: string, format: ExportFormat): string {
  * - 303 redirect to /login: Not authenticated
  * - 400 invalid_format: Invalid format parameter
  * - 400 export_too_large: Export exceeds maximum log limit (10,000)
- * - 404 not_found: Project does not exist
+ * - 404 not_found: Project does not exist or not owned by user
  */
 export async function GET(event: RequestEvent): Promise<Response> {
-  // Require session authentication
-  await requireAuth(event);
+  // Require authentication and project ownership
+  const authResult = await requireProjectOwnership(event, event.params.id);
+  if (isErrorResponse(authResult)) return authResult;
 
+  const { project: projectData } = authResult;
   const db = await getDbClient(event.locals);
   const projectId = event.params.id;
-
-  // Verify project exists and get project details
-  const [projectData] = await db
-    .select({ id: project.id, name: project.name })
-    .from(project)
-    .where(eq(project.id, projectId));
-
-  if (!projectData) {
-    return json({ error: 'not_found', message: 'Project not found' }, { status: 404 });
-  }
 
   // Parse query parameters
   const url = event.url;
