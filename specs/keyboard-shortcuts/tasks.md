@@ -33,7 +33,7 @@ Focus: Validate the idea works end-to-end. Skip tests, accept hardcoded values.
   - _Requirements: FR-5_
   - _Design: Keyboard Handler, shouldBlockShortcut function_
 
-- [ ] 1.2 Add selectedIndex state and j/k navigation to page
+- [x] 1.2 Add selectedIndex state and j/k navigation to page
   - **Do**:
     1. In `src/routes/(app)/projects/[id]/+page.svelte`, add `let selectedIndex = $state(-1)`
     2. Add `<svelte:document onkeydown={handleKeyboardShortcut}>` before the template

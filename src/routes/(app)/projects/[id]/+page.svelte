@@ -22,6 +22,7 @@ import Button from '$lib/components/ui/button/button.svelte';
 import { useLogStream } from '$lib/hooks/use-log-stream.svelte';
 import type { Log, LogLevel, Project } from '$lib/server/db/schema';
 import type { ClientLog } from '$lib/stores/logs.svelte';
+import { shouldBlockShortcut } from '$lib/utils/keyboard';
 import { toastError } from '$lib/utils/toast';
 import type { PageData } from './$types';
 
@@ -70,6 +71,7 @@ let selectedLevels = $state<LogLevel[]>(data.filters.levels);
 let selectedRange = $state<TimeRange>((data.filters.range as TimeRange) || '1h');
 let selectedLog = $state<Log | null>(null);
 let showDetailModal = $state(false);
+let selectedIndex = $state(-1);
 let loading = $state(false);
 
 // Track new log IDs for highlighting
@@ -235,7 +237,45 @@ function handleRemoveRange() {
   selectedRange = '1h';
   updateFilters();
 }
+
+function scrollSelectedIntoView() {
+  const element = document.querySelector('[data-selected="true"]');
+  element?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+}
+
+function handleKeyboardShortcut(event: KeyboardEvent) {
+  // Block shortcuts in form elements, during IME composition, or with modifiers
+  if (shouldBlockShortcut(event)) {
+    return;
+  }
+
+  // Block shortcuts when modal is open
+  if (showDetailModal) {
+    return;
+  }
+
+  switch (event.key) {
+    case 'j':
+      // Navigate to next log
+      if (selectedIndex < allLogs.length - 1) {
+        selectedIndex++;
+      } else if (selectedIndex === -1 && allLogs.length > 0) {
+        selectedIndex = 0;
+      }
+      scrollSelectedIntoView();
+      break;
+    case 'k':
+      // Navigate to previous log
+      if (selectedIndex > 0) {
+        selectedIndex--;
+        scrollSelectedIntoView();
+      }
+      break;
+  }
+}
 </script>
+
+<svelte:document onkeydown={handleKeyboardShortcut} />
 
 {#if isNavigating}
   <LogStreamSkeleton />
