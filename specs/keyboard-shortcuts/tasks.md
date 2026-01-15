@@ -53,7 +53,7 @@ Focus: Validate the idea works end-to-end. Skip tests, accept hardcoded values.
   - _Requirements: FR-1, FR-2, FR-3, FR-4, AC-1.1, AC-1.2, AC-1.3, AC-1.4, AC-1.5_
   - _Design: Keyboard Handler (Page Level), Data Flow_
 
-- [ ] 1.3 Add selectedIndex prop to LogTable and pass to children
+- [x] 1.3 Add selectedIndex prop to LogTable and pass to children
   - **Do**:
     1. In `src/lib/components/log-table.svelte`, add `selectedIndex?: number` to Props interface
     2. Destructure `selectedIndex = -1` from `$props()`

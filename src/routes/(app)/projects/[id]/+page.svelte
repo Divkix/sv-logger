@@ -390,6 +390,7 @@ function handleKeyboardShortcut(event: KeyboardEvent) {
       {newLogIds}
       project={projectData}
       appUrl={data.appUrl ?? undefined}
+      {selectedIndex}
     />
 
     <!-- Load More Button -->
