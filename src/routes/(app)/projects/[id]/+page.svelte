@@ -73,6 +73,7 @@ let selectedLog = $state<Log | null>(null);
 let showDetailModal = $state(false);
 let selectedIndex = $state(-1);
 let loading = $state(false);
+let searchInputRef = $state<HTMLInputElement | null>(null);
 
 // Track new log IDs for highlighting
 let newLogIds = $state<Set<string>>(new Set());
@@ -279,6 +280,11 @@ function handleKeyboardShortcut(event: KeyboardEvent) {
       }
       event.preventDefault();
       break;
+    case '/':
+      // Focus search input
+      event.preventDefault();
+      searchInputRef?.focus();
+      break;
   }
 }
 </script>
@@ -347,6 +353,7 @@ function handleKeyboardShortcut(event: KeyboardEvent) {
         <div data-testid="search-container" class="w-full sm:w-auto sm:flex-1 sm:max-w-sm">
           <SearchInput
             bind:value={searchValue}
+            bind:ref={searchInputRef}
             placeholder="Search logs..."
             onsearch={handleSearch}
           />

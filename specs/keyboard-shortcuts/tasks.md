@@ -128,7 +128,7 @@ Focus: Validate the idea works end-to-end. Skip tests, accept hardcoded values.
   - _Requirements: FR-7, AC-3.1, AC-3.2, AC-3.3_
   - _Design: Existing Patterns to Follow_
 
-- [ ] 1.8 Add / to focus search and Escape to blur
+- [x] 1.8 Add / to focus search and Escape to blur
   - **Do**:
     1. In `src/lib/components/search-input.svelte`:
        - Add `ref` bindable prop: `let { ref = $bindable() }: Props & { ref?: HTMLInputElement | null } = $props()`
