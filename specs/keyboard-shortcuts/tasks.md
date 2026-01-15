@@ -166,7 +166,7 @@ Focus: Validate the idea works end-to-end. Skip tests, accept hardcoded values.
   - **Done when**: No lint errors, no type errors
   - **Commit**: `chore(keyboard): pass quality checkpoint` (only if fixes needed)
 
-- [ ] 1.10 Create KeyboardHelpModal component
+- [x] 1.10 Create KeyboardHelpModal component
   - **Do**:
     1. Create `src/lib/components/keyboard-help-modal.svelte`
     2. Follow same pattern as `log-detail-modal.svelte`:
