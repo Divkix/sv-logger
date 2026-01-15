@@ -2,7 +2,6 @@ import type { Handle, HandleServerError } from '@sveltejs/kit';
 import { svelteKitHandler } from 'better-auth/svelte-kit';
 import { building } from '$app/environment';
 import { auth, initAuth } from '$lib/server/auth';
-import { runMigrations } from '$lib/server/db/migrate';
 import { createErrorHandler } from '$lib/server/error-handler';
 import { startCleanupScheduler } from '$lib/server/jobs/cleanup-scheduler';
 
@@ -10,15 +9,12 @@ import { startCleanupScheduler } from '$lib/server/jobs/cleanup-scheduler';
 let initialized = false;
 
 /**
- * Ensures database and auth are initialized before handling requests.
- * Runs migrations, initializes auth, and starts cleanup scheduler.
+ * Ensures auth is initialized before handling requests.
+ * Starts cleanup scheduler after auth initialization.
  */
 async function ensureInitialized(): Promise<void> {
   if (!initialized) {
-    // Run migrations first (idempotent - only applies new ones)
-    await runMigrations();
-
-    // Then initialize auth
+    // Initialize auth
     await initAuth();
 
     // Start log cleanup scheduler after initialization

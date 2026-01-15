@@ -127,8 +127,8 @@ cp .env.example .env
 # Start PostgreSQL
 docker compose up -d
 
-# Push database schema
-bun run db:push
+# Run database migrations
+bun run db:migrate
 
 # Create admin user
 bun run db:seed
@@ -450,7 +450,7 @@ Logwell derives some UI fields from common OTLP log attributes (if present):
 | Command | Description |
 |---------|-------------|
 | `bun run db:start` | Start PostgreSQL via Docker |
-| `bun run db:push` | Push schema to database |
+| `bun run db:push` | Push schema to database (dev only; prefer `db:migrate`) |
 | `bun run db:generate` | Generate migration files |
 | `bun run db:migrate` | Run migrations |
 | `bun run db:studio` | Open Drizzle Studio |
@@ -644,7 +644,7 @@ bun install
 
 # Start dev environment
 docker compose up -d
-bun run db:push
+bun run db:migrate
 bun run dev
 ```
 
