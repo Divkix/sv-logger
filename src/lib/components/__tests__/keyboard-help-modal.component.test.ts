@@ -1,7 +1,7 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/svelte';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import KeyboardHelpModal from '../keyboard-help-modal.svelte';
 import { SHORTCUTS } from '$lib/utils/keyboard';
+import KeyboardHelpModal from '../keyboard-help-modal.svelte';
 
 describe('KeyboardHelpModal', () => {
   afterEach(() => {

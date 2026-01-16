@@ -333,7 +333,7 @@ After POC validated, clean up code and add polish.
   - **Commit**: `test(keyboard): add component tests for LogCard isSelected`
   - _Design: Test Strategy - Component Tests_
 
-- [ ] 3.4 Component tests for SearchInput ref and onEscape
+- [x] 3.4 Component tests for SearchInput ref and onEscape
   - **Do**:
     1. Add tests to existing `src/lib/components/search-input.test.ts` (or create if missing)
     2. Test:
@@ -346,7 +346,7 @@ After POC validated, clean up code and add polish.
   - **Commit**: `test(keyboard): add component tests for SearchInput ref/onEscape`
   - _Design: Test Strategy - Component Tests_
 
-- [ ] 3.5 Component tests for KeyboardHelpModal
+- [x] 3.5 Component tests for KeyboardHelpModal
   - **Do**:
     1. Create `src/lib/components/keyboard-help-modal.test.ts`
     2. Test:
