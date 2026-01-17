@@ -166,49 +166,97 @@ func newDefaultConfig(endpoint, apiKey string) *Config {
 	}
 }
 
-// validateConfig validates the configuration and returns an error if invalid.
-func validateConfig(c *Config) error {
-	// Validate endpoint (required, must be valid URL with http or https)
-	if c.Endpoint == "" {
+// validateEndpoint validates the endpoint configuration.
+func validateEndpoint(endpoint string) error {
+	if endpoint == "" {
 		return NewError(ErrInvalidConfig, "endpoint is required")
 	}
-	parsedURL, err := url.Parse(c.Endpoint)
+
+	parsedURL, err := url.Parse(endpoint)
 	if err != nil {
 		return NewError(ErrInvalidConfig, "endpoint is not a valid URL: "+err.Error())
 	}
+
 	if parsedURL.Scheme != "http" && parsedURL.Scheme != "https" {
 		return NewError(ErrInvalidConfig, "endpoint must use http or https scheme")
 	}
+
 	if parsedURL.Host == "" {
 		return NewError(ErrInvalidConfig, "endpoint must have a host")
 	}
 
-	// Validate API key (required, must match regex)
-	if c.APIKey == "" {
+	return nil
+}
+
+// validateAPIKey validates the API key format.
+func validateAPIKey(apiKey string) error {
+	if apiKey == "" {
 		return NewError(ErrInvalidConfig, "apiKey is required")
 	}
-	if !apiKeyRegex.MatchString(c.APIKey) {
+
+	if !apiKeyRegex.MatchString(apiKey) {
 		return NewError(ErrInvalidConfig, "apiKey format invalid: must match lw_[a-zA-Z0-9_-]{32,}")
 	}
 
-	// Validate BatchSize
-	if c.BatchSize < MinBatchSize || c.BatchSize > MaxBatchSize {
+	return nil
+}
+
+// validateBatchSize validates the batch size configuration.
+func validateBatchSize(batchSize int) error {
+	if batchSize < MinBatchSize || batchSize > MaxBatchSize {
 		return NewError(ErrInvalidConfig, "batchSize must be between 1 and 500")
 	}
+	return nil
+}
 
-	// Validate FlushInterval
-	if c.FlushInterval < MinFlushInterval || c.FlushInterval > MaxFlushInterval {
+// validateFlushInterval validates the flush interval configuration.
+func validateFlushInterval(flushInterval time.Duration) error {
+	if flushInterval < MinFlushInterval || flushInterval > MaxFlushInterval {
 		return NewError(ErrInvalidConfig, "flushInterval must be between 100ms and 60s")
 	}
+	return nil
+}
 
-	// Validate MaxQueueSize
-	if c.MaxQueueSize < MinMaxQueueSize || c.MaxQueueSize > MaxMaxQueueSize {
+// validateMaxQueueSize validates the max queue size configuration.
+func validateMaxQueueSize(maxQueueSize int) error {
+	if maxQueueSize < MinMaxQueueSize || maxQueueSize > MaxMaxQueueSize {
 		return NewError(ErrInvalidConfig, "maxQueueSize must be between 1 and 10000")
 	}
+	return nil
+}
 
-	// Validate MaxRetries
-	if c.MaxRetries < MinMaxRetries || c.MaxRetries > MaxMaxRetries {
+// validateMaxRetries validates the max retries configuration.
+func validateMaxRetries(maxRetries int) error {
+	if maxRetries < MinMaxRetries || maxRetries > MaxMaxRetries {
 		return NewError(ErrInvalidConfig, "maxRetries must be between 0 and 10")
+	}
+	return nil
+}
+
+// validateConfig validates the configuration and returns an error if invalid.
+func validateConfig(c *Config) error {
+	if err := validateEndpoint(c.Endpoint); err != nil {
+		return err
+	}
+
+	if err := validateAPIKey(c.APIKey); err != nil {
+		return err
+	}
+
+	if err := validateBatchSize(c.BatchSize); err != nil {
+		return err
+	}
+
+	if err := validateFlushInterval(c.FlushInterval); err != nil {
+		return err
+	}
+
+	if err := validateMaxQueueSize(c.MaxQueueSize); err != nil {
+		return err
+	}
+
+	if err := validateMaxRetries(c.MaxRetries); err != nil {
+		return err
 	}
 
 	return nil
