@@ -203,7 +203,7 @@ After POC validated, add remaining features and clean up code.
   - **Verify**: Review README manually
   - **Commit**: `docs(go-sdk): add README with usage examples`
 
-- [ ] 4.2 Local quality check
+- [x] 4.2 Local quality check
   - **Do**: Run `go vet`, `go test -race`, ensure no warnings
   - **Verify**: `cd sdks/go && go vet ./... && go test -race ./logwell/`
   - **Done when**: No vet warnings, tests pass with race detector
