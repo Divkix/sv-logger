@@ -209,7 +209,7 @@ After POC validated, add remaining features and clean up code.
   - **Done when**: No vet warnings, tests pass with race detector
   - **Commit**: `fix(go-sdk): address vet warnings` (if needed)
 
-- [ ] 4.3 Update main README
+- [x] 4.3 Update main README
   - **Do**: Add Go SDK to main project README alongside TS/Python
   - **Files**: `README.md`
   - **Done when**: Go SDK listed in main README
