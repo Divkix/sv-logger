@@ -172,7 +172,7 @@ After POC validated, clean up code.
   - **Commit**: `test(python-sdk): add queue unit tests`
   - _Requirements: AC-2.1 through AC-2.5_
 
-- [ ] 3.5 Unit tests for source_location
+- [x] 3.5 Unit tests for source_location
   - **Do**: Test capture at different frame depths, invalid frames
   - **Files**: `sdks/python/tests/unit/test_source_location.py`
   - **Done when**: Source location capture verified
