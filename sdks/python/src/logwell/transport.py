@@ -112,7 +112,8 @@ class HttpTransport:
             LogwellError: On failure after all retries
         """
         last_error: LogwellError = LogwellError(
-            "Max retries exceeded",
+            f"Failed to send logs after {self._config.max_retries + 1} attempts to {self._ingest_url}. "
+            "Check your network connection and endpoint URL.",
             LogwellErrorCode.NETWORK_ERROR,
             None,
             True,
@@ -159,14 +160,16 @@ class HttpTransport:
             )
         except httpx.TimeoutException as e:
             raise LogwellError(
-                f"Request timeout: {e}",
+                f"Request to {self._ingest_url} timed out after {self._config.timeout}s. "
+                f"The server may be slow or unreachable. Error: {e}",
                 LogwellErrorCode.NETWORK_ERROR,
                 None,
                 True,
             ) from e
         except httpx.RequestError as e:
             raise LogwellError(
-                f"Network error: {e}",
+                f"Network error connecting to {self._ingest_url}. "
+                f"Check your internet connection and that the endpoint is reachable. Error: {e}",
                 LogwellErrorCode.NETWORK_ERROR,
                 None,
                 True,
@@ -208,35 +211,45 @@ class HttpTransport:
         """
         if status == 401:
             return LogwellError(
-                f"Unauthorized: {message}",
+                f"Authentication failed (401): {message}. "
+                "Your API key is invalid, expired, or missing. "
+                "Verify the api_key in your Logwell config matches your project settings.",
                 LogwellErrorCode.UNAUTHORIZED,
                 status,
                 False,
             )
         elif status == 400:
             return LogwellError(
-                f"Validation error: {message}",
+                f"Invalid log data (400): {message}. "
+                "The server rejected the log entries. Check that log entries "
+                "have valid 'level' and 'message' fields.",
                 LogwellErrorCode.VALIDATION_ERROR,
                 status,
                 False,
             )
         elif status == 429:
             return LogwellError(
-                f"Rate limited: {message}",
+                f"Rate limit exceeded (429): {message}. "
+                "Too many requests sent to the server. The SDK will automatically "
+                "retry with exponential backoff.",
                 LogwellErrorCode.RATE_LIMITED,
                 status,
                 True,
             )
         elif status >= 500:
             return LogwellError(
-                f"Server error: {message}",
+                f"Server error ({status}): {message}. "
+                "The Logwell server encountered an error. This is typically temporary. "
+                "The SDK will automatically retry with exponential backoff.",
                 LogwellErrorCode.SERVER_ERROR,
                 status,
                 True,
             )
         else:
             return LogwellError(
-                f"HTTP error {status}: {message}",
+                f"Unexpected HTTP error ({status}): {message}. "
+                "The server returned an unexpected status code. "
+                "Check the server logs or contact support if this persists.",
                 LogwellErrorCode.SERVER_ERROR,
                 status,
                 False,

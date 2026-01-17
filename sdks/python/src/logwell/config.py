@@ -73,52 +73,69 @@ def validate_config(config: LogwellConfig) -> LogwellConfig:
     # Validate required fields
     if "api_key" not in config or not config["api_key"]:
         raise LogwellError(
-            "api_key is required",
+            "Configuration missing 'api_key'. "
+            "Provide your Logwell API key in the config: "
+            "Logwell({'api_key': 'lw_...', 'endpoint': '...'})",
             LogwellErrorCode.INVALID_CONFIG,
         )
 
     if "endpoint" not in config or not config["endpoint"]:
         raise LogwellError(
-            "endpoint is required",
+            "Configuration missing 'endpoint'. "
+            "Provide your Logwell server URL in the config: "
+            "Logwell({'api_key': '...', 'endpoint': 'https://logs.example.com'})",
             LogwellErrorCode.INVALID_CONFIG,
         )
 
     # Validate API key format
     if not validate_api_key_format(config["api_key"]):
+        masked_key = config["api_key"][:10] + "..." if len(config["api_key"]) > 10 else "***"
         raise LogwellError(
-            "Invalid API key format. Expected: lw_[32 characters]",
+            f"Invalid API key format: '{masked_key}'. "
+            "Expected format: 'lw_' followed by 32 alphanumeric characters. "
+            "Get your API key from your Logwell project settings.",
             LogwellErrorCode.INVALID_CONFIG,
         )
 
     # Validate endpoint URL
     if not _is_valid_url(config["endpoint"]):
         raise LogwellError(
-            "Invalid endpoint URL",
+            f"Invalid endpoint URL: '{config['endpoint']}'. "
+            "Expected a valid URL with scheme (http:// or https://) and host. "
+            "Example: 'https://logs.example.com' or 'http://localhost:3000'",
             LogwellErrorCode.INVALID_CONFIG,
         )
 
     # Validate numeric options
     if "batch_size" in config and config["batch_size"] <= 0:
         raise LogwellError(
-            "batch_size must be positive",
+            f"Invalid batch_size: {config['batch_size']}. "
+            "batch_size must be a positive integer (e.g., 50). "
+            "This controls how many logs are batched before auto-flush.",
             LogwellErrorCode.INVALID_CONFIG,
         )
 
     if "flush_interval" in config and config["flush_interval"] <= 0:
         raise LogwellError(
-            "flush_interval must be positive",
+            f"Invalid flush_interval: {config['flush_interval']}. "
+            "flush_interval must be a positive number in seconds (e.g., 5.0). "
+            "This controls how often logs are automatically flushed.",
             LogwellErrorCode.INVALID_CONFIG,
         )
 
     if "max_queue_size" in config and config["max_queue_size"] <= 0:
         raise LogwellError(
-            "max_queue_size must be positive",
+            f"Invalid max_queue_size: {config['max_queue_size']}. "
+            "max_queue_size must be a positive integer (e.g., 1000). "
+            "When exceeded, oldest logs are dropped to prevent memory issues.",
             LogwellErrorCode.INVALID_CONFIG,
         )
 
     if "max_retries" in config and config["max_retries"] < 0:
         raise LogwellError(
-            "max_retries must be non-negative",
+            f"Invalid max_retries: {config['max_retries']}. "
+            "max_retries must be 0 or greater (e.g., 3). "
+            "Set to 0 to disable retries on network failures.",
             LogwellErrorCode.INVALID_CONFIG,
         )
 

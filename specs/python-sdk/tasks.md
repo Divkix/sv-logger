@@ -112,7 +112,7 @@ After POC validated, clean up code.
   - _Requirements: NFR-2_
   - _Design: Thread Safety_
 
-- [ ] 2.2 Improve error messages
+- [x] 2.2 Improve error messages
   - **Do**: Add detailed context to all LogwellError raises
   - **Files**: `sdks/python/src/logwell/*.py`
   - **Done when**: Each error includes actionable message
