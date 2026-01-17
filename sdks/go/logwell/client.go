@@ -40,14 +40,18 @@ func New(endpoint, apiKey string, opts ...Option) (*Client, error) {
 		return nil, err
 	}
 
-	queue := newBatchQueue()
 	transport := newHTTPTransport(endpoint, apiKey)
 
-	return &Client{
+	// Create client first so we can pass flush callback to queue
+	c := &Client{
 		config:    cfg,
-		queue:     queue,
 		transport: transport,
-	}, nil
+	}
+
+	// Create queue with timer-based auto-flush
+	c.queue = newBatchQueue(cfg.FlushInterval, c.flush)
+
+	return c, nil
 }
 
 // Debug logs a message at DEBUG level.

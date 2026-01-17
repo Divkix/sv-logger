@@ -106,7 +106,7 @@ After POC validated, add remaining features and clean up code.
   - _Requirements: FR-11, FR-12, AC-7.1, AC-7.2, AC-7.3, AC-7.4, AC-7.5_
   - _Design: HttpTransport_
 
-- [ ] 2.4 Add timer-based auto-flush
+- [x] 2.4 Add timer-based auto-flush
   - **Do**: Add `time.Timer` to queue that triggers flush after `flushInterval`. Reset on each add, stop on flush.
   - **Files**: `sdks/go/logwell/queue.go`
   - **Done when**: Logs auto-flush after interval even if batch size not reached
