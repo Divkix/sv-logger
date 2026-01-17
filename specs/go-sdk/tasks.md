@@ -30,7 +30,7 @@ Focus: End-to-end log sending works. Skip tests, accept hardcoded values where e
   - _Requirements: FR-2, FR-3_
   - _Design: Types_
 
-- [ ] 1.3 Create error types
+- [x] 1.3 Create error types
   - **Do**: Define `ErrorCode` constants, `Error` struct with `Code`, `Message`, `StatusCode`, `Retryable` fields, implement `error` interface
   - **Files**: `sdks/go/logwell/errors.go`
   - **Done when**: Error type implements `error`, can be created and formatted
