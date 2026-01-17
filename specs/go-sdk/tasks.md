@@ -216,7 +216,7 @@ After POC validated, add remaining features and clean up code.
   - **Verify**: Review README manually
   - **Commit**: `docs: add Go SDK to main README`
 
-- [ ] 4.4 Create PR and verify CI
+- [x] 4.4 Create PR and verify CI
   - **Do**: Push branch, create PR with gh CLI, verify CI passes
   - **Verify**: `gh pr checks --watch` all green
   - **Done when**: PR ready for review
