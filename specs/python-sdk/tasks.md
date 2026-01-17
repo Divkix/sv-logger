@@ -30,7 +30,7 @@ Focus: Validate Python SDK works end-to-end. Skip tests, accept minimal error ha
   - _Requirements: FR-1, NFR-6_
   - _Design: Types_
 
-- [ ] 1.3 Implement errors module
+- [x] 1.3 Implement errors module
   - **Do**: Create `errors.py` with LogwellErrorCode enum and LogwellError exception class
   - **Files**: `sdks/python/src/logwell/errors.py`
   - **Done when**: Can raise and catch LogwellError with code/message/retryable
