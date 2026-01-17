@@ -48,7 +48,7 @@ Focus: Validate Python SDK works end-to-end. Skip tests, accept minimal error ha
   - _Requirements: FR-12, AC-7.1, AC-7.2, AC-7.3_
   - _Design: Config_
 
-- [ ] 1.5 Implement transport module
+- [x] 1.5 Implement transport module
   - **Do**: Create `transport.py` with HttpTransport class, send() with retry and backoff
   - **Files**: `sdks/python/src/logwell/transport.py`
   - **Done when**: Can POST to endpoint with auth header, retries on failure
