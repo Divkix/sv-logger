@@ -14,15 +14,10 @@ from __future__ import annotations
 import inspect
 import os
 from dataclasses import FrozenInstanceError
-from typing import TYPE_CHECKING
 
 import pytest
 
 from logwell.source_location import SourceLocation, capture_source_location
-
-if TYPE_CHECKING:
-    pass
-
 
 # =============================================================================
 # SourceLocation Dataclass Tests

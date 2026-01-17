@@ -24,9 +24,7 @@ from logwell.errors import LogwellError, LogwellErrorCode
 from logwell.queue import BatchQueue
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
-
-    from logwell.types import IngestResponse, LogEntry, LogwellConfig
+    from logwell.types import LogEntry, LogwellConfig
 
 
 # =============================================================================
@@ -152,9 +150,7 @@ class TestLogMethods:
     """Tests for log level methods (debug, info, warn, error, fatal)."""
 
     @pytest.fixture
-    def client_with_mock(
-        self, valid_config: LogwellConfig
-    ) -> tuple[Logwell, list[LogEntry]]:
+    def client_with_mock(self, valid_config: LogwellConfig) -> tuple[Logwell, list[LogEntry]]:
         """Create a client with a mock queue."""
         mock_queue, captured = make_mock_queue()
         client = Logwell(valid_config, _queue=mock_queue)
@@ -237,53 +233,41 @@ class TestLogWithMetadata:
     """Tests for logging with metadata."""
 
     @pytest.fixture
-    def client_with_mock(
-        self, valid_config: LogwellConfig
-    ) -> tuple[Logwell, list[LogEntry]]:
+    def client_with_mock(self, valid_config: LogwellConfig) -> tuple[Logwell, list[LogEntry]]:
         """Create a client with a mock queue."""
         mock_queue, captured = make_mock_queue()
         client = Logwell(valid_config, _queue=mock_queue)
         return client, captured
 
-    def test_debug_with_metadata(
-        self, client_with_mock: tuple[Logwell, list[LogEntry]]
-    ) -> None:
+    def test_debug_with_metadata(self, client_with_mock: tuple[Logwell, list[LogEntry]]) -> None:
         """debug() includes metadata in log entry."""
         client, captured = client_with_mock
         client.debug("Debug", {"key": "value"})
 
         assert captured[0]["metadata"] == {"key": "value"}
 
-    def test_info_with_metadata(
-        self, client_with_mock: tuple[Logwell, list[LogEntry]]
-    ) -> None:
+    def test_info_with_metadata(self, client_with_mock: tuple[Logwell, list[LogEntry]]) -> None:
         """info() includes metadata in log entry."""
         client, captured = client_with_mock
         client.info("Info", {"user_id": "123"})
 
         assert captured[0]["metadata"] == {"user_id": "123"}
 
-    def test_warn_with_metadata(
-        self, client_with_mock: tuple[Logwell, list[LogEntry]]
-    ) -> None:
+    def test_warn_with_metadata(self, client_with_mock: tuple[Logwell, list[LogEntry]]) -> None:
         """warn() includes metadata in log entry."""
         client, captured = client_with_mock
         client.warn("Warning", {"count": 5})
 
         assert captured[0]["metadata"] == {"count": 5}
 
-    def test_error_with_metadata(
-        self, client_with_mock: tuple[Logwell, list[LogEntry]]
-    ) -> None:
+    def test_error_with_metadata(self, client_with_mock: tuple[Logwell, list[LogEntry]]) -> None:
         """error() includes metadata in log entry."""
         client, captured = client_with_mock
         client.error("Error", {"error_code": "E001"})
 
         assert captured[0]["metadata"] == {"error_code": "E001"}
 
-    def test_fatal_with_metadata(
-        self, client_with_mock: tuple[Logwell, list[LogEntry]]
-    ) -> None:
+    def test_fatal_with_metadata(self, client_with_mock: tuple[Logwell, list[LogEntry]]) -> None:
         """fatal() includes metadata in log entry."""
         client, captured = client_with_mock
         client.fatal("Fatal", {"crash_id": "xyz"})
@@ -309,9 +293,7 @@ class TestLogWithMetadata:
         # Empty metadata should not be added
         assert "metadata" not in captured[0]
 
-    def test_complex_metadata(
-        self, client_with_mock: tuple[Logwell, list[LogEntry]]
-    ) -> None:
+    def test_complex_metadata(self, client_with_mock: tuple[Logwell, list[LogEntry]]) -> None:
         """Complex nested metadata is preserved."""
         client, captured = client_with_mock
         metadata = {
@@ -333,9 +315,7 @@ class TestLogTimestamp:
     """Tests for automatic timestamp generation."""
 
     @pytest.fixture
-    def client_with_mock(
-        self, valid_config: LogwellConfig
-    ) -> tuple[Logwell, list[LogEntry]]:
+    def client_with_mock(self, valid_config: LogwellConfig) -> tuple[Logwell, list[LogEntry]]:
         """Create a client with a mock queue."""
         mock_queue, captured = make_mock_queue()
         client = Logwell(valid_config, _queue=mock_queue)
@@ -354,9 +334,7 @@ class TestLogTimestamp:
         assert isinstance(timestamp, str)
         assert "T" in timestamp  # ISO 8601 format has T separator
 
-    def test_timestamp_uses_utc(
-        self, client_with_mock: tuple[Logwell, list[LogEntry]]
-    ) -> None:
+    def test_timestamp_uses_utc(self, client_with_mock: tuple[Logwell, list[LogEntry]]) -> None:
         """Timestamp is in UTC timezone."""
         client, captured = client_with_mock
         client.info("Test")
@@ -471,9 +449,7 @@ class TestFlush:
         assert result == {"accepted": 5, "rejected": 0}
 
     @pytest.mark.asyncio
-    async def test_flush_returns_none_when_empty(
-        self, valid_config: LogwellConfig
-    ) -> None:
+    async def test_flush_returns_none_when_empty(self, valid_config: LogwellConfig) -> None:
         """flush() returns None when queue is empty."""
         mock_queue, _ = make_mock_queue()
         mock_queue.flush = AsyncMock(return_value=None)
@@ -493,9 +469,7 @@ class TestShutdown:
     """Tests for shutdown() method."""
 
     @pytest.mark.asyncio
-    async def test_shutdown_calls_queue_shutdown(
-        self, valid_config: LogwellConfig
-    ) -> None:
+    async def test_shutdown_calls_queue_shutdown(self, valid_config: LogwellConfig) -> None:
         """shutdown() calls queue.shutdown() when owning queue."""
         mock_queue, _ = make_mock_queue()
         # Create client that owns queue
@@ -545,9 +519,7 @@ class TestShutdown:
         mock_queue.shutdown.assert_not_called()
 
     @pytest.mark.asyncio
-    async def test_shutdown_sets_stopped_flag(
-        self, valid_config: LogwellConfig
-    ) -> None:
+    async def test_shutdown_sets_stopped_flag(self, valid_config: LogwellConfig) -> None:
         """shutdown() sets _stopped flag."""
         mock_queue, _ = make_mock_queue()
         client = Logwell(valid_config, _queue=mock_queue)
@@ -557,9 +529,7 @@ class TestShutdown:
         assert client._stopped is True
 
     @pytest.mark.asyncio
-    async def test_shutdown_rejects_new_logs(
-        self, valid_config: LogwellConfig
-    ) -> None:
+    async def test_shutdown_rejects_new_logs(self, valid_config: LogwellConfig) -> None:
         """Logs are ignored after shutdown()."""
         mock_queue, captured = make_mock_queue()
         client = Logwell(valid_config, _queue=mock_queue)
@@ -635,9 +605,7 @@ class TestChild:
 
         assert child._owns_queue is False
 
-    def test_child_inherits_config(
-        self, valid_api_key: str, valid_endpoint: str
-    ) -> None:
+    def test_child_inherits_config(self, valid_api_key: str, valid_endpoint: str) -> None:
         """Child logger inherits parent config."""
         config: LogwellConfig = {
             "api_key": valid_api_key,
@@ -668,9 +636,7 @@ class TestChild:
 
         assert captured[0]["metadata"]["request_id"] == "abc123"
 
-    def test_child_metadata_merges_with_log_metadata(
-        self, valid_config: LogwellConfig
-    ) -> None:
+    def test_child_metadata_merges_with_log_metadata(self, valid_config: LogwellConfig) -> None:
         """Child metadata merges with per-log metadata."""
         mock_queue, captured = make_mock_queue()
         client = Logwell(valid_config, _queue=mock_queue)
@@ -681,9 +647,7 @@ class TestChild:
         assert captured[0]["metadata"]["request_id"] == "abc123"
         assert captured[0]["metadata"]["user_id"] == "user456"
 
-    def test_child_log_metadata_overrides_child_metadata(
-        self, valid_config: LogwellConfig
-    ) -> None:
+    def test_child_log_metadata_overrides_child_metadata(self, valid_config: LogwellConfig) -> None:
         """Per-log metadata takes precedence over child metadata."""
         mock_queue, captured = make_mock_queue()
         client = Logwell(valid_config, _queue=mock_queue)
@@ -693,9 +657,7 @@ class TestChild:
 
         assert captured[0]["metadata"]["key"] == "log_value"
 
-    def test_child_with_service_override(
-        self, valid_api_key: str, valid_endpoint: str
-    ) -> None:
+    def test_child_with_service_override(self, valid_api_key: str, valid_endpoint: str) -> None:
         """Child logger can override service name."""
         config: LogwellConfig = {
             "api_key": valid_api_key,
@@ -710,9 +672,7 @@ class TestChild:
 
         assert captured[0]["service"] == "child-service"
 
-    def test_child_inherits_parent_service(
-        self, valid_api_key: str, valid_endpoint: str
-    ) -> None:
+    def test_child_inherits_parent_service(self, valid_api_key: str, valid_endpoint: str) -> None:
         """Child logger inherits parent's service if not overridden."""
         config: LogwellConfig = {
             "api_key": valid_api_key,
@@ -727,9 +687,7 @@ class TestChild:
 
         assert captured[0]["service"] == "parent-service"
 
-    def test_child_inherits_callbacks(
-        self, valid_api_key: str, valid_endpoint: str
-    ) -> None:
+    def test_child_inherits_callbacks(self, valid_api_key: str, valid_endpoint: str) -> None:
         """Child logger inherits on_error and on_flush callbacks."""
         on_error = MagicMock()
         on_flush = MagicMock()
@@ -791,9 +749,7 @@ class TestNestedChildren:
         assert captured[0]["metadata"]["level1"] == "value1"
         assert captured[0]["metadata"]["level2"] == "value2"
 
-    def test_nested_metadata_overrides_parent(
-        self, valid_config: LogwellConfig
-    ) -> None:
+    def test_nested_metadata_overrides_parent(self, valid_config: LogwellConfig) -> None:
         """Deeper child can override ancestor's metadata key."""
         mock_queue, captured = make_mock_queue()
         root = Logwell(valid_config, _queue=mock_queue)
@@ -841,9 +797,7 @@ class TestNestedChildren:
 class TestSourceLocationCapture:
     """Tests for source location capture when enabled."""
 
-    def test_source_location_disabled_by_default(
-        self, valid_config: LogwellConfig
-    ) -> None:
+    def test_source_location_disabled_by_default(self, valid_config: LogwellConfig) -> None:
         """Source location not captured when disabled (default)."""
         mock_queue, captured = make_mock_queue()
         client = Logwell(valid_config, _queue=mock_queue)
@@ -938,9 +892,7 @@ class TestSourceLocationCapture:
 class TestMergeMetadata:
     """Tests for _merge_metadata internal method."""
 
-    def test_no_parent_no_entry_returns_none(
-        self, valid_config: LogwellConfig
-    ) -> None:
+    def test_no_parent_no_entry_returns_none(self, valid_config: LogwellConfig) -> None:
         """Returns None when no parent or entry metadata."""
         mock_queue, _ = make_mock_queue()
         client = Logwell(valid_config, _queue=mock_queue)
@@ -952,9 +904,7 @@ class TestMergeMetadata:
     def test_parent_only_returns_parent(self, valid_config: LogwellConfig) -> None:
         """Returns parent metadata when no entry metadata."""
         mock_queue, _ = make_mock_queue()
-        client = Logwell(
-            valid_config, _queue=mock_queue, _parent_metadata={"parent": "value"}
-        )
+        client = Logwell(valid_config, _queue=mock_queue, _parent_metadata={"parent": "value"})
 
         result = client._merge_metadata(None)
 
@@ -969,9 +919,7 @@ class TestMergeMetadata:
 
         assert result == {"entry": "value"}
 
-    def test_both_merges_with_entry_priority(
-        self, valid_config: LogwellConfig
-    ) -> None:
+    def test_both_merges_with_entry_priority(self, valid_config: LogwellConfig) -> None:
         """Merges both, entry takes precedence."""
         mock_queue, _ = make_mock_queue()
         client = Logwell(
@@ -1009,9 +957,7 @@ class TestIntegration:
         assert response == {"accepted": 1}
 
     @pytest.mark.asyncio
-    async def test_request_scoped_logging(
-        self, valid_api_key: str, valid_endpoint: str
-    ) -> None:
+    async def test_request_scoped_logging(self, valid_api_key: str, valid_endpoint: str) -> None:
         """Test request-scoped logging pattern."""
         config: LogwellConfig = {
             "api_key": valid_api_key,

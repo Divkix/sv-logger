@@ -156,9 +156,7 @@ def invalid_config_bad_endpoint_relative(valid_api_key: str) -> dict[str, Any]:
 
 
 @pytest.fixture
-def invalid_config_negative_batch_size(
-    valid_api_key: str, valid_endpoint: str
-) -> dict[str, Any]:
+def invalid_config_negative_batch_size(valid_api_key: str, valid_endpoint: str) -> dict[str, Any]:
     """Config with negative batch_size."""
     return {
         "api_key": valid_api_key,
@@ -168,9 +166,7 @@ def invalid_config_negative_batch_size(
 
 
 @pytest.fixture
-def invalid_config_zero_batch_size(
-    valid_api_key: str, valid_endpoint: str
-) -> dict[str, Any]:
+def invalid_config_zero_batch_size(valid_api_key: str, valid_endpoint: str) -> dict[str, Any]:
     """Config with zero batch_size."""
     return {
         "api_key": valid_api_key,
@@ -204,9 +200,7 @@ def invalid_config_negative_max_queue_size(
 
 
 @pytest.fixture
-def invalid_config_negative_max_retries(
-    valid_api_key: str, valid_endpoint: str
-) -> dict[str, Any]:
+def invalid_config_negative_max_retries(valid_api_key: str, valid_endpoint: str) -> dict[str, Any]:
     """Config with negative max_retries."""
     return {
         "api_key": valid_api_key,
@@ -461,9 +455,7 @@ def make_log_entry() -> Callable[..., LogEntry]:
 
 
 @pytest.fixture
-def make_config(
-    valid_api_key: str, valid_endpoint: str
-) -> Callable[..., LogwellConfig]:
+def make_config(valid_api_key: str, valid_endpoint: str) -> Callable[..., LogwellConfig]:
     """Factory fixture for creating configs with custom overrides."""
 
     def _make(**overrides: Any) -> LogwellConfig:

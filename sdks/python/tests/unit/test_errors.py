@@ -13,7 +13,6 @@ import pytest
 
 from logwell.errors import LogwellError, LogwellErrorCode
 
-
 # =============================================================================
 # LogwellErrorCode Tests
 # =============================================================================

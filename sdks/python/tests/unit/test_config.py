@@ -21,8 +21,6 @@ from logwell.config import (
 from logwell.errors import LogwellError, LogwellErrorCode
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
-
     from logwell.types import LogwellConfig
 
 
@@ -680,9 +678,7 @@ class TestValidateConfigReturnValue:
         result["batch_size"] = 9999
         assert valid_config.get("batch_size") != 9999
 
-    def test_all_values_present_in_full_config(
-        self, valid_config_full: LogwellConfig
-    ) -> None:
+    def test_all_values_present_in_full_config(self, valid_config_full: LogwellConfig) -> None:
         """Full config returns all provided values."""
         result = validate_config(valid_config_full)
 
@@ -693,10 +689,7 @@ class TestValidateConfigReturnValue:
         assert result["flush_interval"] == valid_config_full["flush_interval"]
         assert result["max_queue_size"] == valid_config_full["max_queue_size"]
         assert result["max_retries"] == valid_config_full["max_retries"]
-        assert (
-            result["capture_source_location"]
-            == valid_config_full["capture_source_location"]
-        )
+        assert result["capture_source_location"] == valid_config_full["capture_source_location"]
 
 
 # =============================================================================
@@ -707,9 +700,7 @@ class TestValidateConfigReturnValue:
 class TestIsValidUrlEdgeCases:
     """Edge cases for _is_valid_url internal function (via validate_config)."""
 
-    def test_url_that_triggers_exception(
-        self, valid_api_key: str
-    ) -> None:
+    def test_url_that_triggers_exception(self, valid_api_key: str) -> None:
         """Test URL that might trigger urlparse exception.
 
         urlparse is very permissive and rarely throws, but we can test
@@ -732,9 +723,7 @@ class TestIsValidUrlEdgeCases:
             assert exc_info.value.code == LogwellErrorCode.INVALID_CONFIG
             assert "Invalid endpoint URL" in exc_info.value.message
 
-    def test_url_with_attribute_error(
-        self, valid_api_key: str
-    ) -> None:
+    def test_url_with_attribute_error(self, valid_api_key: str) -> None:
         """Test URL that causes AttributeError in urlparse."""
         from unittest.mock import patch
 
@@ -757,9 +746,7 @@ class TestIsValidUrlEdgeCases:
 class TestValidateConfigEdgeCases:
     """Edge case tests for validate_config."""
 
-    def test_api_key_exactly_32_chars_after_prefix(
-        self, valid_endpoint: str
-    ) -> None:
+    def test_api_key_exactly_32_chars_after_prefix(self, valid_endpoint: str) -> None:
         """Accepts API key with exactly 32 chars after prefix."""
         config: dict[str, Any] = {
             "api_key": "lw_" + "a" * 32,
@@ -802,9 +789,7 @@ class TestValidateConfigEdgeCases:
         # api_key error should come first
         assert "api_key" in exc_info.value.message
 
-    def test_api_key_format_checked_before_numeric_bounds(
-        self, valid_endpoint: str
-    ) -> None:
+    def test_api_key_format_checked_before_numeric_bounds(self, valid_endpoint: str) -> None:
         """API key format checked before numeric options."""
         config: dict[str, Any] = {
             "api_key": "invalid_key",
@@ -818,9 +803,7 @@ class TestValidateConfigEdgeCases:
         # api_key format error should come first
         assert "Invalid API key format" in exc_info.value.message
 
-    def test_endpoint_checked_before_numeric_bounds(
-        self, valid_api_key: str
-    ) -> None:
+    def test_endpoint_checked_before_numeric_bounds(self, valid_api_key: str) -> None:
         """Endpoint URL checked before numeric options."""
         config: dict[str, Any] = {
             "api_key": valid_api_key,

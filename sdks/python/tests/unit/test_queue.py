@@ -22,10 +22,9 @@ import pytest
 
 from logwell.errors import LogwellError, LogwellErrorCode
 from logwell.queue import BatchQueue, QueueConfig
-from logwell.types import IngestResponse, LogEntry
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
+    from logwell.types import IngestResponse, LogEntry
 
 
 # =============================================================================
@@ -713,10 +712,7 @@ class TestBatchQueueThreadSafety:
             for i in range(entries_per_thread):
                 queue.add(make_log_entry(f"thread_{thread_id}_msg_{i}"))
 
-        threads = [
-            threading.Thread(target=add_entries, args=(i,))
-            for i in range(num_threads)
-        ]
+        threads = [threading.Thread(target=add_entries, args=(i,)) for i in range(num_threads)]
 
         for t in threads:
             t.start()

@@ -174,6 +174,7 @@ class TestBatching:
 
         # Give time for auto-flush to complete
         import asyncio
+
         await asyncio.sleep(0.1)
 
         await client.shutdown()
@@ -201,9 +202,7 @@ class TestRetry:
             httpx.Response(503, json={"error": "Service unavailable"}),
             httpx.Response(200, json={"accepted": 1}),
         ]
-        mock_server.post("https://logs.example.com/v1/ingest").mock(
-            side_effect=responses
-        )
+        mock_server.post("https://logs.example.com/v1/ingest").mock(side_effect=responses)
 
         # Execute
         client = Logwell(valid_config)
@@ -226,9 +225,7 @@ class TestRetry:
             httpx.Response(429, json={"error": "Too many requests"}),
             httpx.Response(200, json={"accepted": 1}),
         ]
-        mock_server.post("https://logs.example.com/v1/ingest").mock(
-            side_effect=responses
-        )
+        mock_server.post("https://logs.example.com/v1/ingest").mock(side_effect=responses)
 
         # Execute
         client = Logwell(valid_config)
