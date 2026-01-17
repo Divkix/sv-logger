@@ -58,8 +58,9 @@ Logwell is a lightweight, self-hosted log aggregation platform for developers wh
 ## Preview
 
 <p align="center">
-  <img src="static/dashboard.png" alt="Dashboard" width="100%">
-  <em>Multi-project dashboard with log counts</em>
+  <video src="static/demo.mp4" width="100%" autoplay loop muted playsinline></video>
+  <br>
+  <em>Real-time log streaming demo</em>
 </p>
 
 <table>
