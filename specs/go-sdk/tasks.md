@@ -124,7 +124,7 @@ After POC validated, add remaining features and clean up code.
   - _Requirements: FR-13, AC-8.1, AC-8.2, AC-8.3_
   - _Design: BatchQueue_
 
-- [ ] 2.6 Add shutdown and flush with context
+- [x] 2.6 Add shutdown and flush with context
   - **Do**: Implement `Shutdown(ctx)` and `Flush(ctx)` with context cancellation support. Ensure graceful drain.
   - **Files**: `sdks/go/logwell/client.go`, `sdks/go/logwell/queue.go`
   - **Done when**: Shutdown flushes remaining logs, respects context timeout

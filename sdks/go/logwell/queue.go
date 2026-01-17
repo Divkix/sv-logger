@@ -102,3 +102,14 @@ func (q *batchQueue) size() int {
 	defer q.mu.Unlock()
 	return len(q.entries)
 }
+
+// stopTimer stops the auto-flush timer if running.
+// Used during shutdown to prevent timer fires after shutdown starts.
+func (q *batchQueue) stopTimer() {
+	q.mu.Lock()
+	defer q.mu.Unlock()
+	if q.timer != nil {
+		q.timer.Stop()
+		q.timer = nil
+	}
+}

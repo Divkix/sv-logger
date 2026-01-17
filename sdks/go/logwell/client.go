@@ -5,6 +5,9 @@ import (
 	"sync"
 )
 
+// ErrClientShutdown is returned when attempting to log after shutdown.
+var ErrClientShutdown = NewError(ErrValidationError, "client has been shut down")
+
 // Client is the main entry point for sending logs to Logwell.
 type Client struct {
 	config *Config
@@ -12,7 +15,8 @@ type Client struct {
 	queue     *batchQueue
 	transport *httpTransport
 
-	mu sync.Mutex
+	mu       sync.Mutex
+	shutdown bool
 }
 
 // New creates a new Logwell client with the given endpoint and API key.
@@ -87,7 +91,15 @@ func (c *Client) Fatal(message string, metadata ...map[string]any) {
 // Log sends a custom log entry directly.
 // Use this when you need full control over the log entry.
 // The entry's timestamp will be set to now if empty, and service will be set from config if empty.
+// Returns without logging if the client has been shut down.
 func (c *Client) Log(entry LogEntry) {
+	c.mu.Lock()
+	if c.shutdown {
+		c.mu.Unlock()
+		return
+	}
+	c.mu.Unlock()
+
 	// Set defaults if not provided
 	if entry.Timestamp == "" {
 		entry.Timestamp = now()
@@ -109,7 +121,15 @@ func (c *Client) Log(entry LogEntry) {
 }
 
 // log is the internal logging method used by all level methods.
+// Returns without logging if the client has been shut down.
 func (c *Client) log(level LogLevel, message string, metadata ...map[string]any) {
+	c.mu.Lock()
+	if c.shutdown {
+		c.mu.Unlock()
+		return
+	}
+	c.mu.Unlock()
+
 	entry := LogEntry{
 		Level:     level,
 		Message:   message,
@@ -129,6 +149,7 @@ func (c *Client) log(level LogLevel, message string, metadata ...map[string]any)
 }
 
 // flush sends all queued log entries to the server.
+// Internal method - does not respect context cancellation.
 func (c *Client) flush() {
 	entries := c.queue.flush()
 	if len(entries) == 0 {
@@ -138,6 +159,40 @@ func (c *Client) flush() {
 	// Send logs (fire and forget for now, error handling added later)
 	ctx := context.Background()
 	_, _ = c.transport.send(ctx, entries)
+}
+
+// Flush sends all queued log entries immediately.
+// Respects context cancellation and timeout.
+// Returns any error from the transport layer.
+func (c *Client) Flush(ctx context.Context) error {
+	entries := c.queue.flush()
+	if len(entries) == 0 {
+		return nil
+	}
+
+	_, err := c.transport.sendWithRetry(ctx, entries)
+	return err
+}
+
+// Shutdown gracefully shuts down the client.
+// It stops accepting new logs, flushes any remaining queued logs,
+// and cleans up resources.
+// Respects context cancellation and timeout.
+// Returns any error from flushing remaining logs.
+func (c *Client) Shutdown(ctx context.Context) error {
+	c.mu.Lock()
+	if c.shutdown {
+		c.mu.Unlock()
+		return nil // Already shut down
+	}
+	c.shutdown = true
+	c.mu.Unlock()
+
+	// Stop the queue timer to prevent further auto-flushes
+	c.queue.stopTimer()
+
+	// Flush remaining logs with context
+	return c.Flush(ctx)
 }
 
 // mergeMetadata combines multiple metadata maps into one.
