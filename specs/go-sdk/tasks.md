@@ -133,7 +133,7 @@ After POC validated, add remaining features and clean up code.
   - _Requirements: FR-6, FR-7, AC-4.1, AC-4.2, AC-4.3, AC-4.4, AC-5.1, AC-5.2, AC-5.3_
   - _Design: Client, BatchQueue_
 
-- [ ] 2.7 Add child logger
+- [x] 2.7 Add child logger
   - **Do**: Implement `Child()` with `ChildOption` for metadata and service override. Child shares parent queue.
   - **Files**: `sdks/go/logwell/client.go`
   - **Done when**: Child loggers work with inherited and merged metadata
