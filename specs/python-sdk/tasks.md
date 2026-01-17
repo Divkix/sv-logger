@@ -148,7 +148,7 @@ After POC validated, clean up code.
   - **Commit**: `test(python-sdk): add test fixtures`
   - _Design: File Structure_
 
-- [ ] 3.2 Unit tests for config
+- [x] 3.2 Unit tests for config
   - **Do**: Test validate_config, validate_api_key_format, edge cases
   - **Files**: `sdks/python/tests/unit/__init__.py`, `sdks/python/tests/unit/test_config.py`
   - **Done when**: 100% coverage of config.py
