@@ -203,7 +203,7 @@ After POC validated, clean up code.
   - **Done when**: All pass, coverage >= 90%
   - **Commit**: `fix(python-sdk): address lint/type issues` (if needed)
 
-- [ ] 4.2 Create PR
+- [x] 4.2 Create PR
   - **Do**: Push branch, create PR with gh CLI
   - **Verify**: `gh pr checks --watch` all green
   - **Done when**: PR ready for review
