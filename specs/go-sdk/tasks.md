@@ -21,7 +21,7 @@ Focus: End-to-end log sending works. Skip tests, accept hardcoded values where e
   - _Requirements: FR-1_
   - _Design: File Structure_
 
-- [ ] 1.2 Create core types
+- [x] 1.2 Create core types
   - **Do**: Define `LogLevel` constants, `LogEntry` struct, `IngestResponse` struct with JSON tags
   - **Files**: `sdks/go/logwell/types.go`
   - **Done when**: Types compile, JSON marshaling works
