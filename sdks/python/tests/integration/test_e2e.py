@@ -12,7 +12,7 @@ Tests full flow with mocked HTTP using respx:
 from __future__ import annotations
 
 import json
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 import httpx
 import pytest
