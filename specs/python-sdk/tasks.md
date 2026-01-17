@@ -57,7 +57,7 @@ Focus: Validate Python SDK works end-to-end. Skip tests, accept minimal error ha
   - _Requirements: FR-10, AC-5.2, AC-5.3, AC-5.4_
   - _Design: HttpTransport_
 
-- [ ] 1.6 Implement queue module
+- [x] 1.6 Implement queue module
   - **Do**: Create `queue.py` with BatchQueue class, add(), flush(), shutdown(), timer management
   - **Files**: `sdks/python/src/logwell/queue.py`
   - **Done when**: Queues logs, auto-flushes on batch_size, timer-based flush works
