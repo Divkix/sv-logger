@@ -97,7 +97,7 @@ After POC validated, add remaining features and clean up code.
   - _Requirements: FR-2, FR-3, AC-1.2_
   - _Design: Client_
 
-- [ ] 2.3 Add retry logic with exponential backoff
+- [x] 2.3 Add retry logic with exponential backoff
   - **Do**: Add retry loop to transport with exponential backoff + jitter. Classify errors as retryable/non-retryable.
   - **Files**: `sdks/go/logwell/transport.go`
   - **Done when**: Network errors and 5xx retry, 401/400 do not
