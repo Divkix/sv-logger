@@ -93,7 +93,7 @@ Focus: Validate Python SDK works end-to-end. Skip tests, accept minimal error ha
   - _Requirements: NFR-7_
   - _Design: Architecture_
 
-- [ ] 1.10 POC Checkpoint
+- [x] 1.10 POC Checkpoint
   - **Do**: Test full flow: instantiate, log, flush against mock or real server
   - **Done when**: Logs appear in server, no errors
   - **Verify**: Run manual E2E test script
