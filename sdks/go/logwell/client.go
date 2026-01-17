@@ -5,17 +5,9 @@ import (
 	"sync"
 )
 
-// Default configuration values.
-const (
-	defaultBatchSize = 10
-)
-
 // Client is the main entry point for sending logs to Logwell.
 type Client struct {
-	endpoint  string
-	apiKey    string
-	service   string
-	batchSize int
+	config *Config
 
 	queue     *batchQueue
 	transport *httpTransport
@@ -24,18 +16,38 @@ type Client struct {
 }
 
 // New creates a new Logwell client with the given endpoint and API key.
-// Uses default settings: batchSize=10, service="".
-func New(endpoint, apiKey string) *Client {
+// Returns an error if the configuration is invalid.
+//
+// Example:
+//
+//	client, err := logwell.New(
+//	    "https://logs.example.com",
+//	    "lw_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+//	    logwell.WithService("my-app"),
+//	    logwell.WithBatchSize(50),
+//	)
+func New(endpoint, apiKey string, opts ...Option) (*Client, error) {
+	// Create config with defaults
+	cfg := newDefaultConfig(endpoint, apiKey)
+
+	// Apply options
+	for _, opt := range opts {
+		opt(cfg)
+	}
+
+	// Validate config
+	if err := validateConfig(cfg); err != nil {
+		return nil, err
+	}
+
 	queue := newBatchQueue()
 	transport := newHTTPTransport(endpoint, apiKey)
 
 	return &Client{
-		endpoint:  endpoint,
-		apiKey:    apiKey,
-		batchSize: defaultBatchSize,
+		config:    cfg,
 		queue:     queue,
 		transport: transport,
-	}
+	}, nil
 }
 
 // Info logs a message at INFO level.
@@ -50,13 +62,13 @@ func (c *Client) log(level LogLevel, message string, metadata ...map[string]any)
 		Level:     level,
 		Message:   message,
 		Timestamp: now(),
-		Service:   c.service,
-		Metadata:  mergeMetadata(metadata...),
+		Service:   c.config.Service,
+		Metadata:  mergeMetadata(c.config.Metadata, mergeMetadata(metadata...)),
 	}
 
 	c.mu.Lock()
 	c.queue.add(entry)
-	shouldFlush := c.queue.size() >= c.batchSize
+	shouldFlush := c.queue.size() >= c.config.BatchSize
 	c.mu.Unlock()
 
 	if shouldFlush {

@@ -11,6 +11,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
 	"os"
 	"time"
 
@@ -26,11 +27,20 @@ func main() {
 
 	apiKey := os.Getenv("LOGWELL_API_KEY")
 	if apiKey == "" {
-		apiKey = "lw_demo-api-key-for-testing-only"
+		// Demo key that matches the validation regex (lw_ + 32 chars)
+		apiKey = "lw_demo1234567890abcdefghijklmnopqr"
 	}
 
-	// Create a new Logwell client
-	client := logwell.New(endpoint, apiKey)
+	// Create a new Logwell client with options
+	client, err := logwell.New(
+		endpoint,
+		apiKey,
+		logwell.WithService("basic-example"),
+		logwell.WithBatchSize(10),
+	)
+	if err != nil {
+		log.Fatalf("Failed to create Logwell client: %v", err)
+	}
 
 	fmt.Println("Logwell Go SDK - Basic Example")
 	fmt.Printf("Endpoint: %s\n", endpoint)

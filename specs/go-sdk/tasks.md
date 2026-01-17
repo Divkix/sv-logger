@@ -79,7 +79,7 @@ Focus: End-to-end log sending works. Skip tests, accept hardcoded values where e
 
 After POC validated, add remaining features and clean up code.
 
-- [ ] 2.1 Add config validation and functional options
+- [x] 2.1 Add config validation and functional options
   - **Do**: Implement `Option` type, all `With*` functions, `validateConfig()` with API key regex and URL validation. Update `New()` to accept options.
   - **Files**: `sdks/go/logwell/config.go`, `sdks/go/logwell/client.go`
   - **Done when**: All config options work, invalid config returns error
