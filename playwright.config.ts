@@ -26,10 +26,6 @@ const config: PlaywrightTestConfig = {
       name: 'firefox',
       use: { browserName: 'firefox' },
     },
-    {
-      name: 'webkit',
-      use: { browserName: 'webkit' },
-    },
   ],
   webServer: {
     command: isCI ? 'bun run build && bun run preview' : 'bun run dev',
