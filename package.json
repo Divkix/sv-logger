@@ -33,7 +33,7 @@
     "sdk:version": "bun run --cwd sdks/typescript npm version"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.3.13",
+    "@biomejs/biome": "2.3.14",
     "@electric-sql/pglite": "^0.3.15",
     "@internationalized/date": "^3.10.1",
     "@playwright/test": "^1.58.1",
